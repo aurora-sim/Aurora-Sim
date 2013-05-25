@@ -1216,9 +1216,14 @@ namespace Aurora.Framework.PresenceInfo
         event AgentCachedTextureRequest OnAgentCachedTextureRequest;
 
         /// <summary>
-        ///     Set the debug level at which packet output should be printed to console.
+        /// Set the debug level at which packet output should be printed to console.
         /// </summary>
         void SetDebugPacketLevel(int newDebug);
+
+        /// <summary>
+        /// Set a packet that should be printed to console.
+        /// </summary>
+        void SetDebugPacketName(string packetName, bool remove);
 
         void ProcessInPacket(Packet NewPack);
         void Close(bool forceClose);
@@ -1628,5 +1633,7 @@ namespace Aurora.Framework.PresenceInfo
 
         UUID ScopeID { get; set; }
         List<UUID> AllScopeIDs { get; set; }
+
+        void IncomingInstantMessage(GridInstantMessage im);
     }
 }

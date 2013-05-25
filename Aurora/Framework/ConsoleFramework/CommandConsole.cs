@@ -208,8 +208,8 @@ namespace Aurora.Framework.ConsoleFramework
                     }
                     commandOptions.Reverse();
                     commandPath = commandPathList.ToArray();
-                    if (commandOptions.Count > 0)
-                        MainConsole.Instance.Info("Options: " + string.Join(", ", commandOptions.ToArray()));
+                    //if (commandOptions.Count > 0)
+                    //    MainConsole.Instance.Info("Options: " + string.Join(", ", commandOptions.ToArray()));
                     List<string> cmdList;
                     if (commandPath.Length == 1 || !m_allowSubSets)
                     {

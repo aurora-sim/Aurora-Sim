@@ -98,8 +98,8 @@ namespace Aurora.Region
 
         #region Properties
 
-        private List<ISceneChildEntity> m_LoopSoundSlavePrims = new List<ISceneChildEntity>();
-        private List<ISceneChildEntity> m_PlaySoundSlavePrims = new List<ISceneChildEntity>();
+        private List<UUID> m_LoopSoundSlavePrims = new List<UUID>();
+        private List<UUID> m_PlaySoundSlavePrims = new List<UUID>();
 
         /// <summary>
         ///     Added because the Parcel code seems to use it
@@ -163,9 +163,8 @@ namespace Aurora.Region
             }
         }
 
-        public ISceneChildEntity PlaySoundMasterPrim { get; set; }
-
-        public List<ISceneChildEntity> PlaySoundSlavePrims
+        [ProtoMember(2)]
+        public List<UUID> PlaySoundSlavePrims
         {
             get { return m_PlaySoundSlavePrims; }
             set { m_PlaySoundSlavePrims = value; }
@@ -306,9 +305,11 @@ namespace Aurora.Region
             }
         }
 
-        public ISceneChildEntity LoopSoundMasterPrim { get; set; }
+        [ProtoMember(3)]
+        public UUID LoopSoundMasterPrim { get; set; }
 
-        public List<ISceneChildEntity> LoopSoundSlavePrims
+        [ProtoMember(4)]
+        public List<UUID> LoopSoundSlavePrims
         {
             get { return m_LoopSoundSlavePrims; }
             set { m_LoopSoundSlavePrims = value; }
@@ -1484,8 +1485,7 @@ namespace Aurora.Region
             if (startedColliders.Count > 0 && RootPart.CollisionSound != UUID.Zero &&
                 RootPart.CollisionSoundVolume > 0.0f)
             {
-                RootPart.SendSound(RootPart.CollisionSound.ToString(), RootPart.CollisionSoundVolume, true, 0, 0, false,
-                                   false);
+                RootPart.SendSound(RootPart.CollisionSound.ToString(), RootPart.CollisionSoundVolume, true, 0, 0);
             }
             if (RootPart.CollisionSprite != UUID.Zero && RootPart.CollisionSoundVolume > 0.0f)
                 // The collision volume isn't a mistake, its an SL feature/bug
@@ -2171,6 +2171,8 @@ namespace Aurora.Region
             if (command == KeyframeAnimation.Commands.Play)
             {
                 m_rootPart.KeyframeAnimation = animation;
+                //Only have one at a time
+                m_scene.EventManager.OnFrame -= moveKeyframeMotion;
                 m_scene.EventManager.OnFrame += moveKeyframeMotion;
             }
             else
@@ -2267,29 +2269,25 @@ namespace Aurora.Region
                 float progress = (((float)(timeSinceEpoch - m_rootPart.KeyframeAnimation.CurrentFrame)) / (float)currentTime);
                 if (m_rootPart.KeyframeAnimation.PositionList.Length != 0)
                 {
-                    Vector3 _target_velocity =
-                        new Vector3(
-                            (currentTarget.X - m_rootPart.KeyframeAnimation.InitialPosition.X) * progress,
-                            (currentTarget.Y - m_rootPart.KeyframeAnimation.InitialPosition.Y) * progress,
-                            (currentTarget.Z - m_rootPart.KeyframeAnimation.InitialPosition.Z) * progress
-                            );
+                    Vector3 _target_velocity = Vector3.Lerp(Vector3.Zero, currentTarget, progress);
                     if (MadeItToCheckpoint)
                     {
                         if (AllDoneMoving)
                             Velocity = Vector3.Zero;
-                        SetAbsolutePosition(true, currentTarget);
-                        m_rootPart.KeyframeAnimation.InitialPosition = currentTarget;
+                        SetAbsolutePosition(true, m_rootPart.KeyframeAnimation.InitialPosition + currentTarget);
+                        m_rootPart.KeyframeAnimation.InitialPosition = m_rootPart.KeyframeAnimation.InitialPosition + currentTarget;
                     }
                     else
                     {
-                        Velocity = (m_rootPart.KeyframeAnimation.InitialPosition + _target_velocity) - AbsolutePosition;
+                        Velocity = ((m_rootPart.KeyframeAnimation.InitialPosition + _target_velocity) - AbsolutePosition) * -1f;
                         SetAbsolutePosition(true, m_rootPart.KeyframeAnimation.InitialPosition + _target_velocity);
                     }
                 }
                 if (m_rootPart.KeyframeAnimation.RotationList.Length != 0)
                 {
-                    Quaternion source = m_rootPart.GetRotationOffset();
-                    Quaternion newInterpolation = Quaternion.Slerp(source, target, progress);
+                    target = m_rootPart.KeyframeAnimation.InitialRotation * target;
+                    Quaternion newInterpolation = Quaternion.Slerp(m_rootPart.KeyframeAnimation.InitialRotation, target, progress);
+                    newInterpolation.Normalize();
                     m_rootPart.UpdateRotation(newInterpolation);
                     if (MadeItToCheckpoint)
                     {

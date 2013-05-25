@@ -905,7 +905,7 @@ namespace Aurora.Services
                 UuidGatherer gatherer = new UuidGatherer(m_AssetService);
 
                 StampRegionStatusFile(manager.Scene.RegionInfo.RegionID);
-                manager.Scene.ForEachSceneEntity(e => gatherer.GatherAssetUuids(e, assets, manager.Scene));
+                manager.Scene.ForEachSceneEntity(e => gatherer.GatherAssetUuids(e, assets));
 
                 foreach (UUID assetID in assets.Keys)
                 {

@@ -60,7 +60,53 @@ namespace Aurora.Services.SQLServices.GridService
         protected IAgentInfoService m_agentInfoService;
         protected ISyncMessagePosterService m_syncPosterService;
         protected IGridServerInfoService m_gridServerInfo;
-        private readonly Dictionary<UUID, List<GridRegion>> m_KnownNeighbors = new Dictionary<UUID, List<GridRegion>>();
+        private struct NeighborLocation
+        {
+            public UUID RegionID;
+            public int RegionLocX;
+            public int RegionLocY;
+            public override bool Equals(object obj)
+            {
+                if (obj is NeighborLocation)
+                {
+                    NeighborLocation loc = (NeighborLocation)obj;
+                    return loc.RegionID == this.RegionID &&
+                        loc.RegionLocX == this.RegionLocX &&
+                        loc.RegionLocY == this.RegionLocY;
+                }
+                return false;
+            }
+            public static bool operator ==(NeighborLocation a, NeighborLocation b)
+            {
+                // If both are null, or both are same instance, return true.
+                if (System.Object.ReferenceEquals(a, b))
+                    return true;
+
+                // If one is null, but not both, return false.
+                if (((object)a == null) || ((object)b == null))
+                    return false;
+
+                // Return true if the fields match:
+                return a.Equals(b);
+            }
+            public static bool operator !=(NeighborLocation a, NeighborLocation b)
+            {
+                return !(a == b);
+            }
+        }
+        private class NeighborLocationEqualityComparer : IEqualityComparer<NeighborLocation>
+        {
+            public bool Equals(NeighborLocation b1, NeighborLocation b2)
+            {
+                return b1 == b2;
+            }
+            public int GetHashCode(NeighborLocation bx)
+            {
+                return bx.GetHashCode();
+            }
+
+        }
+        private readonly Dictionary<NeighborLocation, List<GridRegion>> m_KnownNeighbors = new Dictionary<NeighborLocation, List<GridRegion>>(new NeighborLocationEqualityComparer());
 
         #endregion
 
@@ -754,15 +800,28 @@ namespace Aurora.Services.SQLServices.GridService
             if (remoteValue != null || m_doRemoteOnly)
                 return (List<GridRegion>) remoteValue;
 
-            List<GridRegion> neighbors = new List<GridRegion>();
-            if (!m_KnownNeighbors.TryGetValue(region.RegionID, out neighbors))
+            NeighborLocation currentLoc = BuildNeighborLocation(region);
+            //List<GridRegion> neighbors = m_KnownNeighbors.FirstOrDefault((loc)=>loc.Key == currentLoc).Value;
+            List<GridRegion> neighbors;
+            //if (neighbors == null)
+            if (!m_KnownNeighbors.TryGetValue(currentLoc, out neighbors))
             {
                 neighbors = FindNewNeighbors(region);
-                m_KnownNeighbors[region.RegionID] = neighbors;
+                m_KnownNeighbors[BuildNeighborLocation(region)] = neighbors;
             }
             GridRegion[] regions = new GridRegion[neighbors.Count];
             neighbors.CopyTo(regions);
             return AllScopeIDImpl.CheckScopeIDs(scopeIDs, new List<GridRegion>(regions));
+        }
+
+        private NeighborLocation BuildNeighborLocation(GridRegion reg)
+        {
+            return new NeighborLocation()
+            {
+                RegionID = reg.RegionID,
+                RegionLocX = reg.RegionLocX,
+                RegionLocY = reg.RegionLocY
+            };
         }
 
         #endregion
@@ -809,8 +868,7 @@ namespace Aurora.Services.SQLServices.GridService
         private void HandleClearAllDownRegions(string[] cmd)
         {
             //Delete any flags with (Flags & 254) == 254
-            m_Database.DeleteAll(new[] {"Flags", "Flags", "Flags", "Flags"},
-                                 new object[] {254, 267, 275, 296});
+            m_Database.DeleteAll(new[] {"Flags"}, new object[] {0});
             MainConsole.Instance.Warn("[GridService]: Cleared all down regions");
         }
 
@@ -1077,18 +1135,19 @@ namespace Aurora.Services.SQLServices.GridService
         {
             foreach (GridRegion r in neighbors)
             {
-                if (m_KnownNeighbors.ContainsKey(r.RegionID))
+                NeighborLocation currentLoc = BuildNeighborLocation(r);
+                if (m_KnownNeighbors.ContainsKey(currentLoc))
                 {
                     //Add/Remove them to/from the list
                     if (down)
-                        m_KnownNeighbors[r.RegionID].Remove(regionInfos);
-                    else if (m_KnownNeighbors[r.RegionID].Find(delegate(GridRegion rr)
+                        m_KnownNeighbors[currentLoc].Remove(regionInfos);
+                    else if (m_KnownNeighbors[currentLoc].Find(delegate(GridRegion rr)
                                                                    {
                                                                        if (rr.RegionID == regionInfos.RegionID)
                                                                            return true;
                                                                        return false;
                                                                    }) == null)
-                        m_KnownNeighbors[r.RegionID].Add(regionInfos);
+                        m_KnownNeighbors[currentLoc].Add(regionInfos);
                 }
 
                 if (m_syncPosterService != null)
@@ -1097,7 +1156,11 @@ namespace Aurora.Services.SQLServices.GridService
             }
 
             if (down)
-                m_KnownNeighbors.Remove(regionInfos.RegionID);
+            {
+                List<NeighborLocation> locs = m_KnownNeighbors.Keys.Where((l) => l.RegionID == regionInfos.RegionID).ToList();
+                foreach (NeighborLocation l in locs)
+                    m_KnownNeighbors.Remove(l);
+            }
         }
 
         /// <summary>

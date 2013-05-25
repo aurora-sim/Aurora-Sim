@@ -72,9 +72,6 @@ namespace Aurora.Modules.Estate
                 sun = (uint) (m_scene.RegionInfo.EstateSettings.SunPosition*1024.0) + 0x1800;
             UUID estateOwner = m_scene.RegionInfo.EstateSettings.EstateOwner;
 
-            //if (m_scene.Permissions.IsGod(remote_client.AgentId))
-            //    estateOwner = remote_client.AgentId;
-
             remote_client.SendDetailedEstateData(invoice,
                                                  m_scene.RegionInfo.EstateSettings.EstateName,
                                                  m_scene.RegionInfo.EstateSettings.EstateID,
@@ -194,7 +191,10 @@ namespace Aurora.Modules.Estate
                 m_scene.RegionInfo.EstateSettings.UseGlobalTime = false;
                 m_scene.RegionInfo.EstateSettings.SunPosition = sun_hour;
             }
-            m_scene.RegionInfo.EstateSettings.Save();
+
+            Aurora.Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>().
+                SaveEstateSettings(m_scene.RegionInfo.EstateSettings);
+
             TriggerEstateInfoChange();
 
             TriggerEstateSunUpdate();
@@ -403,367 +403,83 @@ namespace Aurora.Modules.Estate
             if (user == m_scene.RegionInfo.EstateSettings.EstateOwner)
                 return; // never process EO
 
-            if ((estateAccessType & (int) AccessDeltaRequest.AddAllowedUser) != 0) // User add
+            IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
+            List<EstateSettings> estates = new List<EstateSettings>();
+            if ((estateAccessType & (int)AccessDeltaRequest.ApplyToAllEstates) != 0 && connector != null)
+                estates = connector.GetEstates(m_scene.RegionInfo.EstateSettings.EstateOwner);
+            else
+                estates = new List<EstateSettings>() { m_scene.RegionInfo.EstateSettings };
+
+            bool moreToCome = (estateAccessType & (int)AccessDeltaRequest.MoreToCome) != 0;
+            List<Action<UUID>> actions = new List<Action<UUID>>();
+            bool isOwner = m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) ||
+                       m_scene.Permissions.BypassPermissions();
+            bool isManager = m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, false);
+
+            foreach (EstateSettings es in estates)
             {
-                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true))
+                if (isOwner)
                 {
-                    IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
-                    if ((estateAccessType & 1) != 0 && connector != null) // All estates
-                    {
-                        List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
-                        foreach (EstateSettings estate in estateIDs)
+                    if ((estateAccessType & (int)AccessDeltaRequest.AddEstateManager) != 0)
+                        actions.Add(es.AddEstateManager);
+                    else if ((estateAccessType & (int)AccessDeltaRequest.RemoveEstateManager) != 0)
+                        actions.Add(es.RemoveEstateManager);
+                }
+                if (isManager)
+                {
+                    if ((estateAccessType & (int)AccessDeltaRequest.AddAllowedUser) != 0)
+                        actions.Add(es.AddEstateUser);
+                    else if ((estateAccessType & (int)AccessDeltaRequest.RemoveAllowedUser) != 0)
+                        actions.Add(es.RemoveEstateUser);
+                    else if ((estateAccessType & (int)AccessDeltaRequest.AddAllowedGroup) != 0)
+                        actions.Add(es.AddEstateGroup);
+                    else if ((estateAccessType & (int)AccessDeltaRequest.RemoveAllowedGroup) != 0)
+                        actions.Add(es.RemoveEstateGroup);
+                    else if ((estateAccessType & (int)AccessDeltaRequest.AddBannedUser) != 0)
+                        actions.Add((userID) =>
                         {
-                            if (estate.EstateID != m_scene.RegionInfo.EstateSettings.EstateID)
+                            IScenePresence SP = m_scene.GetScenePresence(user);
+                            EstateBan item = new EstateBan
                             {
-                                estate.AddEstateUser(user);
-                                estate.Save();
-                            }
-                        }
-                    }
-                    m_scene.RegionInfo.EstateSettings.AddEstateUser(user);
-                    if ((estateAccessType & (int) AccessDeltaRequest.MoreToCome) == 0)
-                        //1024 means more than one is being sent
-                    {
-                        m_scene.RegionInfo.EstateSettings.Save();
-                        TriggerEstateInfoChange();
-                    }
-                }
-                else
-                {
-                    remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
-                }
-            }
-            if ((estateAccessType & (int) AccessDeltaRequest.RemoveAllowedUser) != 0) // User remove
-            {
-                IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
-                if ((estateAccessType & 1) != 0 && connector != null) // All estates
-                {
-                    List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
-                    foreach (EstateSettings estate in estateIDs)
-                    {
-                        if (estate.EstateID != m_scene.RegionInfo.EstateSettings.EstateID)
-                        {
-                            estate.RemoveEstateUser(user);
-                            estate.Save();
-                        }
-                    }
-                }
-                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) ||
-                    m_scene.Permissions.BypassPermissions())
-                {
-                    m_scene.RegionInfo.EstateSettings.RemoveEstateUser(user);
-                    if ((estateAccessType & (int) AccessDeltaRequest.MoreToCome) == 0)
-                        //1024 means more than one is being sent
-                    {
-                        m_scene.RegionInfo.EstateSettings.Save();
-                        TriggerEstateInfoChange();
-                    }
-                }
-                else
-                {
-                    remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
-                }
-            }
-            if ((estateAccessType & (int) AccessDeltaRequest.AddAllowedGroup) != 0) // Group add
-            {
-                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) ||
-                    m_scene.Permissions.BypassPermissions())
-                {
-                    IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
-                    if ((estateAccessType & 1) != 0 && connector != null) // All estates
-                    {
-                        List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
-                        foreach (EstateSettings estate in estateIDs)
-                        {
-                            if (estate.EstateID != m_scene.RegionInfo.EstateSettings.EstateID)
-                            {
-                                estate.AddEstateGroup(user);
-                                estate.Save();
-                            }
-                        }
-                    }
-                    m_scene.RegionInfo.EstateSettings.AddEstateGroup(user);
-                    if ((estateAccessType & (int) AccessDeltaRequest.MoreToCome) == 0)
-                        //1024 means more than one is being sent
-                    {
-                        m_scene.RegionInfo.EstateSettings.Save();
-                        TriggerEstateInfoChange();
-                    }
-                }
-                else
-                {
-                    remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
-                }
-            }
-            if ((estateAccessType & (int) AccessDeltaRequest.RemoveAllowedGroup) != 0) // Group remove
-            {
-                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) ||
-                    m_scene.Permissions.BypassPermissions())
-                {
-                    IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
-                    if ((estateAccessType & 1) != 0 && connector != null) // All estates
-                    {
-                        List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
-                        foreach (EstateSettings estate in estateIDs)
-                        {
-                            if (estate.EstateID != m_scene.RegionInfo.EstateSettings.EstateID)
-                            {
-                                estate.RemoveEstateGroup(user);
-                                estate.Save();
-                            }
-                        }
-                    }
-                    m_scene.RegionInfo.EstateSettings.RemoveEstateGroup(user);
-                    if ((estateAccessType & (int) AccessDeltaRequest.MoreToCome) == 0)
-                        //1024 means more than one is being sent
-                    {
-                        m_scene.RegionInfo.EstateSettings.Save();
-                        TriggerEstateInfoChange();
-                    }
-                }
-                else
-                {
-                    remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
-                }
-            }
-            if ((estateAccessType & (int) AccessDeltaRequest.AddBannedUser) != 0) // Ban add
-            {
-                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, false) ||
-                    m_scene.Permissions.BypassPermissions())
-                {
-                    IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
-                    if ((estateAccessType & 1) != 0 && connector != null) // All estates
-                    {
-                        List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
-                        foreach (EstateSettings estate in estateIDs)
-                        {
-                            if (estate.EstateID != m_scene.RegionInfo.EstateSettings.EstateID)
-                            {
-                                List<EstateBan> innerbanlistcheck = estate.EstateBans;
+                                BannedUserID = userID,
+                                EstateID = es.EstateID,
+                                BannedHostAddress = "0.0.0.0",
+                                BannedHostIPMask = (SP != null)
+                                                        ? ((System.Net.IPEndPoint)SP.ControllingClient.GetClientEP())
+                                                              .Address.ToString()
+                                                        : "0.0.0.0"
+                            };
 
-                                bool inneralreadyInList = innerbanlistcheck.Any(t => user == t.BannedUserID);
+                            es.AddBan(item);
 
-                                if (!inneralreadyInList)
-                                {
-                                    EstateBan item = new EstateBan {BannedUserID = user, EstateID = estate.EstateID};
-
-                                    IScenePresence SP = m_scene.GetScenePresence(user);
-                                    item.BannedHostAddress = (SP != null)
-                                                                 ? ((System.Net.IPEndPoint)
-                                                                    SP.ControllingClient.GetClientEP()).Address.ToString
-                                                                       ()
-                                                                 : "0.0.0.0";
-                                    item.BannedHostIPMask = (SP != null)
-                                                                ? ((System.Net.IPEndPoint)
-                                                                   SP.ControllingClient.GetClientEP()).Address.ToString()
-                                                                : "0.0.0.0";
-                                    item.BannedHostNameMask = (SP != null)
-                                                                  ? ((System.Net.IPEndPoint)
-                                                                     SP.ControllingClient.GetClientEP()).Address
-                                                                                                        .ToString()
-                                                                  : "0.0.0.0";
-                                    estate.AddBan(item);
-                                    estate.Save();
-                                }
-                            }
-                        }
-                    }
-                    List<EstateBan> banlistcheck = m_scene.RegionInfo.EstateSettings.EstateBans;
-
-                    bool alreadyInList = banlistcheck.Any(t => user == t.BannedUserID);
-
-                    if (!alreadyInList)
-                    {
-                        EstateBan item = new EstateBan
-                                             {
-                                                 BannedUserID = user,
-                                                 EstateID = m_scene.RegionInfo.EstateSettings.EstateID,
-                                                 BannedHostAddress = "0.0.0.0"
-                                             };
-
-                        IScenePresence SP = m_scene.GetScenePresence(user);
-                        item.BannedHostIPMask = (SP != null)
-                                                    ? ((System.Net.IPEndPoint) SP.ControllingClient.GetClientEP())
-                                                          .Address.ToString()
-                                                    : "0.0.0.0";
-
-                        m_scene.RegionInfo.EstateSettings.AddBan(item);
-
-                        //Trigger the event
-                        m_scene.AuroraEventManager.FireGenericEventHandler("BanUser", user);
-
-                        if ((estateAccessType & (int) AccessDeltaRequest.MoreToCome) == 0)
-                            //1024 means more than one is being sent
-                        {
-                            m_scene.RegionInfo.EstateSettings.Save();
-                            TriggerEstateInfoChange();
-                        }
-
-                        if (SP != null)
-                        {
-                            if (!SP.IsChildAgent)
-                            {
-                                IEntityTransferModule transferModule =
+                            IEntityTransferModule transferModule =
                                     m_scene.RequestModuleInterface<IEntityTransferModule>();
-                                if (transferModule != null)
-                                    transferModule.TeleportHome(user, SP.ControllingClient);
-                            }
-                            else
+                            if (SP != null && transferModule != null)
                             {
-                                //Close them in the sim
-                                IEntityTransferModule transferModule =
-                                    SP.Scene.RequestModuleInterface<IEntityTransferModule>();
-                                if (transferModule != null)
+                                if (!SP.IsChildAgent)
+                                    transferModule.TeleportHome(user, SP.ControllingClient);
+                                else
                                     transferModule.IncomingCloseAgent(SP.Scene, SP.UUID);
                             }
-                        }
-                    }
-                    else
-                    {
-                        remote_client.SendAlertMessage("User is already on the region ban list");
-                    }
-                }
-                else
-                {
-                    remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
+                        });
+                    else if ((estateAccessType & (int)AccessDeltaRequest.RemoveBannedUser) != 0)
+                        actions.Add(es.RemoveBan);
                 }
             }
-            if ((estateAccessType & (int) AccessDeltaRequest.RemoveBannedUser) != 0) // Ban remove
+
+            foreach (Action<UUID> es in actions)
             {
-                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, false) ||
-                    m_scene.Permissions.BypassPermissions())
-                {
-                    IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
-                    if ((estateAccessType & 1) != 0 && connector != null) // All estates
-                    {
-                        List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
-                        foreach (EstateSettings estate in estateIDs)
-                        {
-                            if (estate.EstateID != m_scene.RegionInfo.EstateSettings.EstateID)
-                            {
-                                List<EstateBan> innerbanlistcheck = m_scene.RegionInfo.EstateSettings.EstateBans;
+                es(user);
 
-                                bool inneralreadyInList = false;
-                                EstateBan innerlistitem = null;
-
-                                foreach (EstateBan t in innerbanlistcheck)
-                                {
-                                    if (user == t.BannedUserID)
-                                    {
-                                        inneralreadyInList = true;
-                                        innerlistitem = t;
-                                        break;
-                                    }
-                                }
-
-                                if (inneralreadyInList)
-                                {
-                                    m_scene.RegionInfo.EstateSettings.RemoveBan(innerlistitem.BannedUserID);
-                                }
-                                estate.Save();
-                            }
-                        }
-                    }
-                    List<EstateBan> banlistcheck = m_scene.RegionInfo.EstateSettings.EstateBans;
-
-                    bool alreadyInList = false;
-                    EstateBan listitem = null;
-
-                    foreach (EstateBan t in banlistcheck)
-                    {
-                        if (user == t.BannedUserID)
-                        {
-                            alreadyInList = true;
-                            listitem = t;
-                            break;
-                        }
-                    }
-
-                    //Trigger the event
-                    m_scene.AuroraEventManager.FireGenericEventHandler("UnBanUser", user);
-
-                    if (alreadyInList)
-                    {
-                        m_scene.RegionInfo.EstateSettings.RemoveBan(listitem.BannedUserID);
-                        if ((estateAccessType & (int) AccessDeltaRequest.MoreToCome) == 0)
-                            //1024 means more than one is being sent
-                        {
-                            m_scene.RegionInfo.EstateSettings.Save();
-                            TriggerEstateInfoChange();
-                        }
-                    }
-                    else
-                    {
-                        remote_client.SendAlertMessage("User is not on the region ban list");
-                    }
-                }
-                else
-                {
-                    remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
-                }
+                if (!moreToCome)
+                    connector.SaveEstateSettings(m_scene.RegionInfo.EstateSettings);
             }
-            if ((estateAccessType & (int) AccessDeltaRequest.AddEstateManager) != 0) // Manager add
-            {
-                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) ||
-                    m_scene.Permissions.BypassPermissions())
-                {
-                    IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
-                    if ((estateAccessType & 1) != 0 && connector != null) // All estates
-                    {
-                        List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
-                        foreach (EstateSettings estate in estateIDs)
-                        {
-                            if (estate.EstateID != m_scene.RegionInfo.EstateSettings.EstateID)
-                            {
-                                estate.AddEstateManager(user);
-                                estate.Save();
-                            }
-                        }
-                    }
-                    m_scene.RegionInfo.EstateSettings.AddEstateManager(user);
-                    if ((estateAccessType & (int) AccessDeltaRequest.MoreToCome) == 0)
-                        //1024 means more than one is being sent
-                    {
-                        m_scene.RegionInfo.EstateSettings.Save();
-                        TriggerEstateInfoChange();
-                    }
-                }
-                else
-                {
-                    remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
-                }
-            }
-            if ((estateAccessType & (int) AccessDeltaRequest.RemoveEstateManager) != 0) // Manager remove
-            {
-                if (m_scene.Permissions.CanIssueEstateCommand(remote_client.AgentId, true) ||
-                    m_scene.Permissions.BypassPermissions())
-                {
-                    IEstateConnector connector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
-                    if ((estateAccessType & 1) != 0 && connector != null) // All estates
-                    {
-                        List<EstateSettings> estateIDs = connector.GetEstates(remote_client.AgentId);
-                        foreach (EstateSettings estate in estateIDs)
-                        {
-                            if (estate.EstateID != m_scene.RegionInfo.EstateSettings.EstateID)
-                            {
-                                estate.RemoveEstateManager(user);
-                                estate.Save();
-                            }
-                        }
-                    }
-                    m_scene.RegionInfo.EstateSettings.RemoveEstateManager(user);
-                    if ((estateAccessType & (int) AccessDeltaRequest.MoreToCome) == 0)
-                        //1024 means more than one is being sent
-                    {
-                        m_scene.RegionInfo.EstateSettings.Save();
-                        TriggerEstateInfoChange();
-                    }
-                }
-                else
-                {
-                    remote_client.SendAlertMessage("Method EstateAccessDelta Failed, you don't have permissions");
-                }
-            }
+            if(actions.Count > 0)
+                TriggerEstateInfoChange();
+
+            if (!isManager && !isOwner)
+                remote_client.SendAlertMessage("You don't have the correct permissions to accomplish this action.");
+
             if ((estateAccessType & (int) AccessDeltaRequest.MoreToCome) == 0) //1024 means more than one is being sent
             {
                 remote_client.SendEstateList(invoice, (int) EstateTools.EstateAccessReplyDelta.AllowedUsers,
@@ -1307,7 +1023,8 @@ namespace Aurora.Modules.Estate
             m_scene.RegionInfo.RegionSettings.BlockShowInSearch = (parms1 & (uint) RegionFlags.BlockParcelSearch) ==
                                                                   (uint) RegionFlags.BlockParcelSearch;
 
-            m_scene.RegionInfo.EstateSettings.Save();
+            Aurora.Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>().
+                SaveEstateSettings(m_scene.RegionInfo.EstateSettings);
             TriggerEstateInfoChange();
 
             TriggerEstateSunUpdate();

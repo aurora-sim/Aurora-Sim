@@ -35,6 +35,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -327,113 +328,116 @@ namespace Aurora.Framework.Servers.HttpServer
         public virtual void HandleRequest(HttpListenerContext context)
         {
             HttpListenerRequest request = context.Request;
-            HttpListenerResponse response = context.Response;
-            OSHttpRequest req = new OSHttpRequest(context);
-            OSHttpResponse resp = new OSHttpResponse(context);
-            if (request.HttpMethod == String.Empty) // Can't handle empty requests, not wasting a thread
+            using (HttpListenerResponse response = context.Response)
             {
-                byte[] buffer = GetHTML500(response);
-                response.ContentLength64 = buffer.LongLength;
-                response.Close(buffer, true);
-                return;
-            }
-
-            response.KeepAlive = false;
-            string requestMethod = request.HttpMethod;
-            string uriString = request.RawUrl;
-            int requestStartTick = Environment.TickCount;
-
-            // Will be adjusted later on.
-            int requestEndTick = requestStartTick;
-
-            IStreamedRequestHandler requestHandler = null;
-
-            try
-            {
-                System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US",
-                                                                                                            true);
-
-                string path = request.RawUrl;
-                string handlerKey = GetHandlerKey(request.HttpMethod, path);
-                byte[] buffer = null;
-
-                if ((request.ContentType == "application/xml" || request.ContentType == "text/xml") && GetXmlRPCHandler(request.RawUrl) != null)
+                OSHttpRequest req = new OSHttpRequest(context);
+                OSHttpResponse resp = new OSHttpResponse(context);
+                if (request.HttpMethod == String.Empty) // Can't handle empty requests, not wasting a thread
                 {
-                    buffer = HandleXmlRpcRequests(req, resp);
-                }
-                else if (TryGetStreamHandler(handlerKey, out requestHandler))
-                {
-                    response.ContentType = requestHandler.ContentType;
-                    // Lets do this defaulting before in case handler has varying content type.
-
-                    buffer = requestHandler.Handle(path, request.InputStream, req, resp);
+                    byte[] buffer = GetHTML500(response);
+                    response.ContentLength64 = buffer.LongLength;
+                    response.Close(buffer, true);
+                    return;
                 }
 
-                request.InputStream.Close();
+                response.KeepAlive = false;
+                string requestMethod = request.HttpMethod;
+                string uriString = request.RawUrl;
+                int requestStartTick = Environment.TickCount;
+
+                // Will be adjusted later on.
+                int requestEndTick = requestStartTick;
+
+                IStreamedRequestHandler requestHandler = null;
+
                 try
                 {
-                    if (buffer != null)
+                    System.Threading.Thread.CurrentThread.CurrentCulture = new System.Globalization.CultureInfo("en-US",
+                                                                                                                true);
+
+                    string path = request.RawUrl;
+                    string handlerKey = GetHandlerKey(request.HttpMethod, path);
+                    byte[] buffer = null;
+
+                    if ((request.ContentType == "application/xml" || request.ContentType == "text/xml") && GetXmlRPCHandler(request.RawUrl) != null)
                     {
-                        if (request.ProtocolVersion.Minor == 0)
+                        buffer = HandleXmlRpcRequests(req, resp);
+                    }
+                    else if (TryGetStreamHandler(handlerKey, out requestHandler))
+                    {
+                        response.ContentType = requestHandler.ContentType;
+                        // Lets do this defaulting before in case handler has varying content type.
+
+                        buffer = requestHandler.Handle(path, request.InputStream, req, resp);
+                    }
+
+                    request.InputStream.Close();
+                    try
+                    {
+                        if (buffer != null)
                         {
-                            //HTTP 1.0... no chunking
-                            response.ContentLength64 = buffer.Length;
-                            using (Stream stream = response.OutputStream)
+                            if (request.ProtocolVersion.Minor == 0)
                             {
-                                HttpServerHandlerHelpers.WriteNonChunked(stream, buffer);
+                                //HTTP 1.0... no chunking
+                                response.ContentLength64 = buffer.Length;
+                                using (Stream stream = response.OutputStream)
+                                {
+                                    HttpServerHandlerHelpers.WriteNonChunked(stream, buffer);
+                                }
                             }
+                            else
+                            {
+                                response.SendChunked = true;
+                                using (Stream stream = response.OutputStream)
+                                {
+                                    HttpServerHandlerHelpers.WriteChunked(stream, buffer);
+                                }
+                            }
+                            //response.ContentLength64 = buffer.LongLength;
+                            response.Close();
                         }
                         else
-                        {
-                            response.SendChunked = true;
-                            using (Stream stream = response.OutputStream)
-                            {
-                                HttpServerHandlerHelpers.WriteChunked(stream, buffer);
-                            }
-                        }
-                        //response.ContentLength64 = buffer.LongLength;
-                        response.Close();
+                            response.Close(new byte[0], true);
                     }
-                    else
-                        response.Close (new byte[0], true);
-                }
-                catch(Exception ex)
-                {
-                    if (!(ex is HttpListenerException && (ex as HttpListenerException).ErrorCode == 64))
+                    catch (Exception ex)
                     {
-                        MainConsole.Instance.WarnFormat(
-                            "[BASE HTTP SERVER]: HandleRequest failed to write all data to the stream: {0}", ex.ToString());
+                        if (!(ex is HttpListenerException) ||
+                            !HttpListenerManager.IGNORE_ERROR_CODES.Contains(((HttpListenerException)ex).ErrorCode))
+                        {
+                            MainConsole.Instance.WarnFormat(
+                                "[BASE HTTP SERVER]: HandleRequest failed to write all data to the stream: {0}", ex.ToString());
+                        }
+                        response.Abort();
                     }
+
+                    requestEndTick = Environment.TickCount;
+                }
+                catch (Exception e)
+                {
+                    MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw {0} ", e.ToString());
                     response.Abort();
                 }
-
-                requestEndTick = Environment.TickCount;
-            }
-            catch (Exception e)
-            {
-                MainConsole.Instance.ErrorFormat("[BASE HTTP SERVER]: HandleRequest() threw {0} ", e.ToString());
-                response.Abort();
-            }
-            finally
-            {
-                // Every month or so this will wrap and give bad numbers, not really a problem
-                // since its just for reporting
-                int tickdiff = requestEndTick - requestStartTick;
-                if (tickdiff > 3000 && requestHandler != null)
+                finally
                 {
-                    MainConsole.Instance.InfoFormat(
-                        "[BASE HTTP SERVER]: Slow handling of {0} {1} took {2}ms",
-                        requestMethod,
-                        uriString,
-                        tickdiff);
-                }
-                else if (MainConsole.Instance.IsTraceEnabled)
-                {
-                    MainConsole.Instance.TraceFormat(
-                        "[BASE HTTP SERVER]: Handling {0} {1} took {2}ms",
-                        requestMethod,
-                        uriString,
-                        tickdiff);
+                    // Every month or so this will wrap and give bad numbers, not really a problem
+                    // since its just for reporting
+                    int tickdiff = requestEndTick - requestStartTick;
+                    if (tickdiff > 3000 && requestHandler != null)
+                    {
+                        MainConsole.Instance.InfoFormat(
+                            "[BASE HTTP SERVER]: Slow handling of {0} {1} took {2}ms",
+                            requestMethod,
+                            uriString,
+                            tickdiff);
+                    }
+                    else if (MainConsole.Instance.IsTraceEnabled)
+                    {
+                        MainConsole.Instance.TraceFormat(
+                            "[BASE HTTP SERVER]: Handling {0} {1} took {2}ms",
+                            requestMethod,
+                            uriString,
+                            tickdiff);
+                    }
                 }
             }
         }

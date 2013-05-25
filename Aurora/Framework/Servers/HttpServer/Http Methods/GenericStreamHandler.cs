@@ -106,11 +106,21 @@ namespace Aurora.Framework.Servers.HttpServer
 
             } while (count > 0);
             return sb.ToString();
-            //Doesn't work for chunked requests
-            /*StreamReader sr = new StreamReader(stream);
-            string body = sr.ReadToEnd();
-            sr.Close();
-            return body;*/
+        }
+
+        public static byte[] ReadBytes(Stream stream)
+        {
+            MemoryStream memStream = new MemoryStream();
+            byte[] buf = new byte[CHUNK_SIZE];
+            int count = 0;
+            do
+            {
+                count = stream.Read(buf, 0, CHUNK_SIZE);
+                if (count != 0)
+                    memStream.Write(buf, 0, count);
+
+            } while (count > 0);
+            return memStream.ToArray();
         }
     }
 

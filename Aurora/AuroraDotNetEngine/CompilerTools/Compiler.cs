@@ -37,8 +37,6 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 
-//using Microsoft.JScript;
-
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 {
     public class Compiler
@@ -105,6 +103,30 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             SetupCompilers();
             //Find the default compiler
             FindDefaultCompiler();
+
+#if ADNE_DEBUG
+            TestScripts();
+        }
+        
+        public void TestScripts()
+        {
+            string testScript = @"
+            default
+            {
+                state_entry() { }
+                transaction_result(key id, integer success, string data) { }
+                remote_data( integer event_type, key channel, key message_id, string sender, integer idata, string sdata)
+                {
+                }
+            }";
+            string assembly;
+            PerformScriptCompile(testScript, UUID.Zero, out assembly);
+            if (GetErrors().Length > 0)
+            {
+                MainConsole.Instance.Warn("Failed to pass script test 1: " + string.Join("\n", GetErrors()));
+                ClearErrors();
+            }
+#endif
         }
 
         private void MakeFilePrefixSafe()
@@ -187,11 +209,10 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         ///     Converts script (if needed) and compiles
         /// </summary>
         /// <param name="script">LSL script</param>
-        /// <param name="itemID"></param>
         /// <param name="ownerUUID"></param>
         /// <param name="assembly"></param>
         /// <returns>Filename to .dll assembly</returns>
-        public void PerformScriptCompile(string script, UUID itemID, UUID ownerUUID, out string assembly)
+        public void PerformScriptCompile(string script, UUID ownerUUID, out string assembly)
         {
             assembly = "";
 
@@ -297,7 +318,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 return;
             }
 
-            if (m_scriptEngine.Scene.Permissions.CanCompileScript(ownerID, language) == false)
+            if (m_scriptEngine.Scene != null && !m_scriptEngine.Scene.Permissions.CanCompileScript(ownerID, language))
             {
                 // Not allowed to compile to this language!
                 AddError(ownerID +
@@ -475,10 +496,14 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
                                                                  "Aurora.ScriptEngine.AuroraDotNetEngine.dll"));
             parameters.ReferencedAssemblies.Add("System.dll");
+            parameters.ReferencedAssemblies.Add("Microsoft.CSharp.dll");
+            parameters.ReferencedAssemblies.Add("System.Core.dll");
             if (rootPath != null)
             {
                 parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
                                                                  "Aurora.Framework.dll"));
+                parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
+                                                                 "Aurora.BotManager.dll"));
                 parameters.ReferencedAssemblies.Add(Path.Combine(rootPath,
                                                                  "OpenMetaverseTypes.dll"));
             }

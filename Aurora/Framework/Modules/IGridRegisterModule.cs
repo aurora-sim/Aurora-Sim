@@ -55,5 +55,11 @@ namespace Aurora.Framework.Modules
         /// <param name="scene"></param>
         /// <returns></returns>
         List<GridRegion> GetNeighbors(IScene scene);
+
+        /// <summary>
+        /// Removes a region from the grid
+        /// </summary>
+        /// <param name="scene"></param>
+        void DeleteRegion(IScene scene);
     }
 }

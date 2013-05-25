@@ -45,6 +45,7 @@ namespace Aurora.BotManager
     public class BotManager : INonSharedRegionModule, IBotManager
     {
         private readonly Dictionary<UUID, Bot> m_bots = new Dictionary<UUID, Bot>();
+        private IScene m_scene;
 
         #region INonSharedRegionModule Members
 
@@ -54,6 +55,7 @@ namespace Aurora.BotManager
 
         public void AddRegion(IScene scene)
         {
+            m_scene = scene;
             scene.RegisterModuleInterface<IBotManager>(this);
             scene.RegisterModuleInterface(this);
         }
@@ -373,7 +375,12 @@ namespace Aurora.BotManager
             if (userAttempting == UUID.Zero)
                 return true; //Forced override
             if (bot != null)
-                return bot.AvatarCreatorID == userAttempting;
+            {
+                if(bot.AvatarCreatorID == userAttempting)
+                    return true;
+                else
+                    throw new Exception("Bot permission error, you cannot control this bot");
+            }
             return false;
         }
 
@@ -400,6 +407,20 @@ namespace Aurora.BotManager
                 if (!CheckPermission(bot, userAttempting))
                     return;
                 bot.FollowAvatar(avatarName, startFollowDistance, endFollowDistance, offsetFromAvatar, requireLOS);
+            }
+        }
+
+        public void SetSpeed(UUID botID, UUID userAttempting, float speedModifier)
+        {
+            Bot bot;
+            if (m_bots.TryGetValue(botID, out bot))
+            {
+                if (!CheckPermission(bot, userAttempting))
+                    return;
+
+                IScenePresence avatar = m_scene.GetScenePresence(botID);
+                if (avatar != null)
+                    avatar.SpeedModifier = speedModifier;
             }
         }
 
@@ -454,18 +475,18 @@ namespace Aurora.BotManager
                     return;
                 bot.SendInstantMessage(new GridInstantMessage
                                            {
-                                               binaryBucket = new byte[0],
-                                               dialog = (byte) InstantMessageDialog.MessageFromAgent,
-                                               message = message,
-                                               fromAgentID = botID,
-                                               fromAgentName = bot.Controller.Name,
-                                               fromGroup = false,
-                                               imSessionID = UUID.Random(),
-                                               offline = 0,
+                                               BinaryBucket = new byte[0],
+                                               Dialog = (byte) InstantMessageDialog.MessageFromAgent,
+                                               Message = message,
+                                               FromAgentID = botID,
+                                               FromAgentName = bot.Controller.Name,
+                                               FromGroup = false,
+                                               SessionID = UUID.Random(),
+                                               Offline = 0,
                                                ParentEstateID = 0,
                                                RegionID = bot.Controller.GetScene().RegionInfo.RegionID,
-                                               timestamp = (uint) Util.UnixTimeSinceEpoch(),
-                                               toAgentID = toUser
+                                               Timestamp = (uint) Util.UnixTimeSinceEpoch(),
+                                               ToAgentID = toUser
                                            });
             }
         }

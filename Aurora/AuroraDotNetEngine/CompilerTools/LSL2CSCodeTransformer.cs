@@ -25,7 +25,9 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using System.Collections.Generic;
+using System.Linq;
 using Aurora.ScriptEngineParser;
 using Tools;
 
@@ -52,6 +54,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
 
         private string m_currentEvent = "";
         private string m_currentState = "";
+        private string m_originalScript = "";
 
         public Dictionary<string, SYMBOL> DuplicatedGlobalVars
         {
@@ -77,9 +80,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
         ///     Pass the new CodeTranformer an abstract syntax tree.
         /// </summary>
         /// <param name="astRoot">The root node of the AST.</param>
-        public LSL2CSCodeTransformer(SYMBOL astRoot)
+        /// <param name="originalScript">The original script that we are converting</param>
+        public LSL2CSCodeTransformer(SYMBOL astRoot, string originalScript)
         {
             m_astRoot = astRoot;
+            m_originalScript = originalScript;
 
             // let's populate the dictionary
             if (null == m_datatypeLSL2OpenSim)
@@ -192,6 +197,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
             {
                 //Reset the variables, we changed events
                 StateEvent evt = (StateEvent) s;
+                FixEventName(m_originalScript, ref evt);
                 m_currentEvent = evt.Name;
                 m_localVariableValues.Add(m_currentState + "_" + evt.Name, new Dictionary<string, SYMBOL>());
                 m_localVariableValuesStr.Add(m_currentState + "_" + evt.Name, new Dictionary<string, string>());
@@ -561,6 +567,87 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.CompilerTools
                 // we need to remove the current scope from the parent since we are no longer in that scope
                 if (scopeAdded)
                     scopesParent.Remove(scopeCurrent);
+            }
+        }
+
+        private static readonly List<EventInfo> DEFAULT_EVENT_INFOS = new List<EventInfo>()
+        {
+            new EventInfo("state_entry", null),
+            new EventInfo("touch_start", new [] { "LSL_Types.LSLInteger" }),
+            new EventInfo("touch", new [] { "LSL_Types.LSLInteger" }),
+            new EventInfo("touch_end", new [] { "LSL_Types.LSLInteger" }),
+            new EventInfo("at_rot_target", new [] { "LSL_Types.LSLInteger", "LSL_Types.Quaternion", "LSL_Types.Quaternion" }),
+            new EventInfo("at_target", new [] { "LSL_Types.LSLInteger", "LSL_Types.Vector3", "LSL_Types.Vector3" }),
+            new EventInfo("not_at_target", null),
+            new EventInfo("attach", new [] { "LSL_Types.LSLString" }),
+            new EventInfo("changed", new [] { "LSL_Types.LSLInteger" }),
+            new EventInfo("collision", new [] { "LSL_Types.LSLInteger" }),
+            new EventInfo("collision_end", new [] { "LSL_Types.LSLInteger" }),
+            new EventInfo("collision_start", new [] { "LSL_Types.LSLInteger" }),
+            new EventInfo("run_time_permissions", new [] { "LSL_Types.LSLInteger" }),
+            new EventInfo("control", new [] { "LSL_Types.LSLString", "LSL_Types.LSLInteger", "LSL_Types.LSLInteger" }),
+            new EventInfo("dataserver", new [] { "LSL_Types.LSLString", "LSL_Types.LSLString" }),
+            new EventInfo("email", new [] { "LSL_Types.LSLString", "LSL_Types.LSLString", "LSL_Types.LSLString", 
+                "LSL_Types.LSLString", "LSL_Types.LSLInteger" }),
+            new EventInfo("http_request", new [] { "LSL_Types.LSLString", "LSL_Types.LSLString", "LSL_Types.LSLString" }),
+            new EventInfo("http_response", new [] { "LSL_Types.LSLString", "LSL_Types.LSLInteger", "LSL_Types.list", "LSL_Types.LSLString" }),
+            new EventInfo("land_collision_end", new [] { "LSL_Types.Vector3" }),
+            new EventInfo("land_collision", new [] { "LSL_Types.Vector3" }),
+            new EventInfo("land_collision_start", new [] { "LSL_Types.Vector3" }),
+            new EventInfo("link_message", new [] { "LSL_Types.LSLInteger", "LSL_Types.LSLInteger",
+                "LSL_Types.LSLString", "LSL_Types.LSLString"}),
+            new EventInfo("listen", new [] { "LSL_Types.LSLInteger", "LSL_Types.LSLString",
+                "LSL_Types.LSLString", "LSL_Types.LSLString" }),
+            new EventInfo("on_rez", new [] { "LSL_Types.LSLInteger" }),
+            new EventInfo("money", new [] { "LSL_Types.LSLString", "LSL_Types.LSLInteger" }),
+            new EventInfo("object_rez", new [] { "LSL_Types.LSLString" }),
+            new EventInfo("on_error", new [] { "LSL_Types.LSLString" }),
+            new EventInfo("remote_data", new [] { "LSL_Types.LSLInteger", "LSL_Types.LSLString",
+                "LSL_Types.LSLString", "LSL_Types.LSLString", "LSL_Types.LSLInteger", "LSL_Types.LSLString" }),
+            new EventInfo("sensor", new [] { "LSL_Types.LSLInteger" }),
+            new EventInfo("transaction_result", new [] { "LSL_Types.LSLString", "LSL_Types.LSLInteger",
+                "LSL_Types.LSLString" }),
+            new EventInfo("path_update", new [] { "LSL_Types.LSLInteger", "LSL_Types.list" }),
+            new EventInfo("timer", null),
+            new EventInfo("moving_end", null),
+            new EventInfo("moving_start", null),
+            new EventInfo("no_sensor", null),
+            new EventInfo("not_at_rot_target", null),
+            new EventInfo("state_exit", null),
+        };
+
+        private static List<EventInfo> _newLSLEvents = new List<EventInfo>();
+        public static void AddLSLEvent(EventInfo ev)
+        {
+            _newLSLEvents.Add(ev);
+        }
+
+        public static List<EventInfo> GetNewLSLEvents()
+        {
+            return new List<EventInfo>(_newLSLEvents.ToArray());
+        }
+
+        public static List<EventInfo> GetAllLSLEvents()
+        {
+            var infos = new List<EventInfo>(_newLSLEvents.ToArray());
+            foreach (EventInfo ev in DEFAULT_EVENT_INFOS)
+                if (!infos.Any((e) => e.Name == ev.Name))
+                    infos.Add(ev);
+            return infos;
+        }
+
+        public static void FixEventName(string script, ref StateEvent evt)
+        {
+            if (evt.Name == "remote_data")
+            {
+                string[] lines = script.Split(new [] { '\n' });
+                string line = lines[evt.Line-1];
+                if (line.IndexOf('(') > 0)
+                {
+                    line = line.Substring(0, line.IndexOf('(')).Trim();
+                    if(_newLSLEvents.Any((ev) => ev.Name == line))
+                        evt.Name = line;
+                }
             }
         }
 

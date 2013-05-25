@@ -46,8 +46,10 @@ namespace Aurora.Modules.Friends
 {
     public class FriendsModule : INonSharedRegionModule, IFriendsModule
     {
-        protected Dictionary<UUID, UserFriendData> m_Friends =
-            new Dictionary<UUID, UserFriendData>();
+        protected Dictionary<UUID, List<FriendInfo>> m_Friends =
+            new Dictionary<UUID, List<FriendInfo>>();
+        protected Dictionary<UUID, List<UUID>> m_FriendOnlineStatuses =
+            new Dictionary<UUID, List<UUID>>();
 
         protected IScene m_scene;
         public bool m_enabled = true;
@@ -91,61 +93,36 @@ namespace Aurora.Modules.Friends
             return -1;
         }
 
-        public void SendFriendsStatusMessage(UUID FriendToInformID, UUID userID, bool online)
+        public void SendFriendsStatusMessage(UUID FriendToInformID, UUID[] userIDs, bool online)
         {
             // Try local
             IClientAPI friendClient = LocateClientObject(FriendToInformID);
             if (friendClient != null)
             {
-                //MainConsole.Instance.DebugFormat("[FRIENDS]: Local Status Notify {0} that user {1} is {2}", friendID, userID, online);
+                MainConsole.Instance.InfoFormat("[FriendsModule]: Local Status Notify {0} that {1} users are {2}", FriendToInformID, userIDs.Length, online);
                 // the  friend in this sim as root agent
                 if (online)
-                    friendClient.SendAgentOnline(new[] { userID });
+                    friendClient.SendAgentOnline(userIDs);
                 else
-                    friendClient.SendAgentOffline(new[] { userID });
+                    friendClient.SendAgentOffline(userIDs);
                 // we're done
                 return;
             }
             else
             {
-                MainConsole.Instance.ErrorFormat("[FriendsModule]: Could not send status update ({2}) to non-existant client {0} for {1}.", 
-                    FriendToInformID, userID, "user is " + (online ? "online" : "offline"));
+                MainConsole.Instance.ErrorFormat("[FriendsModule]: Could not send status update to non-existant client {0}.", 
+                    FriendToInformID);
+
             }
         }
 
         public FriendInfo[] GetFriends(UUID agentID)
         {
-            UserFriendData friendsData;
-
+            List<FriendInfo> friends = new List<FriendInfo>();
             lock (m_Friends)
             {
-                if (m_Friends.TryGetValue(agentID, out friendsData))
-                    return friendsData.Friends;
-                else
-                {
-                    UpdateFriendsCache(agentID);
-                    if (m_Friends.TryGetValue(agentID, out friendsData))
-                        return friendsData.Friends;
-                }
-            }
-
-            return new FriendInfo[0];
-        }
-
-        public FriendInfo[] GetFriendsRequest(UUID agentID)
-        {
-            UserFriendData friendsData;
-
-            lock (m_Friends)
-            {
-                if (m_Friends.TryGetValue(agentID, out friendsData))
-                    return friendsData.Friends;
-                else
-                {
-                    UpdateFriendsCache(agentID);
-                    if (m_Friends.TryGetValue(agentID, out friendsData))
-                        return friendsData.Friends;
-                }
+                if (m_Friends.TryGetValue(agentID, out friends))
+                    return friends.ToArray();
             }
 
             return new FriendInfo[0];
@@ -173,6 +150,8 @@ namespace Aurora.Modules.Friends
 
             scene.EventManager.OnNewClient += OnNewClient;
             scene.EventManager.OnClosingClient += OnClosingClient;
+            scene.EventManager.OnCachedUserInfo += UpdateCachedInfo;
+            scene.EventManager.OnMakeRootAgent += MakeRootAgent;
         }
 
         public void RegionLoaded(IScene scene)
@@ -192,6 +171,8 @@ namespace Aurora.Modules.Friends
 
             scene.EventManager.OnNewClient -= OnNewClient;
             scene.EventManager.OnClosingClient -= OnClosingClient;
+            scene.EventManager.OnCachedUserInfo -= UpdateCachedInfo;
+            scene.EventManager.OnMakeRootAgent -= MakeRootAgent;
         }
 
         public string Name
@@ -205,6 +186,32 @@ namespace Aurora.Modules.Friends
         }
 
         #endregion
+
+        private void UpdateCachedInfo(UUID agentID, CachedUserInfo info)
+        {
+            lock (m_FriendOnlineStatuses)
+            {
+                if(info.FriendOnlineStatuses.Count > 0)
+                    m_FriendOnlineStatuses[agentID] = info.FriendOnlineStatuses;
+                else
+                    m_FriendOnlineStatuses.Remove(agentID);
+            }
+            lock (m_Friends)
+                m_Friends[agentID] = info.Friends;
+        }
+
+        void MakeRootAgent(IScenePresence presence)
+        {
+            lock (m_FriendOnlineStatuses)
+            {
+                List<UUID> friendOnlineStatuses;
+                if (m_FriendOnlineStatuses.TryGetValue(presence.UUID, out friendOnlineStatuses))
+                {
+                    SendFriendsStatusMessage(presence.UUID, friendOnlineStatuses.ToArray(), true);
+                    m_FriendOnlineStatuses.Remove(presence.UUID);
+                }
+            }
+        }
 
         protected OSDMap OnMessageReceived(OSDMap message)
         {
@@ -281,16 +288,16 @@ namespace Aurora.Modules.Friends
 
         private void OnInstantMessage(IClientAPI client, GridInstantMessage im)
         {
-            if ((InstantMessageDialog) im.dialog == InstantMessageDialog.FriendshipOffered)
+            if ((InstantMessageDialog) im.Dialog == InstantMessageDialog.FriendshipOffered)
             {
                 // we got a friendship offer
-                UUID principalID = im.fromAgentID;
-                UUID friendID = im.toAgentID;
+                UUID principalID = im.FromAgentID;
+                UUID friendID = im.ToAgentID;
 
                 //Can't trust the incoming name for friend offers, so we have to find it ourselves.
                 UserAccount sender = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs,
                                                                                principalID);
-                im.fromAgentName = sender.Name;
+                im.FromAgentName = sender.Name;
                 UserAccount reciever = m_scene.UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs,
                                                                                  friendID);
 
@@ -308,11 +315,11 @@ namespace Aurora.Modules.Friends
         {
             // !!!!!!!! This is a hack so that we don't have to keep state (transactionID/imSessionID)
             // We stick this agent's ID as imSession, so that it's directly available on the receiving end
-            im.imSessionID = im.fromAgentID;
+            im.SessionID = im.FromAgentID;
 
             // Try the local sim
             UserAccount account = UserAccountService.GetUserAccount(m_scene.RegionInfo.AllScopeIDs, agentID);
-            im.fromAgentName = (account == null) ? "Unknown" : account.Name;
+            im.FromAgentName = (account == null) ? "Unknown" : account.Name;
 
             if (LocalFriendshipOffered(friendID, im))
                 return;
@@ -459,9 +466,14 @@ namespace Aurora.Modules.Friends
             // Barrowed a few lines from SendFriendsOnlineIfNeeded() above.
             UUID agentID = client.AgentId;
             FriendInfo[] friends = FriendsService.GetFriendsRequest(agentID).ToArray();
-            GridInstantMessage im = new GridInstantMessage(client.Scene, UUID.Zero, String.Empty, agentID,
-                                                           (byte) InstantMessageDialog.FriendshipOffered,
-                                                           "Will you be my friend?", true, Vector3.Zero);
+            GridInstantMessage im = new GridInstantMessage() 
+            {
+                ToAgentID = agentID,
+                Dialog = (byte)InstantMessageDialog.FriendshipOffered,
+                Message = "Will you be my friend?", 
+                Offline = 1,
+                RegionID = client.Scene.RegionInfo.RegionID
+            };
             foreach (FriendInfo fi in friends)
             {
                 if (fi.MyFlags == 0)
@@ -472,11 +484,11 @@ namespace Aurora.Modules.Friends
 
                     UserAccount account = m_scene.UserAccountService.GetUserAccount(
                         client.Scene.RegionInfo.AllScopeIDs, fromAgentID);
-                    im.fromAgentID = fromAgentID;
+                    im.FromAgentID = fromAgentID;
                     if (account != null)
-                        im.fromAgentName = account.Name;
-                    im.offline = 1;
-                    im.imSessionID = im.fromAgentID;
+                        im.FromAgentName = account.Name;
+                    im.Offline = 1;
+                    im.SessionID = im.FromAgentID;
 
                     LocalFriendshipOffered(agentID, im);
                 }
@@ -485,16 +497,8 @@ namespace Aurora.Modules.Friends
 
         private void UpdateFriendsCache(UUID agentID)
         {
-            UserFriendData friendsData = new UserFriendData
-                                             {
-                                                 PrincipalID = agentID,
-                                                 Refcount = 0,
-                                                 Friends = FriendsService.GetFriends(agentID).ToArray()
-                                             };
             lock (m_Friends)
-            {
-                m_Friends[agentID] = friendsData;
-            }
+                m_Friends[agentID] = FriendsService.GetFriends(agentID);
         }
 
         #region Local
@@ -522,9 +526,16 @@ namespace Aurora.Modules.Friends
                     us.SendAgentOnline(new[] {friendID});
 
                 // the prospective friend in this sim as root agent
-                GridInstantMessage im = new GridInstantMessage(m_scene, userID, name, friendID,
-                                                               (byte) InstantMessageDialog.FriendshipAccepted,
-                                                               userID.ToString(), false, Vector3.Zero);
+                GridInstantMessage im = new GridInstantMessage()
+                {
+                    FromAgentID = userID,
+                    FromAgentName = name,
+                    ToAgentID = friendID,
+                    Dialog = (byte)InstantMessageDialog.FriendshipAccepted,
+                    Message = userID.ToString(),
+                    Offline = 0,
+                    RegionID = us.Scene.RegionInfo.RegionID
+                };
                 friendClient.SendInstantMessage(im);
 
                 // Update the local cache
@@ -557,9 +568,16 @@ namespace Aurora.Modules.Friends
             if (friendClient != null)
             {
                 // the prospective friend in this sim as root agent
-                GridInstantMessage im = new GridInstantMessage(m_scene, userID, userName, friendID,
-                                                               (byte) InstantMessageDialog.FriendshipDeclined,
-                                                               userID.ToString(), false, Vector3.Zero);
+                GridInstantMessage im = new GridInstantMessage()
+                {
+                    FromAgentID = userID,
+                    FromAgentName = userName,
+                    ToAgentID = friendID,
+                    Dialog = (byte)InstantMessageDialog.FriendshipDeclined,
+                    Message = userID.ToString(),
+                    Offline = 0,
+                    RegionID = friendClient.Scene.RegionInfo.RegionID
+                };
                 friendClient.SendInstantMessage(im);
                 // we're done
                 return true;
@@ -628,22 +646,6 @@ namespace Aurora.Modules.Friends
             }
 
             return false;
-        }
-
-        #endregion
-
-        #region Nested type: UserFriendData
-
-        protected class UserFriendData
-        {
-            public FriendInfo[] Friends;
-            public UUID PrincipalID;
-            public int Refcount;
-
-            public bool IsFriend(string friend)
-            {
-                return Friends.Any(fi => fi.Friend == friend);
-            }
         }
 
         #endregion

@@ -437,22 +437,8 @@ namespace Aurora.Modules.Archivers
             MainConsole.Instance.InfoFormat("[ARCHIVER]: Loading {0} parcels.  Please wait.", landData.Count);
 
             IParcelManagementModule parcelManagementModule = m_scene.RequestModuleInterface<IParcelManagementModule>();
-            if (!m_merge && parcelManagementModule != null)
-                parcelManagementModule.ClearAllParcels();
-            if (landData.Count > 0)
-            {
-                m_scene.EventManager.TriggerIncomingLandDataFromStorage(landData, new Vector2(m_offsetX, m_offsetY));
-                //Update the database as well!
-                if (parcelManagementModule != null)
-                {
-                    foreach (LandData parcel in landData)
-                    {
-                        parcelManagementModule.UpdateLandObject(parcelManagementModule.GetLandObject(parcel.LocalID));
-                    }
-                }
-            }
-            else if (parcelManagementModule != null)
-                parcelManagementModule.ResetSimLandObjects();
+            if (parcelManagementModule != null)
+                parcelManagementModule.IncomingLandDataFromOAR(landData, m_merge, new Vector2(m_offsetX, m_offsetY));
 
             MainConsole.Instance.InfoFormat("[ARCHIVER]: Restored {0} parcels.", landData.Count);
 
@@ -672,37 +658,8 @@ namespace Aurora.Modules.Archivers
                 return;
             }
 
-            RegionSettings currentRegionSettings = m_scene.RegionInfo.RegionSettings;
-
-            currentRegionSettings.AgentLimit = loadedRegionSettings.AgentLimit;
-            currentRegionSettings.AllowDamage = loadedRegionSettings.AllowDamage;
-            currentRegionSettings.AllowLandJoinDivide = loadedRegionSettings.AllowLandJoinDivide;
-            currentRegionSettings.AllowLandResell = loadedRegionSettings.AllowLandResell;
-            currentRegionSettings.BlockFly = loadedRegionSettings.BlockFly;
-            currentRegionSettings.BlockShowInSearch = loadedRegionSettings.BlockShowInSearch;
-            currentRegionSettings.BlockTerraform = loadedRegionSettings.BlockTerraform;
-            currentRegionSettings.DisableCollisions = loadedRegionSettings.DisableCollisions;
-            currentRegionSettings.DisablePhysics = loadedRegionSettings.DisablePhysics;
-            currentRegionSettings.DisableScripts = loadedRegionSettings.DisableScripts;
-            currentRegionSettings.Elevation1NE = loadedRegionSettings.Elevation1NE;
-            currentRegionSettings.Elevation1NW = loadedRegionSettings.Elevation1NW;
-            currentRegionSettings.Elevation1SE = loadedRegionSettings.Elevation1SE;
-            currentRegionSettings.Elevation1SW = loadedRegionSettings.Elevation1SW;
-            currentRegionSettings.Elevation2NE = loadedRegionSettings.Elevation2NE;
-            currentRegionSettings.Elevation2NW = loadedRegionSettings.Elevation2NW;
-            currentRegionSettings.Elevation2SE = loadedRegionSettings.Elevation2SE;
-            currentRegionSettings.Elevation2SW = loadedRegionSettings.Elevation2SW;
-            currentRegionSettings.FixedSun = loadedRegionSettings.FixedSun;
-            currentRegionSettings.ObjectBonus = loadedRegionSettings.ObjectBonus;
-            currentRegionSettings.RestrictPushing = loadedRegionSettings.RestrictPushing;
-            currentRegionSettings.TerrainLowerLimit = loadedRegionSettings.TerrainLowerLimit;
-            currentRegionSettings.TerrainRaiseLimit = loadedRegionSettings.TerrainRaiseLimit;
-            currentRegionSettings.TerrainTexture1 = loadedRegionSettings.TerrainTexture1;
-            currentRegionSettings.TerrainTexture2 = loadedRegionSettings.TerrainTexture2;
-            currentRegionSettings.TerrainTexture3 = loadedRegionSettings.TerrainTexture3;
-            currentRegionSettings.TerrainTexture4 = loadedRegionSettings.TerrainTexture4;
-            currentRegionSettings.UseEstateSun = loadedRegionSettings.UseEstateSun;
-            currentRegionSettings.WaterHeight = loadedRegionSettings.WaterHeight;
+            m_scene.RegionInfo.RegionSettings = loadedRegionSettings;
+            m_scene.SimulationDataService.Tainted();
 
             IEstateModule estateModule = m_scene.RequestModuleInterface<IEstateModule>();
 

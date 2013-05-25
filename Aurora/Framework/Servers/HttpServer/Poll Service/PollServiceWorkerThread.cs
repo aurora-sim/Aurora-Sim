@@ -28,12 +28,14 @@
 using System;
 using System.Collections;
 using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Text;
 using Aurora.Framework.Servers.HttpServer.Implementation;
 using Aurora.Framework.Servers.HttpServer.Interfaces;
 using Aurora.Framework.Utilities;
 using Aurora.Framework.ConsoleFramework;
+using System.Net;
 
 namespace Aurora.Framework.Servers.HttpServer
 {
@@ -129,7 +131,9 @@ namespace Aurora.Framework.Servers.HttpServer
                         }
                         catch (Exception ex)
                         {
-                            MainConsole.Instance.WarnFormat("[POLL SERVICE WORKER THREAD]: Error: {0}", ex.ToString());
+                            if (!(ex is HttpListenerException) ||
+                                !HttpListenerManager.IGNORE_ERROR_CODES.Contains(((HttpListenerException)ex).ErrorCode))
+                                MainConsole.Instance.WarnFormat("[POLL SERVICE WORKER THREAD]: Failed to write all data to the stream: {0}", ex.ToString());
                         }
                     }
                 }

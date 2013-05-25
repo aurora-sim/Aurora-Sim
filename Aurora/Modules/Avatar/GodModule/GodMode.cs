@@ -200,8 +200,9 @@ namespace Aurora.Modules.Gods
                     client.SendAgentAlertMessage("Unable to connect to the given estate.", false);
                 else
                 {
-                    client.Scene.RegionInfo.EstateSettings.EstateID = (uint) EstateID;
-                    client.Scene.RegionInfo.EstateSettings.Save();
+                    client.Scene.RegionInfo.EstateSettings.EstateID = (uint)EstateID;
+                    Aurora.Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>().
+                        SaveEstateSettings(client.Scene.RegionInfo.EstateSettings);
                 }
             }
 
@@ -233,7 +234,8 @@ namespace Aurora.Modules.Gods
                      (ulong) OpenMetaverse.RegionFlags.SkipPhysics));
 
             //Save the changes
-            client.Scene.RegionInfo.EstateSettings.Save();
+            Aurora.Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>().
+                SaveEstateSettings(client.Scene.RegionInfo.EstateSettings);
 
             //Tell the clients to update all references to the new settings
             foreach (IScenePresence sp in client.Scene.GetScenePresences())

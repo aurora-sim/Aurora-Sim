@@ -525,6 +525,8 @@ namespace Aurora.Framework.ClientInterfaces
             ClearAttachments();
             foreach (ISceneEntity e in attachments)
             {
+                if (e.RootChild.FromUserInventoryItemID == UUID.Zero)
+                    continue;
                 AvatarAttachment a = new AvatarAttachment(e.GetAttachmentPoint(), e.RootChild.FromUserInventoryItemID,
                                                           e.RootChild.FromUserInventoryAssetID);
                 lock (m_attachments)

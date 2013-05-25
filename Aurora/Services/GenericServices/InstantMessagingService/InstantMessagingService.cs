@@ -362,7 +362,7 @@ namespace Aurora.Services
                 return;
             }
 
-            UUID GroupID = im.imSessionID;
+            UUID GroupID = im.SessionID;
 
             GroupRecord groupInfo = m_groupData.GetGroupRecord(AgentID, GroupID, null);
 
@@ -515,13 +515,13 @@ namespace Aurora.Services
             }
 
             ChatSession session;
-            ChatSessions.TryGetValue(im.imSessionID, out session);
+            ChatSessions.TryGetValue(im.SessionID, out session);
             if (session == null)
                 return;
             ChatSessionMember member = null;
             foreach (
                 ChatSessionMember testmember in
-                    session.Members.Where(testmember => testmember.AvatarKey == im.fromAgentID))
+                    session.Members.Where(testmember => testmember.AvatarKey == im.FromAgentID))
                 member = testmember;
 
             if (member == null)
@@ -578,13 +578,13 @@ namespace Aurora.Services
             Util.FireAndForget((o) =>
                                    {
                                        ChatSession session;
-                                       ChatSessions.TryGetValue(im.imSessionID, out session);
+                                       ChatSessions.TryGetValue(im.SessionID, out session);
                                        if (session == null)
                                            return;
 
                                        if (agentID != UUID.Zero) //Not system
                                        {
-                                           ChatSessionMember sender = FindMember(im.imSessionID, agentID);
+                                           ChatSessionMember sender = FindMember(im.SessionID, agentID);
                                            if (sender.MuteText)
                                                return; //They have been admin muted, don't allow them to send anything
                                        }
@@ -595,11 +595,11 @@ namespace Aurora.Services
                                        {
                                            if (member.HasBeenAdded)
                                            {
-                                               im.toAgentID = member.AvatarKey;
-                                               im.binaryBucket = Utils.StringToBytes(session.Name);
+                                               im.ToAgentID = member.AvatarKey;
+                                               im.BinaryBucket = Utils.StringToBytes(session.Name);
                                                im.RegionID = UUID.Zero;
                                                im.ParentEstateID = 0;
-                                               im.offline = 0;
+                                               im.Offline = 0;
                                                GridInstantMessage message = new GridInstantMessage();
                                                message.FromOSD(im.ToOSD());
                                                //im.timestamp = 0;
@@ -619,21 +619,21 @@ namespace Aurora.Services
                                                UUID regionID = FindRegionID(member.AvatarKey);
                                                if (regionID != UUID.Zero)
                                                {
-                                                   im.toAgentID = member.AvatarKey;
+                                                   im.ToAgentID = member.AvatarKey;
                                                    m_eventQueueService.ChatterboxInvitation(
                                                        session.SessionID
                                                        , session.Name
-                                                       , im.fromAgentID
-                                                       , im.message
-                                                       , im.toAgentID
-                                                       , im.fromAgentName
-                                                       , im.dialog
-                                                       , im.timestamp
-                                                       , im.offline == 1
+                                                       , im.FromAgentID
+                                                       , im.Message
+                                                       , im.ToAgentID
+                                                       , im.FromAgentName
+                                                       , im.Dialog
+                                                       , im.Timestamp
+                                                       , im.Offline == 1
                                                        , (int) im.ParentEstateID
                                                        , im.Position
                                                        , 1
-                                                       , im.imSessionID
+                                                       , im.SessionID
                                                        , false
                                                        , Utils.StringToBytes(session.Name)
                                                        , regionID

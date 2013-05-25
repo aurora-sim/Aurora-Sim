@@ -68,4 +68,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
         void RegisterExtension<T>(T instance);
     }
+
+    public class EventInfo
+    {
+        public string Name;
+        public string[] ArgumentTypes;
+        public EventInfo(string name, string[] types) { Name = name; ArgumentTypes = types; }
+    }
 }

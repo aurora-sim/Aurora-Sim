@@ -42,12 +42,12 @@ using Aurora.Framework.Services.ClassHelpers.Assets;
 using Aurora.Framework.Services.ClassHelpers.Inventory;
 using Aurora.Framework.Services.ClassHelpers.Profile;
 using Aurora.Framework.Utilities;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Plugins;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using Nini.Config;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
+using OpenMetaverse.StructuredData;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -72,7 +72,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
     /// <summary>
     ///     Contains all LSL ll-functions. This class will be in Default AppDomain.
     /// </summary>
-    public class LSL_Api : MarshalByRefObject, ILSL_Api, IScriptApi
+    public class LSL_Api : MarshalByRefObject, IScriptApi
     {
         protected IScriptModulePlugin m_ScriptEngine;
         protected ISceneChildEntity m_host;
@@ -1019,7 +1019,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (presence != null)
                 {
                     if (chatModule != null)
-                        chatModule.TrySendChatMessage(presence, m_host.AbsolutePosition, m_host.AbsolutePosition,
+                        chatModule.TrySendChatMessage(presence, m_host.AbsolutePosition,
                                                       m_host.UUID, m_host.Name, ChatTypeEnum.Say, text,
                                                       ChatSourceType.Object, 10000);
                 }
@@ -2665,7 +2665,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
 
             // send the sound, once, to all clients in range
-            m_host.SendSound(KeyOrName(sound, AssetType.Sound, true).ToString(), volume, false, 0, 0, false, false);
+            m_host.SendSound(KeyOrName(sound, AssetType.Sound, true).ToString(), volume, false, 0, 0);
         }
 
         // Xantor 20080528 we should do this differently.
@@ -2699,33 +2699,35 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
 
-            m_host.ParentEntity.LoopSoundMasterPrim = m_host;
             lock (m_host.ParentEntity.LoopSoundSlavePrims)
             {
-                foreach (ISceneChildEntity prim in m_host.ParentEntity.LoopSoundSlavePrims)
+                m_host.ParentEntity.LoopSoundMasterPrim = m_host.UUID;
+                foreach (UUID child in m_host.ParentEntity.LoopSoundSlavePrims)
                 {
-                    if (prim.Sound != UUID.Zero)
-                        llStopSound();
+                    ISceneChildEntity part = m_host.ParentEntity.GetChildPart(child);
+                    if (part == null)
+                        continue;
+                    part.Sound = KeyOrName(sound, AssetType.Sound, true);
+                    part.SoundGain = volume;
+                    part.AdjustSoundGain(volume);
+                    part.SoundFlags = (byte)SoundFlags.Loop; // looping
+                    if (part.SoundRadius == 0)
+                        part.SoundRadius = 20; // Magic number, 20 seems reasonable. Make configurable?
 
-                    prim.Sound = KeyOrName(sound, AssetType.Sound, true);
-                    prim.SoundGain = volume;
-                    prim.SoundFlags = (byte) SoundFlags.Loop; // looping
-                    if (prim.SoundRadius == 0)
-                        prim.SoundRadius = 20; // Magic number, 20 seems reasonable. Make configurable?
-
-                    prim.ScheduleUpdate(PrimUpdateFlags.FindBest);
+                    part.ScheduleUpdate(PrimUpdateFlags.FindBest);
                 }
             }
-            if (m_host.Sound != UUID.Zero)
-                llStopSound();
+            //if (m_host.Sound != UUID.Zero)
+            //    llStopSound();
 
+            m_host.AdjustSoundGain(volume);
             m_host.Sound = KeyOrName(sound, AssetType.Sound, true);
             m_host.SoundGain = volume;
             m_host.SoundFlags = (byte) SoundFlags.Loop; // looping
             if (m_host.SoundRadius == 0)
                 m_host.SoundRadius = 20; // Magic number, 20 seems reasonable. Make configurable?
 
-            m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
+            m_host.ScheduleUpdate(PrimUpdateFlags.ForcedFullUpdate);
         }
 
         public void llLoopSoundSlave(string sound, double volume)
@@ -2734,7 +2736,9 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             lock (m_host.ParentEntity.LoopSoundSlavePrims)
             {
-                m_host.ParentEntity.LoopSoundSlavePrims.Add(m_host);
+                if(m_host.UUID != m_host.ParentEntity.LoopSoundMasterPrim &&
+                    !m_host.ParentEntity.LoopSoundSlavePrims.Contains(m_host.UUID))//Can't set the master as a slave
+                    m_host.ParentEntity.LoopSoundSlavePrims.Add(m_host.UUID);
             }
         }
 
@@ -2744,7 +2748,24 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
 
             // send the sound, once, to all clients in range
-            m_host.SendSound(KeyOrName(sound, AssetType.Sound, true).ToString(), volume, false, 0, 0, true, false);
+            //This kinda works, but I haven't found a way to be able to tell the client to sync it with the looping master sound
+            if (m_host.ParentEntity.LoopSoundMasterPrim != UUID.Zero)
+            {
+                ISceneChildEntity part = m_host.ParentEntity.GetChildPart(m_host.ParentEntity.LoopSoundMasterPrim);
+                if (part != null)
+                {
+                    foreach (IScenePresence sp in m_host.ParentEntity.Scene.GetScenePresences())
+                    {
+                        //sp.ControllingClient.SendPlayAttachedSound(part.Sound, part.UUID, part.OwnerID, (float)part.SoundGain, (byte)SoundFlags.Stop);
+                        sp.ControllingClient.SendPlayAttachedSound(KeyOrName(sound, AssetType.Sound, true), m_host.UUID, m_host.OwnerID, (float)(m_host.SoundGain == 0 ? 1.0 : m_host.SoundGain), (byte)(SoundFlags.Queue | SoundFlags.SyncMaster));
+                        sp.ControllingClient.SendPlayAttachedSound(part.Sound, part.UUID, part.OwnerID, (float)part.SoundGain, (byte)(SoundFlags.Queue | SoundFlags.Loop | SoundFlags.SyncSlave));
+                    }
+                    //if (part.Sound != UUID.Zero)
+                    //    part.SendSound(part.Sound.ToString(), part.SoundGain, false, (int)(SoundFlags.Loop | SoundFlags.Queue), (float)part.SoundRadius);
+                }
+            }
+            else
+                m_host.SendSound(KeyOrName(sound, AssetType.Sound, true).ToString(), volume, false, 0, 0);
         }
 
         public void llTriggerSound(string sound, double volume)
@@ -2752,7 +2773,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
 
             // send the sound, once, to all clients in range
-            m_host.SendSound(KeyOrName(sound, AssetType.Sound, true).ToString(), volume, true, 0, 0, false, false);
+            m_host.SendSound(KeyOrName(sound, AssetType.Sound, true).ToString(), volume, true, 0, 0);
         }
 
         // Xantor 20080528: Clear prim data of sound instead
@@ -2761,34 +2782,41 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
 
             m_host.AdjustSoundGain(0);
-            if (m_host.ParentEntity.LoopSoundSlavePrims.Contains(m_host))
+            lock (m_host.ParentEntity.LoopSoundSlavePrims)
             {
-                if (m_host.ParentEntity.LoopSoundMasterPrim == m_host)
+                if (m_host.ParentEntity.LoopSoundMasterPrim == m_host.UUID)
                 {
-                    foreach (ISceneChildEntity part in m_host.ParentEntity.LoopSoundSlavePrims)
+                    foreach (UUID child in m_host.ParentEntity.LoopSoundSlavePrims)
                     {
+                        ISceneChildEntity part = m_host.ParentEntity.GetChildPart(child);
+                        if (part == null)
+                            continue;
                         part.Sound = UUID.Zero;
                         part.SoundGain = 0;
-                        part.SoundFlags = (byte) SoundFlags.None;
+                        part.SoundFlags = (byte)SoundFlags.None;
+                        part.AdjustSoundGain(0);
                         part.ScheduleUpdate(PrimUpdateFlags.FindBest);
                     }
-                    m_host.ParentEntity.LoopSoundMasterPrim = null;
+                    m_host.ParentEntity.LoopSoundMasterPrim = UUID.Zero;
                     m_host.ParentEntity.LoopSoundSlavePrims.Clear();
                 }
                 else
                 {
-                    m_host.Sound = UUID.Zero;
-                    m_host.SoundGain = 0;
-                    m_host.SoundFlags = (byte) SoundFlags.None;
-                    m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
+                    if (m_host.ParentEntity.LoopSoundSlavePrims.Contains(m_host.UUID))
+                    {
+                        m_host.Sound = UUID.Zero;
+                        m_host.SoundGain = 0;
+                        m_host.SoundFlags = (byte)SoundFlags.None;
+                        m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
+                    }
+                    else
+                    {
+                        m_host.Sound = UUID.Zero;
+                        m_host.SoundGain = 0;
+                        m_host.SoundFlags = (byte)SoundFlags.Stop | (byte)SoundFlags.None;
+                        m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
+                    }
                 }
-            }
-            else
-            {
-                m_host.Sound = UUID.Zero;
-                m_host.SoundGain = 0;
-                m_host.SoundFlags = (byte) SoundFlags.Stop | (byte) SoundFlags.None;
-                m_host.ScheduleUpdate(PrimUpdateFlags.FindBest);
             }
         }
 
@@ -4051,27 +4079,28 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
             GridInstantMessage msg = new GridInstantMessage
                                          {
-                                             fromAgentID = m_host.UUID,
-                                             toAgentID = UUID.Parse(user),
-                                             imSessionID = friendTransactionID,
-                                             fromAgentName = m_host.Name
+                                             FromAgentID = m_host.UUID,
+                                             ToAgentID = UUID.Parse(user),
+                                             SessionID = friendTransactionID,
+                                             FromAgentName = m_host.Name,
+                                             RegionID = m_host.ParentEntity.Scene.RegionInfo.RegionID
                                          };
 
             // This is the item we're mucking with here
 
             // Cap the message length at 1024.
             if (message != null && message.Length > 1024)
-                msg.message = message.Substring(0, 1024);
+                msg.Message = message.Substring(0, 1024);
             else
-                msg.message = message;
+                msg.Message = message;
 
-            msg.dialog = (byte) InstantMessageDialog.MessageFromObject;
-            msg.fromGroup = false;
-            msg.offline = 0;
+            msg.Dialog = (byte) InstantMessageDialog.MessageFromObject;
+            msg.FromGroup = false;
+            msg.Offline = 0;
             msg.ParentEstateID = 0;
             msg.Position = m_host.AbsolutePosition;
             msg.RegionID = World.RegionInfo.RegionID;
-            msg.binaryBucket
+            msg.BinaryBucket
                 = Util.StringToBytes256(
                     "{0}/{1}/{2}/{3}",
                     World.RegionInfo.RegionName,
@@ -4968,16 +4997,22 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 byte[] objBytes = agentItem.ID.GetBytes();
                 Array.Copy(objBytes, 0, bucket, 1, 16);
 
-                GridInstantMessage msg = new GridInstantMessage(World,
-                                                                m_host.UUID, m_host.Name + ", an object owned by " +
-                                                                             resolveName(m_host.OwnerID) + ",", destId,
-                                                                (byte) InstantMessageDialog.InventoryOffered,
-                                                                false,
-                                                                objName + "'\n'" + m_host.Name + "' is located at " +
-                                                                m_host.AbsolutePosition.ToString() + " in '" +
-                                                                World.RegionInfo.RegionName,
-                                                                agentItem.ID, true, m_host.AbsolutePosition,
-                                                                bucket);
+                GridInstantMessage msg = new GridInstantMessage()
+                    {
+                        FromAgentID = m_host.UUID,
+                        FromAgentName = m_host.Name + ", an object owned by " +
+                                                                              resolveName(m_host.OwnerID) + ",",
+                        ToAgentID = destId,
+                        Dialog = (byte)InstantMessageDialog.InventoryOffered,
+                        Message = objName + "'\n'" + m_host.Name + "' is located at " +
+                                                                 m_host.AbsolutePosition.ToString() + " in '" +
+                                                                 World.RegionInfo.RegionName,
+                        SessionID = agentItem.ID,
+                        Offline = 1,
+                        Position = m_host.AbsolutePosition,
+                        BinaryBucket = bucket,
+                        RegionID = m_host.ParentEntity.Scene.RegionInfo.RegionID
+                    };
 
                 if (m_TransferModule != null)
                     m_TransferModule.SendInstantMessage(msg);
@@ -6801,7 +6836,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             double radius1 = (float) llVecDist(llGetPos(), top_north_east);
             double radius2 = (float) llVecDist(llGetPos(), bottom_south_west);
             double radius = Math.Abs(radius1 - radius2);
-            m_host.SendSound(KeyOrName(sound, AssetType.Sound, true).ToString(), volume, true, 0, (float)radius, false, false);
+            m_host.SendSound(KeyOrName(sound, AssetType.Sound, true).ToString(), volume, true, 0, (float)radius);
         }
 
         public DateTime llEjectFromLand(string pest)
@@ -7503,16 +7538,23 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             bucket[0] = (byte) AssetType.Folder;
             byte[] objBytes = folderID.GetBytes();
             Array.Copy(objBytes, 0, bucket, 1, 16);
-
-            GridInstantMessage msg = new GridInstantMessage(World,
-                                                            m_host.UUID, m_host.Name + ", an object owned by " +
-                                                                         resolveName(m_host.OwnerID) + ",", destID,
-                                                            (byte) InstantMessageDialog.InventoryOffered,
-                                                            false, category + "\n" + m_host.Name + " is located at " +
+            
+            GridInstantMessage msg = new GridInstantMessage()
+                {
+                    FromAgentID = m_host.UUID,
+                    FromAgentName = m_host.Name + ", an object owned by " +
+                                                                         resolveName(m_host.OwnerID) + ",",
+                    ToAgentID = destID,
+                    Dialog = (byte)InstantMessageDialog.InventoryOffered,
+                    Message = category + "\n" + m_host.Name + " is located at " +
                                                                    World.RegionInfo.RegionName + " " +
                                                                    m_host.AbsolutePosition.ToString(),
-                                                            folderID, true, m_host.AbsolutePosition,
-                                                            bucket);
+                    SessionID = folderID,
+                    Offline = 1,
+                    Position = m_host.AbsolutePosition,
+                    BinaryBucket = bucket,
+                    RegionID = m_host.ParentEntity.Scene.RegionInfo.RegionID
+                };
 
             if (m_TransferModule != null)
                 m_TransferModule.SendInstantMessage(msg);
@@ -10340,6 +10382,12 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 return "Aurora-Sim Server";
             if (name == "sim_version")
                 return World.RequestModuleInterface<ISimulationBase>().Version;
+            if (name == "frame_number")
+                return new LSL_String(World.Frame.ToString());
+            if (name == "region_idle")
+                return new LSL_String("1");
+            if (name == "dynamic_pathfinding")
+                return new LSL_String("disabled");
             return "";
         }
 
@@ -12930,7 +12978,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
         {
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID))
                 return LSL_Integer.FALSE;
-            if (World.Permissions.IsAdministrator(m_host.OwnerID))
+            if (World.Permissions.CanIssueEstateCommand(m_host.OwnerID, false))
             {
                 if (action == ScriptBaseClass.ESTATE_ACCESS_ALLOWED_AGENT_ADD)
                     World.RegionInfo.EstateSettings.AddEstateUser(UUID.Parse(avatar));
@@ -12950,6 +12998,8 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     World.RegionInfo.EstateSettings.RemoveBan(UUID.Parse(avatar));
                 return LSL_Integer.TRUE;
             }
+            else
+                ShoutError("llManageEstateAccess object owner must manage estate.");
             return LSL_Integer.FALSE;
         }
 
@@ -12990,7 +13040,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                     dataType == KeyframeAnimation.Data.Translation)
                 {
                     LSL_Vector pos = keyframes.GetVector3Item(i);
-                    positions.Add(m_host.AbsolutePosition + pos.ToVector3());
+                    positions.Add(pos.ToVector3());
                 }
                 if (dataType == KeyframeAnimation.Data.Both ||
                     dataType == KeyframeAnimation.Data.Rotation)
@@ -13219,6 +13269,354 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                 if (command == ScriptBaseClass.CHARACTER_CMD_STOP)
                     controller.StopMoving(false, true);
             }
+        }
+
+        public LSL_Float llGetSimStats(LSL_Integer statType)
+        {
+            LSL_Float retVal = 0;
+            if (statType == ScriptBaseClass.SIM_STAT_PCT_CHARS_STEPPED)
+            {
+                //TODO: Not implemented
+                retVal = 0;
+            }
+            return retVal;
+        }
+
+        public void llSetAnimationOverride(LSL_String anim_state, LSL_String anim)
+        {
+            //anim_state - animation state to be overriden
+            //anim       - an animation in the prim's inventory or the name of the built-in animation
+
+            UUID invItemID = InventorySelf();
+            if (invItemID == UUID.Zero)
+                return;
+
+            TaskInventoryItem item;
+
+            lock (m_host.TaskInventory)
+            {
+                if (!m_host.TaskInventory.ContainsKey(InventorySelf()))
+                    return;
+                item = m_host.TaskInventory[InventorySelf()];
+            }
+
+            if (item.PermsGranter == UUID.Zero)
+                return;
+
+            if ((item.PermsMask & ScriptBaseClass.PERMISSION_OVERRIDE_ANIMATIONS) != 0)
+            {
+                IScenePresence presence = World.GetScenePresence(item.PermsGranter);
+
+                if (presence != null)
+                {
+                    // Do NOT try to parse UUID, animations cannot be triggered by ID
+                    UUID animID = KeyOrName(anim, AssetType.Animation, false);
+
+                    presence.Animator.SetDefaultAnimationOverride(anim_state, animID, anim);
+                }
+            }
+        }
+
+        public void llResetAnimationOverride(LSL_String anim_state)
+        {
+            //anim_state - animation state to be reset
+            
+            UUID invItemID = InventorySelf();
+            if (invItemID == UUID.Zero)
+                return;
+
+            TaskInventoryItem item;
+
+            lock (m_host.TaskInventory)
+            {
+                if (!m_host.TaskInventory.ContainsKey(InventorySelf()))
+                    return;
+                item = m_host.TaskInventory[InventorySelf()];
+            }
+
+            if (item.PermsGranter == UUID.Zero)
+                return;
+
+            if ((item.PermsMask & ScriptBaseClass.PERMISSION_OVERRIDE_ANIMATIONS) != 0)
+            {
+                IScenePresence presence = World.GetScenePresence(item.PermsGranter);
+
+                if (presence != null)
+                {
+                    presence.Animator.ResetDefaultAnimationOverride(anim_state);
+                }
+            }
+        }
+
+        public LSL_String llGetAnimationOverride(string anim_state)
+        {
+            //anim_state - animation state to be reset
+
+            UUID invItemID = InventorySelf();
+            if (invItemID == UUID.Zero)
+                return "";
+
+            TaskInventoryItem item;
+
+            lock (m_host.TaskInventory)
+            {
+                if (!m_host.TaskInventory.ContainsKey(InventorySelf()))
+                    return "";
+                item = m_host.TaskInventory[InventorySelf()];
+            }
+
+            if (item.PermsGranter == UUID.Zero)
+                return "";
+
+            if ((item.PermsMask & ScriptBaseClass.PERMISSION_TRIGGER_ANIMATION) != 0 ||
+                (item.PermsMask & ScriptBaseClass.PERMISSION_OVERRIDE_ANIMATIONS) != 0)
+            {
+                IScenePresence presence = World.GetScenePresence(item.PermsGranter);
+
+                if (presence != null)
+                {
+                    return new LSL_String(presence.Animator.GetDefaultAnimationOverride(anim_state));
+                }
+            }
+            return "";
+        }
+
+        public LSL_String llJsonGetValue(LSL_String json, LSL_List specifiers)
+        {
+            OSD o = OSDParser.DeserializeJson(json);
+            OSD specVal = JsonGetSpecific(o, specifiers, 0);
+
+            return specVal.AsString();
+        }
+
+        public LSL_List llJson2List(LSL_String json)
+        {
+            try
+            {
+                OSD o = OSDParser.DeserializeJson(json);
+                return (LSL_List)ParseJsonNode(o);
+            }
+            catch (Exception)
+            {
+                return new LSL_List(ScriptBaseClass.JSON_INVALID);
+            }
+        }
+
+        private object ParseJsonNode(OSD node)
+        {
+            if (node.Type == OSDType.Integer)
+                return new LSL_Integer(node.AsInteger());
+            if (node.Type == OSDType.Boolean)
+                return new LSL_Integer(node.AsBoolean() ? 1 : 0);
+            if (node.Type == OSDType.Real)
+                return new LSL_Float(node.AsReal());
+            if (node.Type == OSDType.UUID || node.Type == OSDType.String)
+                return new LSL_String(node.AsString());
+            if (node.Type == OSDType.Array)
+            {
+                LSL_List resp = new LSL_List();
+                OSDArray ar = node as OSDArray;
+                foreach (OSD o in ar)
+                    resp.Add(ParseJsonNode(o));
+                return resp;
+            }
+            if (node.Type == OSDType.Map)
+            {
+                LSL_List resp = new LSL_List();
+                OSDMap ar = node as OSDMap;
+                foreach (KeyValuePair<string, OSD> o in ar)
+                {
+                    resp.Add(new LSL_String(o.Key));
+                    resp.Add(ParseJsonNode(o.Value));
+                }
+                return resp;
+            }
+            throw new Exception(ScriptBaseClass.JSON_INVALID);
+        }
+
+        public LSL_String llList2Json(LSL_String type, LSL_List values)
+        {
+            try
+            {
+                if (type == ScriptBaseClass.JSON_ARRAY)
+                {
+                    OSDArray array = new OSDArray();
+                    foreach (object o in values.Data)
+                    {
+                        array.Add(ListToJson(o));
+                    }
+                    return OSDParser.SerializeJsonString(array);
+                }
+                else if (type == ScriptBaseClass.JSON_OBJECT)
+                {
+                    OSDMap map = new OSDMap();
+                    for (int i = 0; i < values.Data.Length; i += 2)
+                    {
+                        if (!(values.Data[i] is LSL_String))
+                            return ScriptBaseClass.JSON_INVALID;
+                        map.Add(((LSL_String)values.Data[i]).m_string, ListToJson(values.Data[i+1]));
+                    }
+                    return OSDParser.SerializeJsonString(map);
+                }
+                return ScriptBaseClass.JSON_INVALID;
+            }
+            catch (Exception ex)
+            {
+                return ex.Message;
+            }
+        }
+
+        private OSD ListToJson(object o)
+        {
+            if (o is LSL_Float)
+                return OSD.FromReal(((LSL_Float)o).value);
+            if (o is LSL_Integer)
+            {
+                int i = ((LSL_Integer)o).value;
+                if (i == 0)
+                    return OSD.FromBoolean(false);
+                else if (i == 1)
+                    return OSD.FromBoolean(true);
+                return OSD.FromInteger(i);
+            }
+            if (o is LSL_Rotation)
+                return OSD.FromString(((LSL_Rotation)o).ToString());
+            if (o is LSL_Vector)
+                return OSD.FromString(((LSL_Vector)o).ToString());
+            if (o is LSL_String)
+            {
+                string str = ((LSL_String)o).m_string;
+                if (str == ScriptBaseClass.JSON_NULL)
+                    return new OSD();
+                return OSD.FromString(str);
+            }
+            throw new Exception(ScriptBaseClass.JSON_INVALID);
+        }
+
+        private OSD JsonGetSpecific(OSD o, LSL_List specifiers, int i)
+        {
+            object spec = specifiers.Data[i];
+            OSD nextVal = null;
+            if (o is OSDArray)
+            {
+                if (spec is LSL_Integer)
+                    nextVal = ((OSDArray)o)[((LSL_Integer)spec).value];
+            }
+            if (o is OSDMap)
+            {
+                if (spec is LSL_String)
+                    nextVal = ((OSDMap)o)[((LSL_String)spec).m_string];
+            }
+            if (nextVal != null)
+            {
+                if (specifiers.Data.Length - 1 > i)
+                    return JsonGetSpecific(nextVal, specifiers, i + 1);
+            }
+            return nextVal;
+        }
+
+        public LSL_String llJsonSetValue(LSL_String json, LSL_List specifiers, LSL_String value)
+        {
+            try
+            {
+                OSD o = OSDParser.DeserializeJson(json);
+                JsonSetSpecific(o, specifiers, 0, value);
+                return OSDParser.SerializeJsonString(o);
+            }
+            catch (Exception)
+            {
+            }
+            return ScriptBaseClass.JSON_INVALID;
+        }
+
+        private void JsonSetSpecific(OSD o, LSL_List specifiers, int i, LSL_String val)
+        {
+            object spec = specifiers.Data[i];
+            object specNext = i+1 == specifiers.Data.Length ? null : specifiers.Data[i+1];
+            OSD nextVal = null;
+            if (o is OSDArray)
+            {
+                OSDArray array = ((OSDArray)o);
+                if (spec is LSL_Integer)
+                {
+                    int v = ((LSL_Integer)spec).value;
+                    if(v >= array.Count)
+                        array.Add(JsonBuildRestOfSpec(specifiers, i+1, val));
+                    else
+                        nextVal = ((OSDArray)o)[v];
+                }
+                else if (spec is LSL_String && ((LSL_String)spec) == ScriptBaseClass.JSON_APPEND)
+                    array.Add(JsonBuildRestOfSpec(specifiers, i+1, val));
+            }
+            if (o is OSDMap)
+            {
+                if (spec is LSL_String)
+                {
+                    OSDMap map = ((OSDMap)o);
+                    if (map.ContainsKey(((LSL_String)spec).m_string))
+                        nextVal = map[((LSL_String)spec).m_string];
+                    else
+                        map.Add(((LSL_String)spec).m_string, JsonBuildRestOfSpec(specifiers, i+1, val));
+                }
+            }
+            if (nextVal != null)
+            {
+                if (specifiers.Data.Length - 1 > i)
+                {
+                    JsonSetSpecific(nextVal, specifiers, i + 1, val);
+                    return;
+                }
+            }
+        }
+
+        private OSD JsonBuildRestOfSpec(LSL_List specifiers, int i, LSL_String val)
+        {
+            object spec =  i >= specifiers.Data.Length ? null : specifiers.Data[i];
+            object specNext = i+1 >= specifiers.Data.Length ? null : specifiers.Data[i+1];
+
+            if (spec == null)
+                return OSD.FromString(val);
+
+            if (spec is LSL_Integer || 
+                (spec is LSL_String && ((LSL_String)spec) == ScriptBaseClass.JSON_APPEND))
+            {
+                OSDArray array = new OSDArray();
+                array.Add(JsonBuildRestOfSpec(specifiers, i+1, val));
+                return array;
+            }
+            else if (spec is LSL_String)
+            {
+                OSDMap map = new OSDMap();
+                map.Add((LSL_String)spec, JsonBuildRestOfSpec(specifiers, i+1, val));
+                return map;
+            }
+            return new OSD();
+        }
+
+        public LSL_String llJsonValueType(LSL_String json, LSL_List specifiers)
+        {
+            OSD o = OSDParser.DeserializeJson(json);
+            OSD specVal = JsonGetSpecific(o, specifiers, 0);
+            if (specVal == null)
+                return ScriptBaseClass.JSON_INVALID;
+            switch (specVal.Type)
+            {
+                case OSDType.Array:
+                    return ScriptBaseClass.JSON_ARRAY;
+                case OSDType.Boolean:
+                    return specVal.AsBoolean() ? ScriptBaseClass.JSON_TRUE : ScriptBaseClass.JSON_FALSE;
+                case OSDType.Integer:
+                case OSDType.Real:
+                    return ScriptBaseClass.JSON_NUMBER;
+                case OSDType.Map:
+                    return ScriptBaseClass.JSON_OBJECT;
+                case OSDType.String:
+                case OSDType.UUID:
+                    return ScriptBaseClass.JSON_STRING;
+                case OSDType.Unknown:
+                    return ScriptBaseClass.JSON_NULL;
+            }
+            return ScriptBaseClass.JSON_INVALID;
         }
     }
 

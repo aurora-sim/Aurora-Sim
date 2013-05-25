@@ -26,10 +26,13 @@
  */
 
 using Aurora.Framework;
+using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
+using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Servers.HttpServer;
 using Aurora.Framework.Servers.HttpServer.Interfaces;
+using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse;
@@ -43,6 +46,7 @@ namespace Aurora.Modules.Voice
     {
         private string configToSend = "SLVoice";
         private bool m_enabled = true;
+        private IScene m_scene;
 
         #region INonSharedRegionModule Members
 
@@ -71,6 +75,11 @@ namespace Aurora.Modules.Voice
                 scene.EventManager.OnRegisterCaps +=
                     (agentID, server) => OnRegisterCaps(scene, agentID, server);
             }
+            m_scene = scene;
+            ISyncMessageRecievedService syncRecievedService =
+                m_scene.RequestModuleInterface<ISyncMessageRecievedService>();
+            if (syncRecievedService != null)
+                syncRecievedService.OnMessageReceived += syncRecievedService_OnMessageReceived;
         }
 
         // Called to indicate that all loadable modules have now been added
@@ -161,5 +170,66 @@ namespace Aurora.Modules.Voice
             ((OSDMap) response["voice_credentials"])["channel_uri"] = "";
             return OSDParser.SerializeLLSDXmlBytes(response);
         }
+
+
+
+        #region Region-side message sending
+
+        private OSDMap syncRecievedService_OnMessageReceived(OSDMap message)
+        {
+            string method = message["Method"];
+            if (method == "GetParcelChannelInfo")
+            {
+                IScenePresence avatar = m_scene.GetScenePresence(message["AvatarID"].AsUUID());
+
+                bool success = false;
+                bool noAgent = false;
+                // get channel_uri: check first whether estate
+                // settings allow voice, then whether parcel allows
+                // voice, if all do retrieve or obtain the parcel
+                // voice channel
+                if (!m_scene.RegionInfo.EstateSettings.AllowVoice)
+                {
+                    MainConsole.Instance.DebugFormat(
+                        "[GenericVoice]: region \"{0}\": voice not enabled in estate settings",
+                        m_scene.RegionInfo.RegionName);
+                    success = false;
+                }
+                else if (avatar == null || avatar.CurrentParcel == null)
+                {
+                    noAgent = true;
+                    success = false;
+                }
+                else if ((avatar.CurrentParcel.LandData.Flags & (uint)ParcelFlags.AllowVoiceChat) == 0)
+                {
+                    MainConsole.Instance.DebugFormat(
+                        "[GenericVoice]: region \"{0}\": Parcel \"{1}\" ({2}): avatar \"{3}\": voice not enabled for parcel",
+                        m_scene.RegionInfo.RegionName, avatar.CurrentParcel.LandData.Name,
+                        avatar.CurrentParcel.LandData.LocalID, avatar.Name);
+                    success = false;
+                }
+                else
+                {
+                    MainConsole.Instance.DebugFormat(
+                        "[GenericVoice]: region \"{0}\": voice enabled in estate settings, creating parcel voice",
+                        m_scene.RegionInfo.RegionName);
+                    success = true;
+                }
+                OSDMap map = new OSDMap();
+                map["Success"] = success;
+                map["NoAgent"] = noAgent;
+                if (success)
+                {
+                    map["ParcelID"] = avatar.CurrentParcel.LandData.GlobalID;
+                    map["ParcelName"] = avatar.CurrentParcel.LandData.Name;
+                    map["LocalID"] = avatar.CurrentParcel.LandData.LocalID;
+                    map["ParcelFlags"] = avatar.CurrentParcel.LandData.Flags;
+                }
+                return map;
+            }
+            return null;
+        }
+
+        #endregion
     }
 }

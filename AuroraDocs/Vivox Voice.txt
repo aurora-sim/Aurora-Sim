@@ -1,0 +1,33 @@
+##
+## How to set up Vivox Voice
+##
+
+Jump to the section below that corresponds to your setup.
+
+## 
+## Standalone Setup
+##
+
+In Configuration/Modules/VoiceModules.ini, you will find a section
+  with [Voice], you will need to comment (put a ;) in front of 
+    Module = GenericVoice
+
+  and remove the comment (the ;) in front of 
+    Module = VivoxVoice
+
+  then, you will go to the section [VivoxVoice], and you will put
+  in the server information you have received from Vivox.
+  
+##
+## Grid setup
+##
+
+In AuroraServerConfiguration/Modules/VoiceModules.ini, you will find a section
+  with [Voice], you will need to comment (put a ;) in front of 
+    Module = GenericVoice
+
+  and remove the comment (the ;) in front of 
+    Module = VivoxVoice
+
+  then, you will go to the section [VivoxVoice], and you will put
+  in the server information you have received from Vivox.

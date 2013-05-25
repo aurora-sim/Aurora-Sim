@@ -190,6 +190,7 @@ namespace Aurora.BotManager
                                          Message = message,
                                          Channel = channel,
                                          From = m_scenePresence.Name,
+                                         SenderUUID = m_scenePresence.UUID,
                                          Position = m_scenePresence.AbsolutePosition,
                                          Sender = m_scenePresence.ControllingClient,
                                          Type = (ChatTypeEnum) sayType,
@@ -201,20 +202,22 @@ namespace Aurora.BotManager
 
         public void SendInstantMessage(GridInstantMessage im)
         {
-            if (im.dialog == (byte) InstantMessageDialog.GodLikeRequestTeleport ||
-                im.dialog == (byte) InstantMessageDialog.RequestTeleport)
+            if (im.Dialog == (byte)InstantMessageDialog.GodLikeRequestTeleport ||
+                im.Dialog == (byte)InstantMessageDialog.RequestTeleport)
             {
-                if (m_bot.AvatarCreatorID == im.fromAgentID || m_scenePresence.Scene.Permissions.IsGod(im.fromAgentID))
+                if (m_bot.AvatarCreatorID == im.FromAgentID || m_scenePresence.Scene.Permissions.IsGod(im.FromAgentID))
                 {
                     ulong handle = 0;
                     uint x = 128;
                     uint y = 128;
                     uint z = 70;
 
-                    Util.ParseFakeParcelID(im.imSessionID, out handle, out x, out y, out z);
+                    Util.ParseFakeParcelID(im.SessionID, out handle, out x, out y, out z);
                     m_scenePresence.Teleport(new Vector3(x, y, z));
                 }
             }
+            else
+                m_scenePresence.ControllingClient.IncomingInstantMessage(im);
         }
 
         public void Close()
@@ -526,6 +529,17 @@ namespace Aurora.BotManager
             else if (m_controller.AbsolutePosition.Z > pos.Z + 1)
             {
                 m_movementFlag |= (uint) AgentManager.ControlFlags.AGENT_CONTROL_UP_NEG;
+            }
+
+            if (bot_forward.X > 0)
+            {
+                m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_TURN_LEFT;
+                m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_YAW_POS;
+            }
+            if (bot_forward.X < 0)
+            {
+                m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_TURN_RIGHT;
+                m_movementFlag |= (uint)AgentManager.ControlFlags.AGENT_CONTROL_YAW_NEG;
             }
 
             if (m_controller.CanMove)
@@ -1958,6 +1972,10 @@ namespace Aurora.BotManager
         {
         }
 
+        public void SetDebugPacketName(string packetName, bool remove)
+        {
+        }
+
         public void ProcessInPacket(Packet NewPack)
         {
         }
@@ -1984,6 +2002,22 @@ namespace Aurora.BotManager
         public void OnForceChatFromViewer(IClientAPI sender, OSChatMessage e)
         {
             OnChatFromClient(sender, e);
+        }
+
+        public void IncomingInstantMessage(GridInstantMessage im)
+        {
+            PreSendImprovedInstantMessage handlerPreSendInstantMessage = OnPreSendInstantMessage;
+            if (handlerPreSendInstantMessage != null)
+            {
+                if (handlerPreSendInstantMessage.GetInvocationList().Cast<PreSendImprovedInstantMessage>().Any(
+                    d => d(this, im)))
+                {
+                    return; //handled
+                }
+            }
+            ImprovedInstantMessage handlerInstantMessage = OnInstantMessage;
+            if (handlerInstantMessage != null)
+                handlerInstantMessage(this, im);
         }
 
         public void SendInstantMessage(GridInstantMessage im)

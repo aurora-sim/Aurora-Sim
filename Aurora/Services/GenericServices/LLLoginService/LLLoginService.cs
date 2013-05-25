@@ -597,13 +597,17 @@ namespace Aurora.Services
 
                 #endregion
 
+                List<UUID> friendsToInform = new List<UUID>();
+                if (m_FriendsService != null)
+                    friendsToInform = m_FriendsService.GetFriendOnlineStatuses(account.PrincipalID, true);
+
                 //
                 // Instantiate/get the simulation interface and launch an agent at the destination
                 //
                 string reason = "", seedCap = "";
                 AgentCircuitData aCircuit = LaunchAgentAtGrid(destination, tpFlags, account, session,
                                                               secureSession, position, where,
-                                                              clientIP, out where, out reason, out seedCap,
+                                                              clientIP, friendsToInform, out where, out reason, out seedCap,
                                                               out destination);
 
                 if (aCircuit == null)
@@ -643,6 +647,9 @@ namespace Aurora.Services
 
                 ArrayList eventNotifications = new ArrayList();
                 BuildEventNotifications(account.PrincipalID, ref eventNotifications);
+                
+                if (m_FriendsService != null)
+                    m_FriendsService.SendFriendOnlineStatuses(account.PrincipalID, true);
 
                 response = new LLLoginResponse(account, aCircuit, guinfo, destination, inventorySkel,
                                                friendsList.ToArray(), m_InventoryService, m_LibraryService,
@@ -933,7 +940,7 @@ namespace Aurora.Services
         protected AgentCircuitData LaunchAgentAtGrid(GridRegion destination, TeleportFlags tpFlags, UserAccount account,
                                                      UUID session, UUID secureSession, Vector3 position,
                                                      string currentWhere,
-                                                     IPEndPoint clientIP, out string where, out string reason,
+                                                     IPEndPoint clientIP, List<UUID> friendsToInform, out string where, out string reason,
                                                      out string seedCap, out GridRegion dest)
         {
             where = currentWhere;
@@ -950,7 +957,7 @@ namespace Aurora.Services
             aCircuit.TeleportFlags = (uint) tpFlags;
             MainConsole.Instance.DebugFormat("[LoginService]: Attempting to log {0} into {1} at {2}...", account.Name, destination.RegionName, destination.ServerURI);
             LoginAgentArgs args = m_registry.RequestModuleInterface<IAgentProcessing>().
-                                             LoginAgent(destination, aCircuit);
+                                             LoginAgent(destination, aCircuit, friendsToInform);
             aCircuit.CachedUserInfo = args.CircuitData.CachedUserInfo;
             aCircuit.RegionUDPPort = args.CircuitData.RegionUDPPort;
 
@@ -974,7 +981,8 @@ namespace Aurora.Services
                 {
                     success = TryFindGridRegionForAgentLogin(defaultRegions, account,
                                                              session, secureSession, circuitCode, position,
-                                                             clientIP, aCircuit, out seedCap, out reason, out dest);
+                                                             clientIP, aCircuit, friendsToInform, 
+                                                             out seedCap, out reason, out dest);
                 }
                 if (!success)
                 {
@@ -987,7 +995,8 @@ namespace Aurora.Services
                         success = TryFindGridRegionForAgentLogin(fallbacks, account,
                                                                  session, secureSession, circuitCode,
                                                                  position,
-                                                                 clientIP, aCircuit, out seedCap, out reason, out dest);
+                                                                 clientIP, aCircuit, friendsToInform,
+                                                                 out seedCap, out reason, out dest);
                     }
                     if (!success)
                     {
@@ -999,9 +1008,8 @@ namespace Aurora.Services
                         {
                             success = TryFindGridRegionForAgentLogin(safeRegions, account,
                                                                      session, secureSession, circuitCode,
-                                                                     position,
-                                                                     clientIP, aCircuit, out seedCap, out reason,
-                                                                     out dest);
+                                                                     position, clientIP, aCircuit, friendsToInform,
+                                                                     out seedCap, out reason, out dest);
                             if (!success)
                                 reason = "No Region Found";
                         }
@@ -1024,8 +1032,8 @@ namespace Aurora.Services
         protected bool TryFindGridRegionForAgentLogin(List<GridRegion> regions, UserAccount account,
                                                       UUID session, UUID secureSession,
                                                       uint circuitCode, Vector3 position,
-                                                      IPEndPoint clientIP, AgentCircuitData aCircuit, out string seedCap,
-                                                      out string reason, out GridRegion destination)
+                                                      IPEndPoint clientIP, AgentCircuitData aCircuit, List<UUID> friendsToInform,
+                                                      out string seedCap, out string reason, out GridRegion destination)
         {
             LoginAgentArgs args = null;
             foreach (GridRegion r in regions)
@@ -1034,7 +1042,7 @@ namespace Aurora.Services
                     continue;
                 MainConsole.Instance.DebugFormat("[LoginService]: Attempting to log {0} into {1} at {2}...", account.Name, r.RegionName, r.ServerURI);
                 args = m_registry.RequestModuleInterface<IAgentProcessing>().
-                                  LoginAgent(r, aCircuit);
+                                  LoginAgent(r, aCircuit, friendsToInform);
                 if (args.Success)
                 {
                     aCircuit = MakeAgent(r, account, session, secureSession, circuitCode, position, clientIP);

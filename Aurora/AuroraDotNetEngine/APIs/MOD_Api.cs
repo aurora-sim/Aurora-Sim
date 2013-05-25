@@ -29,7 +29,6 @@ using Aurora.Framework;
 using Aurora.Framework.ClientInterfaces;
 using Aurora.Framework.Modules;
 using Aurora.Framework.SceneInfo;
-using Aurora.ScriptEngine.AuroraDotNetEngine.APIs.Interfaces;
 using Aurora.ScriptEngine.AuroraDotNetEngine.Runtime;
 using OpenMetaverse;
 using System;
@@ -44,7 +43,7 @@ using LSL_Vector = Aurora.ScriptEngine.AuroraDotNetEngine.LSL_Types.Vector3;
 
 namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 {
-    public class MOD_Api : MarshalByRefObject, IMOD_Api, IScriptApi
+    public class MOD_Api : MarshalByRefObject, IScriptApi
     {
         internal ScriptProtectionModule ScriptProtection;
         internal IScriptModulePlugin m_ScriptEngine;

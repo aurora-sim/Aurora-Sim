@@ -1486,6 +1486,7 @@
       </Configuration>
 
       <ReferencePath>../../bin/</ReferencePath>
+      <Reference name="Microsoft.CSharp"/>
       <Reference name="System"/>
       <Reference name="System.Core"/>
       <Reference name="System.Data"/>

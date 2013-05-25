@@ -341,31 +341,31 @@ namespace Aurora.Modules.Land
 
                         GridInstantMessage msg = new GridInstantMessage
                                                      {
-                                                         fromAgentID = UUID.Zero,
-                                                         toAgentID = ret.Key,
-                                                         imSessionID = transaction,
-                                                         timestamp = (uint) Util.UnixTimeSinceEpoch(),
-                                                         fromAgentName = "Server",
-                                                         dialog = 19,
-                                                         fromGroup = false,
-                                                         offline = 1,
+                                                         FromAgentID = UUID.Zero,
+                                                         ToAgentID = ret.Key,
+                                                         SessionID = transaction,
+                                                         Timestamp = (uint) Util.UnixTimeSinceEpoch(),
+                                                         FromAgentName = "Server",
+                                                         Dialog = 19,
+                                                         FromGroup = false,
+                                                         Offline = 1,
                                                          ParentEstateID =
                                                              m_scene.RegionInfo.EstateSettings.ParentEstateID,
                                                          Position = Vector3.Zero,
                                                          RegionID = m_scene.RegionInfo.RegionID,
-                                                         binaryBucket = Util.StringToBytes256("\0")
+                                                         BinaryBucket = Util.StringToBytes256("\0")
                                                      };
                         // From server
                         // Object msg
                         // We must fill in a null-terminated 'empty' string here since bytes[0] will crash viewer 3.
 
                         if (ret.Value.count > 1)
-                            msg.message =
+                            msg.Message =
                                 string.Format("Your {0} objects were returned from {1} in region {2} due to {3}",
                                               ret.Value.count, ret.Value.location.ToString(),
                                               m_scene.RegionInfo.RegionName, ret.Value.reason);
                         else
-                            msg.message = string.Format(
+                            msg.Message = string.Format(
                                 "Your object {0} was returned from {1} in region {2} due to {3}", ret.Value.objectName,
                                 ret.Value.location.ToString(), m_scene.RegionInfo.RegionName, ret.Value.reason);
 
@@ -1149,6 +1149,10 @@ namespace Aurora.Modules.Land
 
         private void UpdateParcelBitmap(ILandObject lo)
         {
+            int size = (m_scene.RegionInfo.RegionSizeX / 4) * (m_scene.RegionInfo.RegionSizeY / 4) / 8;
+            if (lo.LandData.Bitmap.Length != size)
+                lo.LandData.Bitmap = new byte[size];
+
             int y, x, i = 0, byteNum = 0;
             byte tempByte = 0;
             for (y = 0; y < m_scene.RegionInfo.RegionSizeY/4; y++)
@@ -1709,6 +1713,51 @@ namespace Aurora.Modules.Land
                 ResetSimLandObjects();
         }
 
+        public void IncomingLandDataFromOAR(List<LandData> data, bool merge, Vector2 parcelOffset)
+        {
+            if (!merge || data.Count == 0) //Serious fallback
+                ResetSimLandObjects();
+            foreach (LandData t in data)
+            {
+                int oldRegionSize = (int)Math.Sqrt(t.Bitmap.Length * 8);
+                int offset_x = (int)(parcelOffset.X > 0 ? (parcelOffset.X / 4f) : 0),
+                    offset_y = (int)(parcelOffset.Y > 0 ? (parcelOffset.Y / 4f) : 0),
+                    i = 0, bitNum = 0;
+                byte tempByte;
+                lock (m_landListLock)
+                {
+                    //Update the localID
+                    t.LocalID = ++m_lastLandLocalID;
+                }
+                int x = 0, y = 0;
+                for (i = 0; i < t.Bitmap.Length; i++)
+                {
+                    tempByte = t.Bitmap[i];
+                    for (bitNum = 0; bitNum < 8; bitNum++)
+                    {
+                        bool bit = Convert.ToBoolean(Convert.ToByte(tempByte >> bitNum) & (byte)1);
+                        if (bit)
+                            m_landIDList[offset_x + x, offset_y + y] = t.LocalID;
+                        x++;
+                        if (x > oldRegionSize - 1)
+                        {
+                            x = 0;
+                            y++;
+                        }
+                    }
+                }
+                ILandObject new_land = new LandObject(t.OwnerID, t.IsGroupOwned, m_scene);
+                new_land.LandData = t;
+                new_land.ForceUpdateLandInfo();
+                lock (m_landListLock)
+                {
+                    m_lastLandLocalID -= 1;
+                }
+                AddLandObject(new_land);
+            }
+            UpdateAllParcelBitmaps();
+        }
+
         private bool SetLandBitmapFromByteArray(ILandObject parcel, bool forceSet, Vector2 offsetOfParcel)
         {
             int avg = (m_scene.RegionInfo.RegionSizeX*m_scene.RegionInfo.RegionSizeY/128);
@@ -1925,12 +1974,21 @@ namespace Aurora.Modules.Land
                         if (info != null)
                             regionID = info.RegionID;
                     }
-                    IDirectoryServiceConnector DSC = Framework.Utilities.DataManager.RequestPlugin<IDirectoryServiceConnector>();
-                    if (DSC != null)
+                    if (regionID == m_scene.RegionInfo.RegionID)
                     {
-                        LandData data = DSC.GetParcelInfo(regionID, (int)x, (int)y);
-                        if(data != null)
-                            parcelID = data.GlobalID;
+                        ILandObject parcel = GetLandObject(x, y);
+                        if (parcel != null)
+                            parcelID = parcel.LandData.GlobalID;
+                    }
+                    if(parcelID == UUID.Zero)
+                    {
+                        IDirectoryServiceConnector DSC = Framework.Utilities.DataManager.RequestPlugin<IDirectoryServiceConnector>();
+                        if (DSC != null)
+                        {
+                            LandData data = DSC.GetParcelInfo(regionID, (int)x, (int)y);
+                            if (data != null)
+                                parcelID = data.GlobalID;
+                        }
                     }
                 }
             }

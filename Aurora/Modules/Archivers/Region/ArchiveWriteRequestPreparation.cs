@@ -121,7 +121,7 @@ namespace Aurora.Modules.Archivers
 
             foreach (ISceneEntity sceneObject in sceneObjects)
             {
-                assetGatherer.GatherAssetUuids(sceneObject, assetUuids, m_scene);
+                assetGatherer.GatherAssetUuids(sceneObject, assetUuids);
             }
 
             MainConsole.Instance.InfoFormat(

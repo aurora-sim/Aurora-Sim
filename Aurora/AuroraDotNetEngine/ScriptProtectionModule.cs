@@ -759,7 +759,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
         public string TryGetPreviouslyCompiledScript(string source)
         {
             //string key = source.Length.ToString() + source.GetHashCode().ToString();
-            string key = Util.Md5Hash(source);
+            string key = source.Length.ToString() + Util.Md5Hash(source);
             string assemblyName = "";
             PreviouslyCompiled.TryGetValue(key, out assemblyName);
             //PreviouslyCompiled.TryGetValue (source, out assemblyName);

@@ -290,6 +290,7 @@ namespace Aurora.Services
             ISimulationService SimulationService = m_registry.RequestModuleInterface<ISimulationService>();
             IGridService GridService = m_registry.RequestModuleInterface<IGridService>();
             IAgentInfoService agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
+            IFriendsService friendsService = m_registry.RequestModuleInterface<IFriendsService>();
 
             if (SimulationService != null && GridService != null)
             {
@@ -313,6 +314,8 @@ namespace Aurora.Services
                 agentInfoService.SetLoggedIn(regionCaps.AgentID.ToString(), false, UUID.Zero, "");
                 agentInfoService.FireUserStatusChangeEvent(regionCaps.AgentID.ToString(), false, UUID.Zero);
             }
+            if (friendsService != null)
+                friendsService.SendFriendOnlineStatuses(regionCaps.AgentID, false);
 
             m_capsService.RemoveCAPS(regionCaps.AgentID);
         }
@@ -500,7 +503,7 @@ namespace Aurora.Services
 
                 int requestedPort = 0;
                 CreateAgentResponse createAgentResponse;
-                bool regionAccepted = CreateAgent(neighbor, otherRegionService, ref circuitData, SimulationService,
+                bool regionAccepted = CreateAgent(neighbor, otherRegionService, ref circuitData, SimulationService, new List<UUID>(),
                                                   out createAgentResponse);
                 reason = createAgentResponse.Reason;
                 if (regionAccepted)
@@ -1057,7 +1060,7 @@ namespace Aurora.Services
 
         #region Login initial agent
 
-        public virtual LoginAgentArgs LoginAgent(GridRegion region, AgentCircuitData aCircuit)
+        public virtual LoginAgentArgs LoginAgent(GridRegion region, AgentCircuitData aCircuit, List<UUID> friendsToInform)
         {
             bool success = false;
             string seedCap = "";
@@ -1083,7 +1086,7 @@ namespace Aurora.Services
                 int requestedUDPPort = 0;
                 CreateAgentResponse createAgentResponse;
                 // As we are creating the agent, we must also initialize the CapsService for the agent
-                success = CreateAgent(region, regionClientCaps, ref aCircuit, SimulationService,
+                success = CreateAgent(region, regionClientCaps, ref aCircuit, SimulationService, friendsToInform,
                                       out createAgentResponse);
 
                 reason = createAgentResponse.Reason;
@@ -1121,9 +1124,17 @@ namespace Aurora.Services
                     //Fix this so that it gets sent to the client that way
                     regionClientCaps.AddCAPS(createAgentResponse.CapsURIs);
                     regionClientCaps = clientCaps.GetCapsService(region.RegionID);
-                    regionClientCaps.LoopbackRegionIP = ipAddress;
-                    regionClientCaps.CircuitData.RegionUDPPort = requestedUDPPort;
-                    regionClientCaps.RootAgent = true;
+                    if (regionClientCaps != null)
+                    {
+                        regionClientCaps.LoopbackRegionIP = ipAddress;
+                        regionClientCaps.CircuitData.RegionUDPPort = requestedUDPPort;
+                        regionClientCaps.RootAgent = true;
+                    }
+                    else
+                    {
+                        success = false;
+                        reason = "Timeout error";
+                    }
                 }
             }
             else
@@ -1132,7 +1143,7 @@ namespace Aurora.Services
         }
 
         private bool CreateAgent(GridRegion region, IRegionClientCapsService regionCaps, ref AgentCircuitData aCircuit,
-                                 ISimulationService SimulationService, out CreateAgentResponse response)
+                                 ISimulationService SimulationService, List<UUID> friendsToInform, out CreateAgentResponse response)
         {
             CachedUserInfo info = new CachedUserInfo();
             IAgentConnector con = Framework.Utilities.DataManager.RequestPlugin<IAgentConnector>();
@@ -1159,6 +1170,11 @@ namespace Aurora.Services
             IAvatarService avatarService = m_registry.RequestModuleInterface<IAvatarService>();
             if (avatarService != null)
                 info.Appearance = avatarService.GetAppearance(aCircuit.AgentID);
+
+            info.FriendOnlineStatuses = friendsToInform;
+            IFriendsService friendsService = m_registry.RequestModuleInterface<IFriendsService>();
+            if (friendsService != null)
+                info.Friends = friendsService.GetFriends(aCircuit.AgentID);
 
             aCircuit.CachedUserInfo = info;
             return SimulationService.CreateAgent(region, aCircuit, aCircuit.TeleportFlags,

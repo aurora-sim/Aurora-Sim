@@ -134,7 +134,7 @@ namespace Aurora.Modules.Chat
 
         public void OnInstantMessage(IClientAPI client, GridInstantMessage im)
         {
-            byte dialog = im.dialog;
+            byte dialog = im.Dialog;
 
             if (dialog != (byte) InstantMessageDialog.MessageFromAgent
                 && dialog != (byte) InstantMessageDialog.StartTyping
@@ -150,14 +150,14 @@ namespace Aurora.Modules.Chat
                 if (client == null)
                 {
                     UserAccount account = m_Scene.UserAccountService.GetUserAccount(m_Scene.RegionInfo.AllScopeIDs,
-                                                                                    im.fromAgentID);
+                                                                                    im.FromAgentID);
                     if (account != null)
-                        im.fromAgentName = account.Name;
+                        im.FromAgentName = account.Name;
                     else
-                        im.fromAgentName = im.fromAgentName + "(No account found for this user)";
+                        im.FromAgentName = im.FromAgentName + "(No account found for this user)";
                 }
                 else
-                    im.fromAgentName = client.Name;
+                    im.FromAgentName = client.Name;
 
                 m_TransferModule.SendInstantMessage(im);
             }
@@ -168,7 +168,7 @@ namespace Aurora.Modules.Chat
         /// <param name="msg"></param>
         private void OnGridInstantMessage(GridInstantMessage msg)
         {
-            byte dialog = msg.dialog;
+            byte dialog = msg.Dialog;
 
             if (dialog != (byte) InstantMessageDialog.MessageFromAgent
                 && dialog != (byte) InstantMessageDialog.StartTyping
@@ -181,14 +181,14 @@ namespace Aurora.Modules.Chat
             if (m_TransferModule != null)
             {
                 UserAccount account = m_Scene.UserAccountService.GetUserAccount(m_Scene.RegionInfo.AllScopeIDs,
-                                                                                msg.fromAgentID);
+                                                                                msg.FromAgentID);
                 if (account != null)
-                    msg.fromAgentName = account.Name;
+                    msg.FromAgentName = account.Name;
                 else
-                    msg.fromAgentName = msg.fromAgentName + "(No account found for this user)";
+                    msg.FromAgentName = msg.FromAgentName + "(No account found for this user)";
 
                 IScenePresence presence = null;
-                if (m_Scene.TryGetScenePresence(msg.toAgentID, out presence))
+                if (m_Scene.TryGetScenePresence(msg.ToAgentID, out presence))
                 {
                     presence.ControllingClient.SendInstantMessage(msg);
                     return;

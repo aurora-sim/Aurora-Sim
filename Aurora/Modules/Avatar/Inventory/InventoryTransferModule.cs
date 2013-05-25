@@ -137,14 +137,14 @@ namespace Aurora.Modules.Inventory
         {
             //MainConsole.Instance.InfoFormat("[INVENTORY TRANSFER]: OnInstantMessage {0}", im.dialog);
 
-            if (im.dialog == (byte) InstantMessageDialog.InventoryOffered)
+            if (im.Dialog == (byte) InstantMessageDialog.InventoryOffered)
             {
                 //MainConsole.Instance.DebugFormat("Asset type {0}", ((AssetType)im.binaryBucket[0]));
 
-                if (im.binaryBucket.Length < 17) // Invalid
+                if (im.BinaryBucket.Length < 17) // Invalid
                     return;
 
-                UUID receipientID = im.toAgentID;
+                UUID receipientID = im.ToAgentID;
                 IScenePresence user = m_Scene.GetScenePresence(receipientID);
                 UUID copyID;
 
@@ -155,15 +155,15 @@ namespace Aurora.Modules.Inventory
                 if (user != null)
                 {
                     // First byte is the asset type
-                    AssetType assetType = (AssetType) im.binaryBucket[0];
+                    AssetType assetType = (AssetType) im.BinaryBucket[0];
 
                     if (AssetType.Folder == assetType)
                     {
-                        UUID folderID = new UUID(im.binaryBucket, 1);
+                        UUID folderID = new UUID(im.BinaryBucket, 1);
 
                         MainConsole.Instance.DebugFormat("[INVENTORY TRANSFER]: Inserting original folder {0} " +
                                                          "into agent {1}'s inventory",
-                                                         folderID, im.toAgentID);
+                                                         folderID, im.ToAgentID);
 
                         m_Scene.InventoryService.GiveInventoryFolderAsync(receipientID, client.AgentId,
                                                                           folderID, UUID.Zero, (folder) =>
@@ -187,13 +187,13 @@ namespace Aurora.Modules.Inventory
                                                                                                                copyID
                                                                                                                    .GetBytes
                                                                                                                    ();
-                                                                                                       im.binaryBucket =
+                                                                                                       im.BinaryBucket =
                                                                                                            new byte[
                                                                                                                1 +
                                                                                                                copyIDBytes
                                                                                                                    .Length
                                                                                                                ];
-                                                                                                       im.binaryBucket[0
+                                                                                                       im.BinaryBucket[0
                                                                                                            ] =
                                                                                                            (byte)
                                                                                                            AssetType
@@ -202,7 +202,7 @@ namespace Aurora.Modules.Inventory
                                                                                                            copyIDBytes,
                                                                                                            0,
                                                                                                            im
-                                                                                                               .binaryBucket,
+                                                                                                               .BinaryBucket,
                                                                                                            1,
                                                                                                            copyIDBytes
                                                                                                                .Length);
@@ -213,7 +213,7 @@ namespace Aurora.Modules.Inventory
                                                                                                                .SendBulkUpdateInventory
                                                                                                                (folder);
 
-                                                                                                       im.imSessionID =
+                                                                                                       im.SessionID =
                                                                                                            copyID;
                                                                                                        user
                                                                                                            .ControllingClient
@@ -226,15 +226,15 @@ namespace Aurora.Modules.Inventory
                         // First byte of the array is probably the item type
                         // Next 16 bytes are the UUID
 
-                        UUID itemID = new UUID(im.binaryBucket, 1);
+                        UUID itemID = new UUID(im.BinaryBucket, 1);
 
                         MainConsole.Instance.DebugFormat("[INVENTORY TRANSFER]: (giving) Inserting item {0} " +
                                                          "into agent {1}'s inventory",
-                                                         itemID, im.toAgentID);
+                                                         itemID, im.ToAgentID);
 
                         m_Scene.InventoryService.GiveInventoryItemAsync(
-                            im.toAgentID,
-                            im.fromAgentID, itemID, UUID.Zero, false, (itemCopy) =>
+                            im.ToAgentID,
+                            im.FromAgentID, itemID, UUID.Zero, false, (itemCopy) =>
                                                                           {
                                                                               if (itemCopy == null)
                                                                               {
@@ -246,7 +246,7 @@ namespace Aurora.Modules.Inventory
 
                                                                               copyID = itemCopy.ID;
                                                                               Array.Copy(copyID.GetBytes(), 0,
-                                                                                         im.binaryBucket, 1, 16);
+                                                                                         im.BinaryBucket, 1, 16);
 
                                                                               if (user != null)
                                                                               {
@@ -254,7 +254,7 @@ namespace Aurora.Modules.Inventory
                                                                                       .SendBulkUpdateInventory(itemCopy);
                                                                               }
 
-                                                                              im.imSessionID = itemCopy.ID;
+                                                                              im.SessionID = itemCopy.ID;
                                                                               user.ControllingClient.SendInstantMessage(
                                                                                   im);
                                                                           });
@@ -266,9 +266,9 @@ namespace Aurora.Modules.Inventory
                         m_TransferModule.SendInstantMessage(im);
                 }
             }
-            else if (im.dialog == (byte) InstantMessageDialog.InventoryAccepted)
+            else if (im.Dialog == (byte) InstantMessageDialog.InventoryAccepted)
             {
-                IScenePresence user = m_Scene.GetScenePresence(im.toAgentID);
+                IScenePresence user = m_Scene.GetScenePresence(im.ToAgentID);
 
                 if (user != null) // Local
                 {
@@ -280,7 +280,7 @@ namespace Aurora.Modules.Inventory
                         m_TransferModule.SendInstantMessage(im);
                 }
             }
-            else if (im.dialog == (byte) InstantMessageDialog.InventoryDeclined)
+            else if (im.Dialog == (byte) InstantMessageDialog.InventoryDeclined)
             {
                 // Here, the recipient is local and we can assume that the
                 // inventory is loaded. Courtesy of the above bulk update,
@@ -291,7 +291,7 @@ namespace Aurora.Modules.Inventory
                 InventoryFolderBase trashFolder =
                     invService.GetFolderForType(client.AgentId, InventoryType.Unknown, AssetType.TrashFolder);
 
-                UUID inventoryID = im.imSessionID; // The inventory item/folder, back from it's trip
+                UUID inventoryID = im.SessionID; // The inventory item/folder, back from it's trip
 
                 InventoryItemBase item = invService.GetItem(client.AgentId, inventoryID);
                 InventoryFolderBase folder = null;
@@ -335,7 +335,7 @@ namespace Aurora.Modules.Inventory
                                                  "received inventory" + reason, false);
                 }
 
-                IScenePresence user = m_Scene.GetScenePresence(im.toAgentID);
+                IScenePresence user = m_Scene.GetScenePresence(im.ToAgentID);
 
                 if (user != null) // Local
                 {
@@ -356,7 +356,7 @@ namespace Aurora.Modules.Inventory
         {
             // Find agent to deliver to
             //
-            IScenePresence user = m_Scene.GetScenePresence(msg.toAgentID);
+            IScenePresence user = m_Scene.GetScenePresence(msg.ToAgentID);
 
             // Just forward to local handling
             OnInstantMessage(user.ControllingClient, msg);

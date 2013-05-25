@@ -1,4 +1,14 @@
 ##
+## Readme
+##
+
+If you are using a release, skip down to the next section, otherwise, read on
+If you are using the master build, you will need to compile Aurora-Sim before you can use it.
+  To do this, follow the instructions in Compiling.txt for your system before continuing on with
+  this tutorial.
+
+
+##
 ## Setting up Aurora-Sim
 ##
   The first thing is to figure out which mode of Aurora-Sim you wish to run.

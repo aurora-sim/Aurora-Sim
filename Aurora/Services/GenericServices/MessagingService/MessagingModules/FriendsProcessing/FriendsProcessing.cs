@@ -44,7 +44,6 @@ namespace Aurora.Services
         #region Declares
 
         protected IRegistryCore m_registry;
-        protected IAgentInfoService m_agentInfoService;
 
         #endregion
 
@@ -57,78 +56,15 @@ namespace Aurora.Services
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            registry.RequestModuleInterface<ISimulationBase>().EventManager.RegisterEventHandler("UserStatusChange",
-                                                                                                 OnGenericEvent);
         }
 
         public void FinishedStartup()
         {
             //Also look for incoming messages to display
-            m_agentInfoService = m_registry.RequestModuleInterface<IAgentInfoService>();
             m_registry.RequestModuleInterface<ISyncMessageRecievedService>().OnMessageReceived += OnMessageReceived;
         }
 
         #endregion
-
-        protected object OnGenericEvent(string FunctionName, object parameters)
-        {
-            if (FunctionName == "UserStatusChange")
-            {
-                //A user has logged in or out... we need to update friends lists across the grid
-
-                System.Threading.WaitCallback delayed = state =>
-                {
-                    System.Threading.Thread.Sleep(5000);
-                    SendFriendStatusChanges(parameters);
-                };
-
-                System.Threading.ThreadPool.QueueUserWorkItem(delayed);
-            }
-            return null;
-        }
-
-        private void SendFriendStatusChanges(object parameters)
-        {
-            ISyncMessagePosterService asyncPoster = m_registry.RequestModuleInterface<ISyncMessagePosterService>();
-            IFriendsService friendsService = m_registry.RequestModuleInterface<IFriendsService>();
-            if (asyncPoster != null && friendsService != null)
-            {
-                //Get all friends
-                object[] info = (object[])parameters;
-                UUID us = UUID.Parse(info[0].ToString());
-                bool isOnline = bool.Parse(info[1].ToString());
-
-                List<FriendInfo> friends = friendsService.GetFriends(us);
-                List<UUID> OnlineFriends = new List<UUID>();
-                foreach (FriendInfo friend in friends)
-                {
-                    if (friend.TheirFlags == -1 || friend.MyFlags == -1)
-                        continue; //Not validiated yet!
-                    UUID FriendToInform = UUID.Zero;
-                    if (!UUID.TryParse(friend.Friend, out FriendToInform))
-                        continue;
-
-                    UserInfo user = m_agentInfoService.GetUserInfo(friend.Friend);
-                    //Now find their caps service so that we can find where they are root (and if they are logged in)
-                    if (user != null && user.IsOnline)
-                    {
-                        //Find the root agent
-                        OnlineFriends.Add(FriendToInform);
-                        //Post!
-                        asyncPoster.Post(user.CurrentRegionURI,
-                                         SyncMessageHelper.AgentStatusChange(us, FriendToInform, isOnline));
-                    }
-                }
-                //If the user is coming online, send all their friends online statuses to them
-                if (isOnline)
-                {
-                    UserInfo user = m_agentInfoService.GetUserInfo(us.ToString());
-                    if (user != null)
-                        asyncPoster.Post(user.CurrentRegionURI,
-                                         SyncMessageHelper.AgentStatusChanges(OnlineFriends, us, true));
-                }
-            }
-        }
 
         protected OSDMap OnMessageReceived(OSDMap message)
         {
@@ -150,7 +86,7 @@ namespace Aurora.Services
                     if (friendsModule != null)
                     {
                         //Send the message
-                        friendsModule.SendFriendsStatusMessage(FriendToInformID, AgentID, NewStatus);
+                        friendsModule.SendFriendsStatusMessage(FriendToInformID, new [] { AgentID }, NewStatus);
                     }
                 }
             }
@@ -170,8 +106,7 @@ namespace Aurora.Services
                     if (friendsModule != null)
                     {
                         //Send the message
-                        foreach (UUID agentID in AgentIDs)
-                            friendsModule.SendFriendsStatusMessage(FriendToInformID, agentID, NewStatus);
+                        friendsModule.SendFriendsStatusMessage(FriendToInformID, AgentIDs.ToArray(), NewStatus);
                     }
                 }
             }

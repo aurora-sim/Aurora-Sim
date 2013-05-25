@@ -163,7 +163,8 @@ namespace Aurora.Modules
             if (m_scene != null)
             {
                 IGridRegisterModule gridRegister = m_scene.RequestModuleInterface<IGridRegisterModule>();
-                gridRegister.UpdateGridRegion(m_scene);
+                //Re-register so that if the position has changed, we get the new neighbors
+                gridRegister.RegisterRegionWithGrid(m_scene, true, false, null);
 
                 ForceBackup();
 

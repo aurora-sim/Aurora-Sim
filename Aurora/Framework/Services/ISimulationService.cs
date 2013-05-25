@@ -49,19 +49,21 @@ namespace Aurora.Framework.Services
         public List<GridInstantMessage> OfflineMessages = new List<GridInstantMessage>();
         public List<MuteList> MuteList = new List<MuteList>();
         public AvatarAppearance Appearance = null;
+        public List<UUID> FriendOnlineStatuses = new List<UUID>();
+        public List<FriendInfo> Friends = new List<FriendInfo>();
 
         public override void FromOSD(OSDMap map)
         {
             AgentInfo = new IAgentInfo();
             AgentInfo.FromOSD((OSDMap) (map["AgentInfo"]));
             UserAccount = new UserAccount();
-            UserAccount.FromOSD((OSDMap) (map["UserAccount"]));
+            UserAccount.FromOSD((OSDMap)(map["UserAccount"]));
             if (!map.ContainsKey("ActiveGroup"))
                 ActiveGroup = null;
             else
             {
                 ActiveGroup = new GroupMembershipData();
-                ActiveGroup.FromOSD((OSDMap) (map["ActiveGroup"]));
+                ActiveGroup.FromOSD((OSDMap)(map["ActiveGroup"]));
             }
             GroupMemberships = ((OSDArray) map["GroupMemberships"]).ConvertAll<GroupMembershipData>((o) =>
                                                                                                         {
@@ -97,6 +99,15 @@ namespace Aurora.Framework.Services
                 Appearance = new AvatarAppearance();
                 Appearance.FromOSD((OSDMap)map["Appearance"]);
             }
+            if (map.ContainsKey("FriendOnlineStatuses"))
+                FriendOnlineStatuses = ((OSDArray)map["FriendOnlineStatuses"]).ConvertAll<UUID>((o) => { return o; });
+            if (map.ContainsKey("Friends"))
+                Friends = ((OSDArray)map["Friends"]).ConvertAll<FriendInfo>((o) =>
+                { 
+                    FriendInfo f = new FriendInfo();
+                    f.FromOSD((OSDMap)o);
+                    return f; 
+                });
         }
 
         public override OSDMap ToOSD()
@@ -111,6 +122,8 @@ namespace Aurora.Framework.Services
             map["MuteList"] = MuteList.ToOSDArray();
             if(Appearance != null)
                 map["Appearance"] = Appearance.ToOSD();
+            map["FriendOnlineStatuses"] = FriendOnlineStatuses.ToOSDArray();
+            map["Friends"] = Friends.ToOSDArray();
             return map;
         }
     }

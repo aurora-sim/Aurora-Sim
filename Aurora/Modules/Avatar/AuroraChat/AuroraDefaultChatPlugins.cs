@@ -213,24 +213,21 @@ namespace Aurora.Modules.Chat
                     if (message[1] == "SayDistance")
                     {
                         chatModule.SayDistance = Convert.ToInt32(message[2]);
-                        chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(c.Scene.RegionInfo.RegionLocX,
-                                                                                        c.Scene.RegionInfo.RegionLocY, 0),
+                        chatModule.TrySendChatMessage(senderSP, c.Position,
                                                       UUID.Zero, "AuroraChat", ChatTypeEnum.Region,
                                                       message[1] + " changed.", ChatSourceType.System, -1);
                     }
                     if (message[1] == "WhisperDistance")
                     {
                         chatModule.WhisperDistance = Convert.ToInt32(message[2]);
-                        chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(c.Scene.RegionInfo.RegionLocX,
-                                                                                        c.Scene.RegionInfo.RegionLocY, 0),
+                        chatModule.TrySendChatMessage(senderSP, c.Position,
                                                       UUID.Zero, "AuroraChat", ChatTypeEnum.Region,
                                                       message[1] + " changed.", ChatSourceType.System, -1);
                     }
                     if (message[1] == "ShoutDistance")
                     {
                         chatModule.ShoutDistance = Convert.ToInt32(message[2]);
-                        chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(c.Scene.RegionInfo.RegionLocX,
-                                                                                        c.Scene.RegionInfo.RegionLocY, 0),
+                        chatModule.TrySendChatMessage(senderSP, c.Position,
                                                       UUID.Zero, "AuroraChat", ChatTypeEnum.Region,
                                                       message[1] + " changed.", ChatSourceType.System, -1);
                     }
@@ -240,8 +237,7 @@ namespace Aurora.Modules.Chat
                         IScenePresence NewSP;
                         c.Scene.TryGetAvatarByName(message[2], out NewSP);
                         m_authList.Add(NewSP.UUID);
-                        chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(c.Scene.RegionInfo.RegionLocX,
-                                                                                        c.Scene.RegionInfo.RegionLocY, 0),
+                        chatModule.TrySendChatMessage(senderSP, c.Position,
                                                       UUID.Zero, "AuroraChat", ChatTypeEnum.Region,
                                                       message[2] + " added.", ChatSourceType.System, -1);
                     }
@@ -250,8 +246,7 @@ namespace Aurora.Modules.Chat
                         IScenePresence NewSP;
                         c.Scene.TryGetAvatarByName(message[2], out NewSP);
                         m_authList.Remove(NewSP.UUID);
-                        chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(c.Scene.RegionInfo.RegionLocX,
-                                                                                        c.Scene.RegionInfo.RegionLocY, 0),
+                        chatModule.TrySendChatMessage(senderSP, c.Position,
                                                       UUID.Zero, "AuroraChat", ChatTypeEnum.Region,
                                                       message[2] + " added.", ChatSourceType.System, -1);
                     }
@@ -259,8 +254,7 @@ namespace Aurora.Modules.Chat
                     if (message[1] == "BlockChat")
                     {
                         m_blockChat = true;
-                        chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(c.Scene.RegionInfo.RegionLocX,
-                                                                                        c.Scene.RegionInfo.RegionLocY, 0),
+                        chatModule.TrySendChatMessage(senderSP, c.Position,
                                                       UUID.Zero, "AuroraChat", ChatTypeEnum.Region, "Chat blocked.",
                                                       ChatSourceType.System, -1);
                     }
@@ -268,8 +262,7 @@ namespace Aurora.Modules.Chat
                     if (message[1] == "AllowChat")
                     {
                         m_blockChat = false;
-                        chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(c.Scene.RegionInfo.RegionLocX,
-                                                                                        c.Scene.RegionInfo.RegionLocY, 0),
+                        chatModule.TrySendChatMessage(senderSP, c.Position,
                                                       UUID.Zero, "AuroraChat", ChatTypeEnum.Region, "Chat allowed.",
                                                       ChatSourceType.System, -1);
                     }
@@ -279,8 +272,7 @@ namespace Aurora.Modules.Chat
                         IScenePresence NewSP;
                         c.Scene.TryGetAvatarByName(message[2], out NewSP);
                         m_authorizedSpeakers.Remove(NewSP.UUID);
-                        chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(c.Scene.RegionInfo.RegionLocX,
-                                                                                        c.Scene.RegionInfo.RegionLocY, 0),
+                        chatModule.TrySendChatMessage(senderSP, c.Position,
                                                       UUID.Zero, "AuroraChat", ChatTypeEnum.Region,
                                                       message[2] + " - revoked.", ChatSourceType.System, -1);
                     }
@@ -290,8 +282,7 @@ namespace Aurora.Modules.Chat
                         IScenePresence NewSP;
                         c.Scene.TryGetAvatarByName(message[2], out NewSP);
                         m_authorizedSpeakers.Add(NewSP.UUID);
-                        chatModule.TrySendChatMessage(senderSP, c.Position, new Vector3(c.Scene.RegionInfo.RegionLocX,
-                                                                                        c.Scene.RegionInfo.RegionLocY, 0),
+                        chatModule.TrySendChatMessage(senderSP, c.Position,
                                                       UUID.Zero, "AuroraChat", ChatTypeEnum.Region,
                                                       message[2] + " - revoked.", ChatSourceType.System, -1);
                     }
@@ -315,14 +306,14 @@ namespace Aurora.Modules.Chat
         public void OnNewClient(IClientAPI client)
         {
             IScenePresence SP = client.Scene.GetScenePresence(client.AgentId);
+            //If chat is not blocked for now, add to the not blocked list
+            if (!m_blockChat)
+            {
+                if (!m_authorizedSpeakers.Contains(client.AgentId))
+                    m_authorizedSpeakers.Add(client.AgentId);
+            }
             if (!SP.IsChildAgent)
             {
-                //If chat is not blocked for now, add to the not blocked list
-                if (!m_blockChat)
-                {
-                    if (!m_authorizedSpeakers.Contains(client.AgentId))
-                        m_authorizedSpeakers.Add(client.AgentId);
-                }
 
                 //Tell all the clients about the incoming client if it is enabled
                 if (m_announceNewAgents)

@@ -73,6 +73,9 @@ namespace Aurora.Modules.Startup
         public bool RegisterRegionWithGrid(IScene scene, bool returnResponseFirstTime, bool continueTrying,
                                            string password)
         {
+            if (password == null)
+                password = m_RegisterRegionPassword;
+
             GridRegion region = new GridRegion(scene.RegionInfo);
 
             IGridService GridService = scene.RequestModuleInterface<IGridService>();

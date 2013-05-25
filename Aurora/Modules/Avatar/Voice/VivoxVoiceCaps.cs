@@ -221,83 +221,6 @@ namespace Aurora.Modules
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            if (m_registry == null)
-                return;
-            ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
-            if (manager != null)
-            {
-                manager.OnAddedScene += scene =>
-                                            {
-                                                lock (vlock)
-                                                {
-                                                    string channelId;
-
-                                                    string sceneUUID = scene.RegionInfo.RegionID.ToString();
-                                                    string sceneName = scene.RegionInfo.RegionName;
-
-                                                    // Make sure that all local channels are deleted.
-                                                    // So we have to search for the children, and then do an
-                                                    // iteration over the set of chidren identified.
-                                                    // This assumes that there is just one directory per
-                                                    // region.
-
-                                                    if (VivoxTryGetDirectory(sceneUUID + "D", out channelId))
-                                                    {
-                                                        MainConsole.Instance.DebugFormat(
-                                                            "[VivoxVoice]: region {0}: uuid {1}: located directory id {2}",
-                                                            sceneName, sceneUUID, channelId);
-
-                                                        XmlElement children = VivoxListChildren(channelId);
-                                                        string count;
-
-                                                        if (XmlFind(children, "response.level0.channel-search.count",
-                                                                    out count))
-                                                        {
-                                                            int cnum = Convert.ToInt32(count);
-                                                            for (int i = 0; i < cnum; i++)
-                                                            {
-                                                                string id;
-                                                                if (XmlFind(children,
-                                                                            "response.level0.channel-search.channels.channels.level4.id",
-                                                                            i, out id))
-                                                                {
-                                                                    if (!IsOK(VivoxDeleteChannel(channelId, id)))
-                                                                        MainConsole.Instance.WarnFormat(
-                                                                            "[VivoxVoice] Channel delete failed {0}:{1}:{2}",
-                                                                            i, channelId, id);
-                                                                }
-                                                            }
-                                                        }
-                                                    }
-                                                    else
-                                                    {
-                                                        if (
-                                                            !VivoxTryCreateDirectory(sceneUUID + "D", sceneName,
-                                                                                     out channelId))
-                                                        {
-                                                            MainConsole.Instance.WarnFormat(
-                                                                "[VivoxVoice] Create failed <{0}:{1}:{2}>",
-                                                                "*", sceneUUID, sceneName);
-                                                            channelId = String.Empty;
-                                                        }
-                                                    }
-
-
-                                                    // Create a dictionary entry unconditionally. This eliminates the
-                                                    // need to check for a parent in the core code. The end result is
-                                                    // the same, if the parent table entry is an empty string, then
-                                                    // region channels will be created as first-level channels.
-
-                                                    lock (m_parents)
-                                                        if (!m_parents.ContainsKey(sceneUUID))
-                                                            m_parents.Add(sceneUUID, channelId);
-                                                }
-                                            };
-            }
-            ISyncMessageRecievedService syncRecievedService =
-                m_registry.RequestModuleInterface<ISyncMessageRecievedService>();
-            if (syncRecievedService != null)
-                syncRecievedService.OnMessageReceived += syncRecievedService_OnMessageReceived;
         }
 
         public void FinishedStartup()
@@ -305,67 +228,6 @@ namespace Aurora.Modules
             //if (m_pluginEnabled)
             //    VivoxLogout();
         }
-
-        #region Region-side message sending
-
-        private OSDMap syncRecievedService_OnMessageReceived(OSDMap message)
-        {
-            string method = message["Method"];
-            if (method == "GetParcelChannelInfo")
-            {
-                ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
-                IScenePresence avatar = manager.Scene.GetScenePresence(message["AvatarID"].AsUUID());
-
-                bool success = false;
-                bool noAgent = false;
-                // get channel_uri: check first whether estate
-                // settings allow voice, then whether parcel allows
-                // voice, if all do retrieve or obtain the parcel
-                // voice channel
-                if (!manager.Scene.RegionInfo.EstateSettings.AllowVoice)
-                {
-                    MainConsole.Instance.DebugFormat(
-                        "[VivoxVoice][PARCELVOICE]: region \"{0}\": voice not enabled in estate settings",
-                        manager.Scene.RegionInfo.RegionName);
-                    success = false;
-                }
-                else if (avatar == null || avatar.CurrentParcel == null)
-                {
-                    noAgent = true;
-                    success = false;
-                }
-                else if ((avatar.CurrentParcel.LandData.Flags & (uint) ParcelFlags.AllowVoiceChat) == 0)
-                {
-                    MainConsole.Instance.DebugFormat(
-                        "[VivoxVoice][PARCELVOICE]: region \"{0}\": Parcel \"{1}\" ({2}): avatar \"{3}\": voice not enabled for parcel",
-                        manager.Scene.RegionInfo.RegionName, avatar.CurrentParcel.LandData.Name,
-                        avatar.CurrentParcel.LandData.LocalID, avatar.Name);
-                    success = false;
-                }
-                else
-                {
-                    MainConsole.Instance.DebugFormat(
-                        "[VivoxVoice]: region \"{0}\": voice enabled in estate settings, creating parcel voice",
-                        manager.Scene.RegionInfo.RegionName);
-                    success = true;
-                }
-                OSDMap map = new OSDMap();
-                map["Success"] = success;
-                map["NoAgent"] = noAgent;
-                if (success)
-                {
-                    map["ParcelID"] = avatar.CurrentParcel.LandData.GlobalID;
-                    map["ParcelName"] = avatar.CurrentParcel.LandData.Name;
-                    map["LocalID"] = avatar.CurrentParcel.LandData.LocalID;
-                    map["ParcelFlags"] = avatar.CurrentParcel.LandData.Flags;
-                    lock (m_parents) map["ParentID"] = m_parents[avatar.Scene.RegionInfo.RegionID.ToString()];
-                }
-                return map;
-            }
-            return null;
-        }
-
-        #endregion
 
         #region IVoiceModule Members
 
@@ -499,14 +361,14 @@ namespace Aurora.Modules
             UUID parcelID;
             string parcelName, ParentID;
             uint parcelFlags;
-            GetParcelChannelInfo(regionClient.AgentID, user.CurrentRegionURI, out success, out parcelID, out parcelName,
+            GetParcelChannelInfo(regionClient.AgentID, regionClient.Region, user.CurrentRegionURI, out success, out parcelID, out parcelName,
                                  out localID, out parcelFlags, out ParentID);
             if (success)
                 channel_uri = RegionGetOrCreateChannel(user.CurrentRegionID, regionClient.Region.RegionName, parcelID,
                                                        parcelName, localID, parcelFlags, ParentID);
         }
 
-        public void GetParcelChannelInfo(UUID avatarID, string URL,
+        public void GetParcelChannelInfo(UUID avatarID, Aurora.Framework.Services.GridRegion region, string URL,
                                          out bool success, out UUID parcelID, out string parcelName, out int localID,
                                          out uint parcelFlags, out string ParentID)
         {
@@ -526,7 +388,80 @@ namespace Aurora.Modules
             parcelName = response["ParcelName"];
             localID = response["LocalID"];
             parcelFlags = response["ParcelFlags"];
-            ParentID = response["ParentID"];
+            ParentID = GetParentIDForRegion(region);
+        }
+
+        private string GetParentIDForRegion(Aurora.Framework.Services.GridRegion region)
+        {
+            lock (vlock)
+            {
+                string sceneUUID = region.RegionID.ToString();
+                lock (m_parents)
+                    if (m_parents.ContainsKey(sceneUUID))
+                        return m_parents[sceneUUID];
+
+                string channelId;
+
+                string sceneName = region.RegionName;
+
+                // Make sure that all local channels are deleted.
+                // So we have to search for the children, and then do an
+                // iteration over the set of chidren identified.
+                // This assumes that there is just one directory per
+                // region.
+
+                if (VivoxTryGetDirectory(sceneUUID + "D", out channelId))
+                {
+                    MainConsole.Instance.DebugFormat(
+                        "[VivoxVoice]: region {0}: uuid {1}: located directory id {2}",
+                        sceneName, sceneUUID, channelId);
+
+                    XmlElement children = VivoxListChildren(channelId);
+                    string count;
+
+                    if (XmlFind(children, "response.level0.channel-search.count",
+                                out count))
+                    {
+                        int cnum = Convert.ToInt32(count);
+                        for (int i = 0; i < cnum; i++)
+                        {
+                            string id;
+                            if (XmlFind(children,
+                                        "response.level0.channel-search.channels.channels.level4.id",
+                                        i, out id))
+                            {
+                                if (!IsOK(VivoxDeleteChannel(channelId, id)))
+                                    MainConsole.Instance.WarnFormat(
+                                        "[VivoxVoice] Channel delete failed {0}:{1}:{2}",
+                                        i, channelId, id);
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (
+                        !VivoxTryCreateDirectory(sceneUUID + "D", sceneName,
+                                                 out channelId))
+                    {
+                        MainConsole.Instance.WarnFormat(
+                            "[VivoxVoice] Create failed <{0}:{1}:{2}>",
+                            "*", sceneUUID, sceneName);
+                        channelId = String.Empty;
+                    }
+                }
+
+
+                // Create a dictionary entry unconditionally. This eliminates the
+                // need to check for a parent in the core code. The end result is
+                // the same, if the parent table entry is an empty string, then
+                // region channels will be created as first-level channels.
+
+                lock (m_parents)
+                    if (!m_parents.ContainsKey(sceneUUID))
+                        m_parents.Add(sceneUUID, channelId);
+                return channelId;
+            }
         }
 
         private string RegionGetOrCreateChannel(UUID regionID, string regionName, UUID parcelID, string parcelName,

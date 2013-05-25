@@ -32,14 +32,17 @@ using Aurora.Framework.Modules;
 using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Servers;
+using Aurora.Framework.Servers.HttpServer;
+using Aurora.Framework.Servers.HttpServer.Implementation;
 using Aurora.Framework.Services;
+using Aurora.Framework.Utilities;
 using Nini.Config;
-using Nwc.XmlRpc;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using GridRegion = Aurora.Framework.Services.GridRegion;
@@ -97,7 +100,7 @@ namespace Aurora.Modules.Chat
 
         public virtual void SendInstantMessage(GridInstantMessage im)
         {
-            UUID toAgentID = im.toAgentID;
+            UUID toAgentID = im.ToAgentID;
 
             //Look locally first
             IScenePresence user;
@@ -109,7 +112,7 @@ namespace Aurora.Modules.Chat
             ISceneChildEntity childPrim = null;
             if ((childPrim = m_Scene.GetSceneObjectPart(toAgentID)) != null)
             {
-                im.toAgentID = childPrim.OwnerID;
+                im.ToAgentID = childPrim.OwnerID;
                 SendInstantMessage(im);
                 return;
             }
@@ -134,8 +137,7 @@ namespace Aurora.Modules.Chat
 
             m_Enabled = true;
 
-            MainServer.Instance.AddXmlRPCHandler(
-                "grid_instant_message", processXMLRPCGridInstantMessage);
+            MainServer.Instance.AddStreamHandler(new GenericStreamHandler("POST", "/gridinstantmessages/", processGridInstantMessage));
         }
 
         public virtual void AddRegion(IScene scene)
@@ -192,58 +194,36 @@ namespace Aurora.Modules.Chat
             //MainConsole.Instance.DebugFormat("[INSTANT MESSAGE]: Undeliverable");
         }
 
-        /// <summary>
-        ///     Process a XMLRPC Grid Instant Message
-        /// </summary>
-        /// <param name="request">
-        ///     XMLRPC parameters
-        /// </param>
-        /// <param name="remoteClient"> </param>
-        /// <returns>Nothing much</returns>
-        protected virtual XmlRpcResponse processXMLRPCGridInstantMessage(XmlRpcRequest request, IPEndPoint remoteClient)
+        protected virtual byte[] processGridInstantMessage(string path, Stream request, OSHttpRequest httpRequest, OSHttpResponse httpResponse)
         {
+            GridInstantMessage gim = ProtoBuf.Serializer.Deserialize<GridInstantMessage>(request);
+            
+            // Trigger the Instant message in the scene.
+            IScenePresence user;
             bool successful = false;
-            GridInstantMessage gim = new GridInstantMessage();
-            Hashtable requestData = (Hashtable) request.Params[0];
-
-            if (requestData.ContainsKey("message"))
+            if (m_Scene.TryGetScenePresence(gim.ToAgentID, out user))
             {
-                gim.FromOSD((OSDMap) OSDParser.DeserializeJson(requestData["message"].ToString()));
-                
-                // Trigger the Instant message in the scene.
-                IScenePresence user;
-                if (m_Scene.TryGetScenePresence(gim.toAgentID, out user))
+                if (!user.IsChildAgent)
                 {
-                    if (!user.IsChildAgent)
-                    {
-                        m_Scene.EventManager.TriggerIncomingInstantMessage(gim);
-                        successful = true;
-                    }
+                    m_Scene.EventManager.TriggerIncomingInstantMessage(gim);
+                    successful = true;
                 }
-                if (!successful)
-                {
-                    // If the message can't be delivered to an agent, it
-                    // is likely to be a group IM. On a group IM, the
-                    // imSessionID = toAgentID = group id. Raise the
-                    // unhandled IM event to give the groups module
-                    // a chance to pick it up. We raise that in a random
-                    // scene, since the groups module is shared.
-                    //
-                    m_Scene.EventManager.TriggerUnhandledInstantMessage(gim);
-                }
+            }
+            if (!successful)
+            {
+                // If the message can't be delivered to an agent, it
+                // is likely to be a group IM. On a group IM, the
+                // imSessionID = toAgentID = group id. Raise the
+                // unhandled IM event to give the groups module
+                // a chance to pick it up. We raise that in a random
+                // scene, since the groups module is shared.
+                //
+                m_Scene.EventManager.TriggerUnhandledInstantMessage(gim);
             }
 
             //Send response back to region calling if it was successful
             // calling region uses this to know when to look up a user's location again.
-            XmlRpcResponse resp = new XmlRpcResponse();
-            Hashtable respdata = new Hashtable();
-            if (successful)
-                respdata["success"] = "TRUE";
-            else
-                respdata["success"] = "FALSE";
-            resp.Value = respdata;
-
-            return resp;
+            return new byte[1] { successful ? (byte)1 : (byte)0 };
         }
 
         protected virtual void GridInstantMessageCompleted(IAsyncResult iar)
@@ -279,21 +259,16 @@ namespace Aurora.Modules.Chat
             foreach (KeyValuePair<UUID, string> kvp in HTTPPaths)
             {
                 //Fix the agentID
-                im.toAgentID = kvp.Key;
-                Hashtable msgdata = ConvertGridInstantMessageToXMLRPC(im);
+                im.ToAgentID = kvp.Key;
                 //We've tried to send an IM to them before, pull out their info
                 //Send the IM to their last location
-                if (!doIMSending(kvp.Value, msgdata))
+                if (!doIMSending(kvp.Value, im))
                 {
-                    msgdata = ConvertGridInstantMessageToXMLRPCXML(im);
-                    if (!doIMSending(kvp.Value, msgdata))
+                    //If this fails, the user has either moved from their stored location or logged out
+                    //Since it failed, let it look them up again and rerun
+                    lock (IMUsersCache)
                     {
-                        //If this fails, the user has either moved from their stored location or logged out
-                        //Since it failed, let it look them up again and rerun
-                        lock (IMUsersCache)
-                        {
-                            IMUsersCache.Remove(kvp.Key);
-                        }
+                        IMUsersCache.Remove(kvp.Key);
                     }
                 }
                 else
@@ -318,7 +293,7 @@ namespace Aurora.Modules.Chat
 
             //Ask for the user new style first
             List<string> AgentLocations =
-                m_Scene.RequestModuleInterface<IAgentInfoService>().GetAgentsLocations(im.fromAgentID.ToString(),
+                m_Scene.RequestModuleInterface<IAgentInfoService>().GetAgentsLocations(im.FromAgentID.ToString(),
                                                                                        Queries);
             //If this is false, this doesn't exist on the presence server and we use the legacy way
             if (AgentLocations.Count != 0)
@@ -332,7 +307,7 @@ namespace Aurora.Modules.Chat
                         MainConsole.Instance.Debug("[GRID INSTANT MESSAGE]: Unable to deliver an instant message to " +
                                                    users[i] +
                                                    ", user was not online");
-                        im.toAgentID = users[i];
+                        im.ToAgentID = users[i];
                         HandleUndeliveredMessage(im, "User is not set as online by presence service.");
                         continue;
                     }
@@ -342,7 +317,7 @@ namespace Aurora.Modules.Chat
                         MainConsole.Instance.Info("[GRID INSTANT MESSAGE]: Unable to deliver an instant message to " +
                                                   users[i] +
                                                   ", user does not exist");
-                        im.toAgentID = users[i];
+                        im.ToAgentID = users[i];
                         HandleUndeliveredMessage(im, "User does not exist.");
                         continue;
                     }
@@ -361,21 +336,16 @@ namespace Aurora.Modules.Chat
             {
                 if (kvp.Value != "")
                 {
-                    im.toAgentID = kvp.Key;
-                    Hashtable msgdata = ConvertGridInstantMessageToXMLRPC(im);
-                    if (!doIMSending(kvp.Value, msgdata))
+                    im.ToAgentID = kvp.Key;
+                    if (!doIMSending(kvp.Value, im))
                     {
-                        msgdata = ConvertGridInstantMessageToXMLRPCXML(im);
-                        if (!doIMSending(kvp.Value, msgdata))
+                        //It failed
+                        lock (IMUsersCache)
                         {
-                            //It failed
-                            lock (IMUsersCache)
-                            {
-                                //Remove them so we keep testing against the db
-                                IMUsersCache.Remove(kvp.Key);
-                            }
-                            HandleUndeliveredMessage(im, "Failed to send IM to destination.");
+                            //Remove them so we keep testing against the db
+                            IMUsersCache.Remove(kvp.Key);
                         }
+                        HandleUndeliveredMessage(im, "Failed to send IM to destination.");
                     }
                     else
                     {
@@ -414,10 +384,8 @@ namespace Aurora.Modules.Chat
         protected virtual void SendGridInstantMessageViaXMLRPCAsync(GridInstantMessage im,
                                                                     GridRegion prevRegion)
         {
-            UUID toAgentID = im.toAgentID;
+            UUID toAgentID = im.ToAgentID;
             string HTTPPath = "";
-
-            Hashtable msgdata = ConvertGridInstantMessageToXMLRPC(im);
 
             lock (IMUsersCache)
             {
@@ -429,25 +397,16 @@ namespace Aurora.Modules.Chat
             {
                 //We've tried to send an IM to them before, pull out their info
                 //Send the IM to their last location
-                if (!doIMSending(HTTPPath, msgdata))
+                if (!doIMSending(HTTPPath, im))
                 {
-                    msgdata = ConvertGridInstantMessageToXMLRPCXML(im);
-                    if (!doIMSending(HTTPPath, msgdata))
+                    //If this fails, the user has either moved from their stored location or logged out
+                    //Since it failed, let it look them up again and rerun
+                    lock (IMUsersCache)
                     {
-                        //If this fails, the user has either moved from their stored location or logged out
-                        //Since it failed, let it look them up again and rerun
-                        lock (IMUsersCache)
-                        {
-                            IMUsersCache.Remove(toAgentID);
-                        }
-                        //Clear the path and let it continue trying again.
-                        HTTPPath = "";
+                        IMUsersCache.Remove(toAgentID);
                     }
-                    else
-                    {
-                        //Send the IM, and it made it to the user, return true
-                        return;
-                    }
+                    //Clear the path and let it continue trying again.
+                    HTTPPath = "";
                 }
                 else
                 {
@@ -458,7 +417,7 @@ namespace Aurora.Modules.Chat
 
             //Now query the grid server for the agent
             IAgentInfoService ais = m_Scene.RequestModuleInterface<IAgentInfoService>();
-            List<string> AgentLocations = ais.GetAgentsLocations(im.fromAgentID.ToString(),
+            List<string> AgentLocations = ais.GetAgentsLocations(im.FromAgentID.ToString(),
                                                                  new List<string>(new[] {toAgentID.ToString()}));
             if (AgentLocations.Count > 0)
             {
@@ -489,30 +448,18 @@ namespace Aurora.Modules.Chat
             //We found the agent's location, now ask them about the user
             if (HTTPPath != "")
             {
-                if (!doIMSending(HTTPPath, msgdata))
+                if (!doIMSending(HTTPPath, im))
                 {
-                    msgdata = ConvertGridInstantMessageToXMLRPCXML(im);
-                    if (!doIMSending(HTTPPath, msgdata))
+                    //It failed, stop now
+                    lock (IMUsersCache)
                     {
-                        //It failed, stop now
-                        lock (IMUsersCache)
-                        {
-                            //Remove them so we keep testing against the db
-                            IMUsersCache.Remove(toAgentID);
-                        }
-                        MainConsole.Instance.Info(
-                            "[GRID INSTANT MESSAGE]: Unable to deliver an instant message as the region could not be found");
-                        HandleUndeliveredMessage(im, "Failed to send IM to destination.");
-                        return;
+                        //Remove them so we keep testing against the db
+                        IMUsersCache.Remove(toAgentID);
                     }
-                    else
-                    {
-                        //Add to the cache
-                        if (!IMUsersCache.ContainsKey(toAgentID))
-                            IMUsersCache.Add(toAgentID, HTTPPath);
-                        //Send the IM, and it made it to the user, return true
-                        return;
-                    }
+                    MainConsole.Instance.Info(
+                        "[GRID INSTANT MESSAGE]: Unable to deliver an instant message as the region could not be found");
+                    HandleUndeliveredMessage(im, "Failed to send IM to destination.");
+                    return;
                 }
                 else
                 {
@@ -543,74 +490,12 @@ namespace Aurora.Modules.Chat
         /// <param name="httpInfo">RegionInfo we pull the data out of to send the request to</param>
         /// <param name="xmlrpcdata">The Instant Message data Hashtable</param>
         /// <returns>Bool if the message was successfully delivered at the other side.</returns>
-        protected virtual bool doIMSending(string httpInfo, Hashtable xmlrpcdata)
+        protected virtual bool doIMSending(string httpInfo, GridInstantMessage message)
         {
-            ArrayList SendParams = new ArrayList {xmlrpcdata};
-            XmlRpcRequest GridReq = new XmlRpcRequest("grid_instant_message", SendParams);
-            try
-            {
-                XmlRpcResponse GridResp = GridReq.Send(httpInfo, 7000);
-
-                Hashtable responseData = (Hashtable) GridResp.Value;
-
-                if (responseData.ContainsKey("success"))
-                {
-                    if ((string) responseData["success"] == "TRUE")
-                        return true;
-                    return false;
-                }
-                return false;
-            }
-            catch (WebException e)
-            {
-                MainConsole.Instance.ErrorFormat("[GRID INSTANT MESSAGE]: Error sending message to " + httpInfo,
-                                                 e.Message);
-            }
-
-            return false;
-        }
-
-        /// <summary>
-        ///     Takes a GridInstantMessage and converts it into a Hashtable for XMLRPC
-        /// </summary>
-        /// <param name="msg">The GridInstantMessage object</param>
-        /// <returns>Hashtable containing the XMLRPC request</returns>
-        protected virtual Hashtable ConvertGridInstantMessageToXMLRPC(GridInstantMessage msg)
-        {
-            Hashtable gim = new Hashtable();
-            gim["message"] = OSDParser.SerializeJsonString(msg.ToOSD());
-            return gim;
-        }
-
-        protected virtual Hashtable ConvertGridInstantMessageToXMLRPCXML(GridInstantMessage msg)
-        {
-            Hashtable gim = new Hashtable();
-            gim["from_agent_id"] = msg.fromAgentID.ToString();
-            // Kept for compatibility
-            gim["from_agent_session"] = UUID.Zero.ToString();
-            gim["to_agent_id"] = msg.toAgentID.ToString();
-            gim["im_session_id"] = msg.imSessionID.ToString();
-            gim["timestamp"] = msg.timestamp.ToString();
-            gim["from_agent_name"] = msg.fromAgentName;
-            gim["message"] = msg.message;
-            byte[] dialogdata = new byte[1];
-            dialogdata[0] = msg.dialog;
-            gim["dialog"] = Convert.ToBase64String(dialogdata, Base64FormattingOptions.None);
-
-            if (msg.fromGroup)
-                gim["from_group"] = "TRUE";
-            else
-                gim["from_group"] = "FALSE";
-            byte[] offlinedata = new byte[1];
-            offlinedata[0] = msg.offline;
-            gim["offline"] = Convert.ToBase64String(offlinedata, Base64FormattingOptions.None);
-            gim["parent_estate_id"] = msg.ParentEstateID.ToString();
-            gim["position_x"] = msg.Position.X.ToString();
-            gim["position_y"] = msg.Position.Y.ToString();
-            gim["position_z"] = msg.Position.Z.ToString();
-            gim["region_id"] = msg.RegionID.ToString();
-            gim["binary_bucket"] = Convert.ToBase64String(msg.binaryBucket, Base64FormattingOptions.None);
-            return gim;
+            MemoryStream stream = new MemoryStream();
+            ProtoBuf.Serializer.Serialize(stream, message);
+            byte[] data = WebUtils.PostToService(httpInfo + "/gridinstantmessages/", stream.ToArray());
+            return data == null || data.Length == 0 || data[0] == 0 ? false : true;
         }
     }
 }

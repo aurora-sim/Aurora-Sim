@@ -663,7 +663,7 @@ namespace Aurora.Modules.Startup
                             Thread.Sleep(5);
                         //Get all the assets too
                         if (saveAssets)
-                            assetGatherer.GatherAssetUuids(entity, assets, scene);
+                            assetGatherer.GatherAssetUuids(entity, assets);
                     }
                     catch (Exception ex)
                     {

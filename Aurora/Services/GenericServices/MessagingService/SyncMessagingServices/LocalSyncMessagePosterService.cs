@@ -32,6 +32,7 @@ using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 using Nini.Config;
 using OpenMetaverse.StructuredData;
+using System;
 
 namespace Aurora.Services
 {
@@ -83,11 +84,15 @@ namespace Aurora.Services
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void PostInternal(bool remote, string url, OSDMap request)
         {
-            LogMessage(remote, url, request);
-            if (remote)
-                DoRemoteCallPost(true, url + "/syncmessage/", false, url + "/syncmessage/", request);
-            else
-                m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
+            try
+            {
+                LogMessage(remote, url, request);
+                if (remote)
+                    DoRemoteCallPost(true, url + "/syncmessage/", false, url + "/syncmessage/", request);
+                else
+                    m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
+            }
+            catch (Exception ex) { MainConsole.Instance.WarnFormat("[SyncMessagePoster]: Caught exception when attempting to post to {0}: {1}", url, ex.ToString()); }
         }
 
         public void PostToServer(OSDMap request)
@@ -103,11 +108,15 @@ namespace Aurora.Services
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public void PostToServerInternal(bool remote, OSDMap request)
         {
-            LogMessage(remote, "", request);
-            if (remote)
-                DoRemoteCallPost(true, "SyncMessageServerURI", false, request);
-            else
-                m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
+            try
+            {
+                LogMessage(remote, "", request);
+                if (remote)
+                    DoRemoteCallPost(true, "SyncMessageServerURI", false, request);
+                else
+                    m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
+            }
+            catch (Exception ex) { MainConsole.Instance.WarnFormat("[SyncMessagePoster]: Caught exception when attempting to post to grid server: {0}", ex.ToString()); }
         }
 
         public void Get(string url, OSDMap request, GetResponse response)
@@ -123,18 +132,23 @@ namespace Aurora.Services
         [CanBeReflected(ThreatLevel = ThreatLevel.Low)]
         public OSDMap GetInternal(bool remote, string url, OSDMap request)
         {
-            LogMessage(remote, url, request);
-            if (remote)
+            try
             {
-                if (url != "")
+                LogMessage(remote, url, request);
+                if (remote)
                 {
-                    url = (url.EndsWith("/syncmessage/") ? url : (url + "/syncmessage/"));
-                    return DoRemoteCallGet(true, url, false, url, request) as OSDMap;
+                    if (url != "")
+                    {
+                        url = (url.EndsWith("/syncmessage/") ? url : (url + "/syncmessage/"));
+                        return DoRemoteCallGet(true, url, false, url, request) as OSDMap;
+                    }
+                    else
+                        return DoRemoteCallGet(true, "SyncMessageServerURI", false, url, request) as OSDMap;
                 }
-                else
-                    return DoRemoteCallGet(true, "SyncMessageServerURI", false, url, request) as OSDMap;
+                return m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
             }
-            return m_registry.RequestModuleInterface<ISyncMessageRecievedService>().FireMessageReceived(request);
+            catch (Exception ex) { MainConsole.Instance.WarnFormat("[SyncMessagePoster]: Caught exception when attempting to post to {0}: {1}", url, ex.ToString()); }
+            return null;
         }
 
         private void LogMessage(bool remote, string url, OSDMap request)

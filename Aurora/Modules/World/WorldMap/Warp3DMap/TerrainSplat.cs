@@ -130,7 +130,7 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                         {
                             // Try to fetch the original JPEG2000 texture, resize if needed, and cache as PNG
                             byte[] assetData = assetService.GetData(textureIDs[i].ToString());
-                            if (asset != null)
+                            if (assetData != null)
                             {
                                 try
                                 {
@@ -138,7 +138,7 @@ namespace Aurora.Modules.WorldMap.Warp3DMap
                                 }
                                 catch (Exception ex)
                                 {
-                                    MainConsole.Instance.Warn("Failed to decode terrain texture " + asset.ID + ": " +
+                                    MainConsole.Instance.Warn("Failed to decode terrain texture " + textureIDs[i] + ": " +
                                                               ex.Message);
                                 }
                             }

@@ -427,29 +427,29 @@ namespace Aurora.Modules.Groups
 
             GridInstantMessage msg = new GridInstantMessage
                                          {
-                                             toAgentID = agentID,
-                                             dialog = dialog,
-                                             fromGroup = true,
-                                             offline = 1,
+                                             ToAgentID = agentID,
+                                             Dialog = dialog,
+                                             FromGroup = true,
+                                             Offline = 1,
                                              ParentEstateID = 0,
                                              Position = Vector3.Zero,
                                              RegionID = UUID.Zero,
-                                             imSessionID = UUID.Random()
+                                             SessionID = UUID.Random()
                                          };
 
             // msg.dialog = (byte)OpenMetaverse.InstantMessageDialog.GroupNotice;
             // Allow this message to be stored for offline use
 
-            msg.fromAgentID = info.GroupID;
-            msg.timestamp = info.noticeData.Timestamp;
-            msg.fromAgentName = info.noticeData.FromName;
-            msg.message = info.noticeData.Subject + "|" + info.Message;
+            msg.FromAgentID = info.GroupID;
+            msg.Timestamp = info.noticeData.Timestamp;
+            msg.FromAgentName = info.noticeData.FromName;
+            msg.Message = info.noticeData.Subject + "|" + info.Message;
             if (info.noticeData.HasAttachment)
             {
-                msg.binaryBucket = CreateBitBucketForGroupAttachment(info.noticeData, info.GroupID);
+                msg.BinaryBucket = CreateBitBucketForGroupAttachment(info.noticeData, info.GroupID);
                 //Save the sessionID for the callback by the client (reject or accept)
                 //Only save if has attachment
-                msg.imSessionID = info.noticeData.ItemID;
+                msg.SessionID = info.noticeData.ItemID;
             }
             else
             {
@@ -458,7 +458,7 @@ namespace Aurora.Modules.Groups
                 bucket[1] = 0; //No attachment, so no asset type
                 info.GroupID.ToBytes(bucket, 2);
                 bucket[18] = 0; //dunno
-                msg.binaryBucket = bucket;
+                msg.BinaryBucket = bucket;
             }
 
             return msg;
@@ -523,17 +523,17 @@ namespace Aurora.Modules.Groups
                 // SL sends out notifications to the group messaging session that the person has left
                 GridInstantMessage im = new GridInstantMessage
                                             {
-                                                fromAgentID = groupID,
-                                                dialog = (byte) InstantMessageDialog.SessionSend,
-                                                binaryBucket = new byte[0],
-                                                fromAgentName = "System",
-                                                fromGroup = true,
-                                                imSessionID = groupID,
-                                                message = remoteClient.Name + " has left the group.",
-                                                offline = 1,
+                                                FromAgentID = groupID,
+                                                Dialog = (byte) InstantMessageDialog.SessionSend,
+                                                BinaryBucket = new byte[0],
+                                                FromAgentName = "System",
+                                                FromGroup = true,
+                                                SessionID = groupID,
+                                                Message = remoteClient.Name + " has left the group.",
+                                                Offline = 1,
                                                 RegionID = remoteClient.Scene.RegionInfo.RegionID,
-                                                timestamp = (uint) Util.UnixTimeSinceEpoch(),
-                                                toAgentID = UUID.Zero
+                                                Timestamp = (uint) Util.UnixTimeSinceEpoch(),
+                                                ToAgentID = UUID.Zero
                                             };
 
                 m_imService.EnsureSessionIsStarted(groupID);
@@ -595,22 +595,22 @@ namespace Aurora.Modules.Groups
             // Send Message to avatar being ejected from the group
             GridInstantMessage msg = new GridInstantMessage
                                          {
-                                             imSessionID = UUID.Zero,
-                                             fromAgentID = UUID.Zero,
-                                             toAgentID = ejecteeID,
-                                             timestamp = 0,
-                                             fromAgentName = "System",
-                                             message =
+                                             SessionID = UUID.Zero,
+                                             FromAgentID = UUID.Zero,
+                                             ToAgentID = ejecteeID,
+                                             Timestamp = 0,
+                                             FromAgentName = "System",
+                                             Message =
                                                  string.Format("You have been ejected from '{1}' by {0}.",
                                                                agentName,
                                                                groupInfo.GroupName),
-                                             dialog = 210,
-                                             fromGroup = false,
-                                             offline = 0,
+                                             Dialog = 210,
+                                             FromGroup = false,
+                                             Offline = 0,
                                              ParentEstateID = 0,
                                              Position = Vector3.Zero,
                                              RegionID = remoteClient.Scene.RegionInfo.RegionID,
-                                             binaryBucket = new byte[0]
+                                             BinaryBucket = new byte[0]
                                          };
 
             OutgoingInstantMessage(msg, ejecteeID);
@@ -619,7 +619,7 @@ namespace Aurora.Modules.Groups
             IClientAPI ejectee = GetActiveClient(ejecteeID);
             if (ejectee != null)
             {
-                msg.dialog = (byte) InstantMessageDialog.MessageFromAgent;
+                msg.Dialog = (byte) InstantMessageDialog.MessageFromAgent;
                 OutgoingInstantMessage(msg, ejecteeID);
                 ejectee.SendAgentDropGroup(groupID);
             }
@@ -638,19 +638,19 @@ namespace Aurora.Modules.Groups
                 // SL sends out notifcations to the group messaging session that the person has left
                 GridInstantMessage im = new GridInstantMessage
                                             {
-                                                fromAgentID = groupID,
-                                                dialog = (byte) InstantMessageDialog.SessionSend,
-                                                binaryBucket = new byte[0],
-                                                fromAgentName = "System",
-                                                fromGroup = true,
-                                                imSessionID = groupID,
-                                                message =
+                                                FromAgentID = groupID,
+                                                Dialog = (byte) InstantMessageDialog.SessionSend,
+                                                BinaryBucket = new byte[0],
+                                                FromAgentName = "System",
+                                                FromGroup = true,
+                                                SessionID = groupID,
+                                                Message =
                                                     account.Name + " has been ejected from the group by " +
                                                     remoteClient.Name + ".",
-                                                offline = 1,
+                                                Offline = 1,
                                                 RegionID = remoteClient.Scene.RegionInfo.RegionID,
-                                                timestamp = (uint) Util.UnixTimeSinceEpoch(),
-                                                toAgentID = UUID.Zero
+                                                Timestamp = (uint) Util.UnixTimeSinceEpoch(),
+                                                ToAgentID = UUID.Zero
                                             };
 
                 m_imService.EnsureSessionIsStarted(groupID);
@@ -713,11 +713,11 @@ namespace Aurora.Modules.Groups
 
                     GridInstantMessage msg = new GridInstantMessage
                                                  {
-                                                     imSessionID = inviteUUID,
-                                                     fromAgentID = groupID,
-                                                     toAgentID = invitedAgentID,
-                                                     timestamp = 0,
-                                                     fromAgentName = agentName
+                                                     SessionID = inviteUUID,
+                                                     FromAgentID = groupID,
+                                                     ToAgentID = invitedAgentID,
+                                                     Timestamp = 0,
+                                                     FromAgentName = agentName
                                                  };
                     // msg.fromAgentID = GetRequestingAgentID(remoteClient).Guid;
                     // msg.timestamp = (uint)Util.UnixTimeSinceEpoch();
@@ -727,15 +727,15 @@ namespace Aurora.Modules.Groups
                     {
                         MemberShipCost = ". To join, you must pay " + groupInfo.MembershipFee.ToString() + ".";
                     }
-                    msg.message = string.Format("{0} has invited you to join " + groupInfo.GroupName + MemberShipCost,
+                    msg.Message = string.Format("{0} has invited you to join " + groupInfo.GroupName + MemberShipCost,
                                                 remoteClient.Name);
-                    msg.dialog = (byte) InstantMessageDialog.GroupInvitation;
-                    msg.fromGroup = true;
-                    msg.offline = 0;
+                    msg.Dialog = (byte) InstantMessageDialog.GroupInvitation;
+                    msg.FromGroup = true;
+                    msg.Offline = 0;
                     msg.ParentEstateID = 0;
                     msg.Position = Vector3.Zero;
                     msg.RegionID = remoteClient.Scene.RegionInfo.RegionID;
-                    msg.binaryBucket = new byte[20];
+                    msg.BinaryBucket = new byte[20];
 
                     OutgoingInstantMessage(msg, invitedAgentID);
                 }
@@ -744,7 +744,7 @@ namespace Aurora.Modules.Groups
 
         public GridInstantMessage BuildOfflineGroupNotice(GridInstantMessage msg)
         {
-            msg.dialog = 211; //We set this so that it isn't taken the wrong way later
+            msg.Dialog = 211; //We set this so that it isn't taken the wrong way later
             return msg;
         }
 
@@ -1344,11 +1344,12 @@ namespace Aurora.Modules.Groups
 
                         GridInstantMessage msg = new GridInstantMessage
                                                      {
-                                                         imSessionID = inviteUUID,
-                                                         fromAgentID = Invite.GroupID,
-                                                         toAgentID = Invite.AgentID,
-                                                         timestamp = (uint) Util.UnixTimeSinceEpoch(),
-                                                         fromAgentName = Invite.FromAgentName
+                                                         SessionID = inviteUUID,
+                                                         FromAgentID = Invite.GroupID,
+                                                         ToAgentID = Invite.AgentID,
+                                                         Timestamp = (uint) Util.UnixTimeSinceEpoch(),
+                                                         FromAgentName = Invite.FromAgentName,
+                                                         RegionID = client.Scene.RegionInfo.RegionID
                                                      };
 
 
@@ -1357,16 +1358,16 @@ namespace Aurora.Modules.Groups
                         if (groupInfo.MembershipFee != 0)
                             MemberShipCost = ". To join, you must pay " + groupInfo.MembershipFee.ToString() + ".";
 
-                        msg.message =
+                        msg.Message =
                             string.Format("{0} has invited you to join " + groupInfo.GroupName + MemberShipCost,
                                           Invite.FromAgentName);
-                        msg.dialog = (byte) InstantMessageDialog.GroupInvitation;
-                        msg.fromGroup = true;
-                        msg.offline = 0;
+                        msg.Dialog = (byte) InstantMessageDialog.GroupInvitation;
+                        msg.FromGroup = true;
+                        msg.Offline = 0;
                         msg.ParentEstateID = 0;
                         msg.Position = Vector3.Zero;
                         msg.RegionID = UUID.Zero;
-                        msg.binaryBucket = new byte[20];
+                        msg.BinaryBucket = new byte[20];
 
                         OutgoingInstantMessage(msg, Invite.AgentID);
                     }
@@ -1484,10 +1485,10 @@ namespace Aurora.Modules.Groups
                 MainConsole.Instance.DebugFormat("[GROUPS]: {0} called", MethodBase.GetCurrentMethod().Name);
 
             // Group invitations
-            if ((im.dialog == (byte) InstantMessageDialog.GroupInvitationAccept) ||
-                (im.dialog == (byte) InstantMessageDialog.GroupInvitationDecline))
+            if ((im.Dialog == (byte) InstantMessageDialog.GroupInvitationAccept) ||
+                (im.Dialog == (byte) InstantMessageDialog.GroupInvitationDecline))
             {
-                UUID inviteID = im.imSessionID;
+                UUID inviteID = im.SessionID;
                 GroupInviteInfo inviteInfo = m_groupData.GetAgentToGroupInvite(GetRequestingAgentID(remoteClient),
                                                                                inviteID);
 
@@ -1505,11 +1506,11 @@ namespace Aurora.Modules.Groups
                                                      inviteInfo.AgentID,
                                                      inviteInfo.GroupID);
 
-                UUID fromAgentID = im.fromAgentID;
+                UUID fromAgentID = im.FromAgentID;
                 if ((inviteInfo != null) && (fromAgentID == inviteInfo.AgentID))
                 {
                     // Accept
-                    if (im.dialog == (byte) InstantMessageDialog.GroupInvitationAccept)
+                    if (im.Dialog == (byte) InstantMessageDialog.GroupInvitationAccept)
                     {
                         if (m_debugEnabled)
                             MainConsole.Instance.DebugFormat("[GROUPS]: Received an accept invite notice.");
@@ -1524,20 +1525,20 @@ namespace Aurora.Modules.Groups
 
                             GridInstantMessage msg = new GridInstantMessage
                                                          {
-                                                             imSessionID = UUID.Zero,
-                                                             fromAgentID = UUID.Zero,
-                                                             toAgentID = inviteInfo.AgentID,
-                                                             timestamp = (uint) Util.UnixTimeSinceEpoch(),
-                                                             fromAgentName = "Groups",
-                                                             message =
+                                                             SessionID = UUID.Zero,
+                                                             FromAgentID = UUID.Zero,
+                                                             ToAgentID = inviteInfo.AgentID,
+                                                             Timestamp = (uint) Util.UnixTimeSinceEpoch(),
+                                                             FromAgentName = "Groups",
+                                                             Message =
                                                                  string.Format("You have been added to the group."),
-                                                             dialog = (byte) InstantMessageDialog.MessageBox,
-                                                             fromGroup = false,
-                                                             offline = 0,
+                                                             Dialog = (byte) InstantMessageDialog.MessageBox,
+                                                             FromGroup = false,
+                                                             Offline = 0,
                                                              ParentEstateID = 0,
                                                              Position = Vector3.Zero,
                                                              RegionID = UUID.Zero,
-                                                             binaryBucket = new byte[0]
+                                                             BinaryBucket = new byte[0]
                                                          };
 
                             OutgoingInstantMessage(msg, inviteInfo.AgentID);
@@ -1556,7 +1557,7 @@ namespace Aurora.Modules.Groups
                     }
 
                     // Reject
-                    if (im.dialog == (byte) InstantMessageDialog.GroupInvitationDecline)
+                    if (im.Dialog == (byte) InstantMessageDialog.GroupInvitationDecline)
                     {
                         if (m_debugEnabled)
                             MainConsole.Instance.DebugFormat("[GROUPS]: Received a reject invite notice.");
@@ -1567,26 +1568,26 @@ namespace Aurora.Modules.Groups
             }
 
             // Group notices
-            switch (im.dialog)
+            switch (im.Dialog)
             {
                 case (byte) InstantMessageDialog.GroupNotice:
                     {
                         if (!m_groupNoticesEnabled)
                             return;
 
-                        UUID GroupID = im.toAgentID;
+                        UUID GroupID = im.ToAgentID;
                         if (m_groupData.GetGroupRecord(GetRequestingAgentID(remoteClient), GroupID, null) != null)
                         {
                             UUID NoticeID = UUID.Random();
-                            string Subject = im.message.Substring(0, im.message.IndexOf('|'));
-                            string Message = im.message.Substring(Subject.Length + 1);
+                            string Subject = im.Message.Substring(0, im.Message.IndexOf('|'));
+                            string Message = im.Message.Substring(Subject.Length + 1);
 
                             byte[] bucket;
                             UUID ItemID = UUID.Zero;
                             int AssetType = 0;
                             string ItemName = "";
 
-                            if ((im.binaryBucket.Length == 1) && (im.binaryBucket[0] == 0))
+                            if ((im.BinaryBucket.Length == 1) && (im.BinaryBucket[0] == 0))
                             {
                                 bucket = new byte[19];
                                 bucket[0] = 0;
@@ -1596,8 +1597,8 @@ namespace Aurora.Modules.Groups
                             }
                             else
                             {
-                                bucket = im.binaryBucket;
-                                string binBucket = Utils.BytesToString(im.binaryBucket);
+                                bucket = im.BinaryBucket;
+                                string binBucket = Utils.BytesToString(im.BinaryBucket);
                                 binBucket = binBucket.Remove(0, 14).Trim();
 
                                 OSDMap binBucketOSD = (OSDMap) OSDParser.DeserializeLLSDXml(binBucket);
@@ -1618,26 +1619,26 @@ namespace Aurora.Modules.Groups
                             }
 
                             m_groupData.AddGroupNotice(GetRequestingAgentID(remoteClient), GroupID, NoticeID,
-                                                       im.fromAgentName,
+                                                       im.FromAgentName,
                                                        Subject, Message, ItemID, AssetType, ItemName);
                             if (OnNewGroupNotice != null)
                                 OnNewGroupNotice(GroupID, NoticeID);
                             GroupNoticeInfo notice = new GroupNoticeInfo()
                                                          {
-                                                             BinaryBucket = im.binaryBucket,
+                                                             BinaryBucket = im.BinaryBucket,
                                                              GroupID = GroupID,
                                                              Message = Message,
                                                              noticeData = new GroupNoticeData()
                                                                               {
                                                                                   AssetType = (byte) AssetType,
-                                                                                  FromName = im.fromAgentName,
+                                                                                  FromName = im.FromAgentName,
                                                                                   GroupID = GroupID,
                                                                                   HasAttachment = ItemID != UUID.Zero,
                                                                                   ItemID = ItemID,
                                                                                   ItemName = ItemName,
                                                                                   NoticeID = NoticeID,
                                                                                   Subject = Subject,
-                                                                                  Timestamp = im.timestamp
+                                                                                  Timestamp = im.Timestamp
                                                                               }
                                                          };
 
@@ -1649,9 +1650,9 @@ namespace Aurora.Modules.Groups
                     break;
                 case (byte) InstantMessageDialog.GroupNoticeInventoryAccepted:
                     {
-                        UUID FolderID = new UUID(im.binaryBucket, 0);
+                        UUID FolderID = new UUID(im.BinaryBucket, 0);
                         remoteClient.Scene.InventoryService.GiveInventoryItemAsync(remoteClient.AgentId, UUID.Zero,
-                                                                                   im.imSessionID, FolderID, false,
+                                                                                   im.SessionID, FolderID, false,
                                                                                    (item) =>
                                                                                        {
                                                                                            if (item != null)
@@ -1667,15 +1668,15 @@ namespace Aurora.Modules.Groups
                         // if it's being delivered here, then the ejectee is here
                         // so we need to send local updates to the agent.
 
-                        UUID ejecteeID = im.toAgentID;
+                        UUID ejecteeID = im.ToAgentID;
 
-                        im.dialog = (byte) InstantMessageDialog.MessageFromAgent;
+                        im.Dialog = (byte) InstantMessageDialog.MessageFromAgent;
                         OutgoingInstantMessage(im, ejecteeID);
 
                         IClientAPI ejectee = GetActiveClient(ejecteeID);
                         if (ejectee != null)
                         {
-                            UUID groupID = im.imSessionID;
+                            UUID groupID = im.SessionID;
                             ejectee.SendAgentDropGroup(groupID);
                             if (ejectee.ActiveGroupId == groupID)
                                 GroupTitleUpdate(ejectee, UUID.Zero, UUID.Zero);
@@ -1685,18 +1686,18 @@ namespace Aurora.Modules.Groups
                     break;
                 case 211:
                     {
-                        im.dialog = (byte) InstantMessageDialog.GroupNotice;
+                        im.Dialog = (byte) InstantMessageDialog.GroupNotice;
 
                         //In offline group notices, imSessionID is replaced with the NoticeID so that we can rebuild the packet here
-                        GroupNoticeInfo GND = m_groupData.GetGroupNotice(im.toAgentID, im.imSessionID);
+                        GroupNoticeInfo GND = m_groupData.GetGroupNotice(im.ToAgentID, im.SessionID);
 
                         //Rebuild the binary bucket
                         if (GND.noticeData.HasAttachment)
                         {
-                            im.binaryBucket = CreateBitBucketForGroupAttachment(GND.noticeData, GND.GroupID);
+                            im.BinaryBucket = CreateBitBucketForGroupAttachment(GND.noticeData, GND.GroupID);
                             //Save the sessionID for the callback by the client (reject or accept)
                             //Only save if has attachment
-                            im.imSessionID = GND.noticeData.ItemID;
+                            im.SessionID = GND.noticeData.ItemID;
                         }
                         else
                         {
@@ -1705,15 +1706,15 @@ namespace Aurora.Modules.Groups
                             bucket[1] = 0; //No attachment, so no asset type
                             GND.GroupID.ToBytes(bucket, 2);
                             bucket[18] = 0; //dunno
-                            im.binaryBucket = bucket;
+                            im.BinaryBucket = bucket;
                         }
 
-                        OutgoingInstantMessage(im, im.toAgentID);
+                        OutgoingInstantMessage(im, im.ToAgentID);
 
                         //You MUST reset this, otherwise the client will get it twice,
                         // as it goes through OnGridInstantMessage
                         // which will check and then reresent the notice
-                        im.dialog = 211;
+                        im.Dialog = 211;
                     }
                     break;
             }
@@ -1752,7 +1753,7 @@ namespace Aurora.Modules.Groups
                     GridInstantMessage msg = CreateGroupNoticeIM(GetRequestingAgentID(remoteClient), notice,
                                                                  (byte) InstantMessageDialog.GroupNotice);
 
-                    msg.toAgentID = member.AgentID;
+                    msg.ToAgentID = member.AgentID;
                     OutgoingInstantMessage(msg, member.AgentID, localOnly);
                 }
             }
@@ -1779,13 +1780,13 @@ namespace Aurora.Modules.Groups
             OnInstantMessage(null, msg);
 
             // If a message from a group arrives here, it may need to be forwarded to a local client
-            if (msg.fromGroup)
+            if (msg.FromGroup)
             {
-                switch (msg.dialog)
+                switch (msg.Dialog)
                 {
                     case (byte) InstantMessageDialog.GroupInvitation:
                     case (byte) InstantMessageDialog.GroupNotice:
-                        UUID toAgentID = msg.toAgentID;
+                        UUID toAgentID = msg.ToAgentID;
                         IClientAPI localClient = GetActiveClient(toAgentID);
                         if (localClient != null)
                         {
@@ -1827,28 +1828,28 @@ namespace Aurora.Modules.Groups
         {
             GridInstantMessage msg = new GridInstantMessage
                                          {
-                                             fromAgentID = data.GroupID,
-                                             toAgentID = AgentID,
-                                             timestamp = data.noticeData.Timestamp,
-                                             fromAgentName = data.noticeData.FromName,
-                                             message = data.noticeData.Subject + "|" + data.Message,
-                                             dialog = (byte) InstantMessageDialog.GroupNoticeRequested,
-                                             fromGroup = true,
-                                             offline = 1,
+                                             FromAgentID = data.GroupID,
+                                             ToAgentID = AgentID,
+                                             Timestamp = data.noticeData.Timestamp,
+                                             FromAgentName = data.noticeData.FromName,
+                                             Message = data.noticeData.Subject + "|" + data.Message,
+                                             Dialog = (byte) InstantMessageDialog.GroupNoticeRequested,
+                                             FromGroup = true,
+                                             Offline = 1,
                                              ParentEstateID = 0,
                                              Position = Vector3.Zero,
                                              RegionID = UUID.Zero,
-                                             imSessionID = UUID.Random()
+                                             SessionID = UUID.Random()
                                          };
 
             //Allow offline
 
             if (data.noticeData.HasAttachment)
             {
-                msg.binaryBucket = CreateBitBucketForGroupAttachment(data.noticeData, data.GroupID);
+                msg.BinaryBucket = CreateBitBucketForGroupAttachment(data.noticeData, data.GroupID);
                 //Save the sessionID for the callback by the client (reject or accept)
                 //Only save if has attachment
-                msg.imSessionID = data.noticeData.ItemID;
+                msg.SessionID = data.noticeData.ItemID;
             }
             else
             {
@@ -1857,7 +1858,7 @@ namespace Aurora.Modules.Groups
                 bucket[1] = 0; //No attachment, so no asset type
                 data.GroupID.ToBytes(bucket, 2);
                 bucket[18] = 0; //dunno
-                msg.binaryBucket = bucket;
+                msg.BinaryBucket = bucket;
             }
             return msg;
         }

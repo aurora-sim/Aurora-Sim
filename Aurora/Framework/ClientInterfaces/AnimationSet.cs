@@ -40,6 +40,8 @@ namespace Aurora.Framework.ClientInterfaces
         private readonly List<Animation> m_animations = new List<Animation>();
         private Animation m_implicitDefaultAnimation = new Animation();
         private Animation m_defaultAnimation = new Animation();
+        private readonly Dictionary<string, UUID> m_defaultAnimationOverrides = new Dictionary<string,UUID>();
+        private readonly Dictionary<string, string> m_defaultAnimationOverridesName = new Dictionary<string, string>();
 
         public AnimationSet(AvatarAnimations animations)
         {
@@ -127,11 +129,47 @@ namespace Aurora.Framework.ClientInterfaces
         /// </summary>
         public bool TrySetDefaultAnimation(string anim, int sequenceNum, UUID objectID)
         {
-            if (Animations.AnimsUUID.ContainsKey(anim))
+            UUID uuid;
+            if (m_defaultAnimationOverrides.TryGetValue(anim, out uuid) ||
+                Animations.AnimsUUID.TryGetValue(anim, out uuid))
             {
-                return SetDefaultAnimation(Animations.AnimsUUID[anim], sequenceNum, objectID);
+                return SetDefaultAnimation(uuid, sequenceNum, objectID);
             }
             return false;
+        }
+
+        public void SetDefaultAnimationOverride(string anim_state, UUID animID, string animation)
+        {
+            m_defaultAnimationOverrides[anim_state] = animID;
+            m_defaultAnimationOverridesName[anim_state] = animation;
+        }
+
+        public void ResetDefaultAnimationOverride(string anim_state)
+        {
+            if (anim_state == "ALL")
+            {
+                m_defaultAnimationOverrides.Clear();
+                m_defaultAnimationOverridesName.Clear();
+            }
+            else
+            {
+                m_defaultAnimationOverrides.Remove(anim_state);
+                m_defaultAnimationOverridesName.Remove(anim_state);
+            }
+        }
+
+        public string GetDefaultAnimationOverride(string anim_state)
+        {
+            string anim = "";
+            if (!m_defaultAnimationOverridesName.TryGetValue(anim_state, out anim))
+            {
+                UUID animID;
+                if (!Animations.AnimsUUID.TryGetValue(anim_state, out animID))
+                    anim = "";
+                else
+                    return anim_state;
+            }
+            return anim;
         }
 
         public void GetArrays(out UUID[] animIDs, out int[] sequenceNums, out UUID[] objectIDs)

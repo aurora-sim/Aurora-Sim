@@ -46,7 +46,7 @@ namespace Aurora.Framework.Modules
         /// <param name="FriendToInformID"></param>
         /// <param name="UserID"></param>
         /// <param name="NewStatus">On/Offline</param>
-        void SendFriendsStatusMessage(UUID FriendToInformID, UUID UserID, bool NewStatus);
+        void SendFriendsStatusMessage(UUID FriendToInformID, UUID[] UserID, bool NewStatus);
 
         /// <summary>
         ///     Gets all the given friends of the user (only if the user is in the region)

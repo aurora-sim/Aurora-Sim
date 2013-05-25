@@ -441,6 +441,9 @@ namespace Aurora.Region
         [ProtoMember(103)]
         public Dictionary<UUID, StateSave> StateSaves { get; set; }
 
+        [ProtoMember(104)]
+        public OSDArray RenderMaterials { get; set; }
+
         public Vector3 GroupScale()
         {
             return m_parentGroup.GroupScale();
@@ -539,9 +542,7 @@ namespace Aurora.Region
         private int _ownershipCost;
         private uint _parentID;
         private int _salePrice;
-        private List<SceneObjectPart> m_LoopSoundSlavePrims = new List<SceneObjectPart>();
         private byte[] m_ParticleSystem;
-        private List<SceneObjectPart> m_PlaySoundSlavePrims = new List<SceneObjectPart>();
         private string m_currentMediaVersion = "x-mv:0000000001/00000000-0000-0000-0000-000000000000";
         private int m_passCollision;
         private byte[] m_textureAnimation;
@@ -647,26 +648,6 @@ namespace Aurora.Region
 
         [ProtoMember(69)]
         public bool APIDEnabled { get; set; }
-
-        [XmlIgnore]
-        public SceneObjectPart PlaySoundMasterPrim { get; set; }
-
-        [XmlIgnore]
-        public List<SceneObjectPart> PlaySoundSlavePrims
-        {
-            get { return m_PlaySoundSlavePrims; }
-            set { m_PlaySoundSlavePrims = value; }
-        }
-
-        [XmlIgnore]
-        public SceneObjectPart LoopSoundMasterPrim { get; set; }
-
-        [XmlIgnore]
-        public List<SceneObjectPart> LoopSoundSlavePrims
-        {
-            get { return m_LoopSoundSlavePrims; }
-            set { m_LoopSoundSlavePrims = value; }
-        }
 
         [XmlIgnore, ProtoMember(64)]
         public float Damage { get; set; }
@@ -2240,8 +2221,7 @@ namespace Aurora.Region
         /// <param name="radius"></param>
         /// <param name="useMaster"></param>
         /// <param name="isMaster"></param>
-        public void SendSound(string sound, double volume, bool triggered, byte flags, float radius, bool useMaster,
-                              bool isMaster)
+        public void SendSound(string sound, double volume, bool triggered, byte flags, float radius)
         {
             if (sound == "" || sound == UUID.Zero.ToString())
                 return;
@@ -2276,56 +2256,11 @@ namespace Aurora.Region
             ISoundModule soundModule = m_parentGroup.Scene.RequestModuleInterface<ISoundModule>();
             if (soundModule != null)
             {
-                if (useMaster)
-                {
-                    if (isMaster)
-                    {
-                        if (triggered)
-                            soundModule.TriggerSound(soundID, ownerID, objectID, parentID, volume, position,
-                                                     regionHandle, radius);
-                        else
-                            soundModule.PlayAttachedSound(soundID, ownerID, objectID, volume, position, flags, radius);
-                        ParentGroup.PlaySoundMasterPrim = this;
-                        ownerID = _ownerID;
-                        objectID = ParentGroup.RootPart.UUID;
-                        parentID = GetRootPartUUID();
-                        position = AbsolutePosition; // region local
-                        regionHandle = ParentGroup.Scene.RegionInfo.RegionHandle;
-                        if (triggered)
-                            soundModule.TriggerSound(soundID, ownerID, objectID, parentID, volume, position,
-                                                     regionHandle, radius);
-                        else
-                            soundModule.PlayAttachedSound(soundID, ownerID, objectID, volume, position, flags, radius);
-                        foreach (SceneObjectPart prim in ParentGroup.PlaySoundSlavePrims)
-                        {
-                            ownerID = prim._ownerID;
-                            objectID = prim.ParentGroup.RootPart.UUID;
-                            parentID = prim.GetRootPartUUID();
-                            position = prim.AbsolutePosition; // region local
-                            regionHandle = prim.ParentGroup.Scene.RegionInfo.RegionHandle;
-                            if (triggered)
-                                soundModule.TriggerSound(soundID, ownerID, objectID, parentID, volume, position,
-                                                         regionHandle, radius);
-                            else
-                                soundModule.PlayAttachedSound(soundID, ownerID, objectID, volume, position, flags,
-                                                              radius);
-                        }
-                        ParentGroup.PlaySoundSlavePrims.Clear();
-                        ParentGroup.PlaySoundMasterPrim = null;
-                    }
-                    else
-                    {
-                        ParentGroup.PlaySoundSlavePrims.Add(this);
-                    }
-                }
+                if (triggered)
+                    soundModule.TriggerSound(soundID, ownerID, objectID, parentID, volume, position, regionHandle,
+                                                radius);
                 else
-                {
-                    if (triggered)
-                        soundModule.TriggerSound(soundID, ownerID, objectID, parentID, volume, position, regionHandle,
-                                                 radius);
-                    else
-                        soundModule.PlayAttachedSound(soundID, ownerID, objectID, volume, position, flags, radius);
-                }
+                    soundModule.PlayAttachedSound(soundID, ownerID, objectID, volume, position, flags, radius);
             }
         }
 
@@ -3741,8 +3676,6 @@ namespace Aurora.Region
             dupe.Flags = Flags;
             dupe.LinkNum = LinkNum;
             dupe.SitTargetAvatar = new List<UUID>();
-            dupe.m_LoopSoundSlavePrims = new List<SceneObjectPart>();
-            dupe.m_PlaySoundSlavePrims = new List<SceneObjectPart>();
 
             dupe.m_ValidpartOOB = false;
 
@@ -3883,7 +3816,7 @@ namespace Aurora.Region
             // play the sound.
             if (startedColliders.Count > 0 && CollisionSound != UUID.Zero && CollisionSoundVolume > 0.0f)
             {
-                SendSound(CollisionSound.ToString(), CollisionSoundVolume, true, 0, 0, false, false);
+                SendSound(CollisionSound.ToString(), CollisionSoundVolume, true, 0, 0);
             }
             else if (startedColliders.Count > 0)
             {
@@ -3893,32 +3826,32 @@ namespace Aurora.Region
                         break; // Agents will play the sound so we don't
 
                     case ActorTypes.Ground:
-                        SendSound(SoundWoodCollision, 1, true, 0, 0, false, false);
+                        SendSound(SoundWoodCollision, 1, true, 0, 0);
                         break; //Always play the click or thump sound when hitting ground
 
                     case ActorTypes.Prim:
                         switch (Material)
                         {
                             case (int) OpenMetaverse.Material.Flesh:
-                                SendSound(SoundFleshCollision, 1, true, 0, 0, false, false);
+                                SendSound(SoundFleshCollision, 1, true, 0, 0);
                                 break;
                             case (int) OpenMetaverse.Material.Glass:
-                                SendSound(SoundGlassCollision, 1, true, 0, 0, false, false);
+                                SendSound(SoundGlassCollision, 1, true, 0, 0);
                                 break;
                             case (int) OpenMetaverse.Material.Metal:
-                                SendSound(SoundMetalCollision, 1, true, 0, 0, false, false);
+                                SendSound(SoundMetalCollision, 1, true, 0, 0);
                                 break;
                             case (int) OpenMetaverse.Material.Plastic:
-                                SendSound(SoundPlasticCollision, 1, true, 0, 0, false, false);
+                                SendSound(SoundPlasticCollision, 1, true, 0, 0);
                                 break;
                             case (int) OpenMetaverse.Material.Rubber:
-                                SendSound(SoundRubberCollision, 1, true, 0, 0, false, false);
+                                SendSound(SoundRubberCollision, 1, true, 0, 0);
                                 break;
                             case (int) OpenMetaverse.Material.Stone:
-                                SendSound(SoundStoneCollision, 1, true, 0, 0, false, false);
+                                SendSound(SoundStoneCollision, 1, true, 0, 0);
                                 break;
                             case (int) OpenMetaverse.Material.Wood:
-                                SendSound(SoundWoodCollision, 1, true, 0, 0, false, false);
+                                SendSound(SoundWoodCollision, 1, true, 0, 0);
                                 break;
                         }
                         break; //Play based on material type in prim2prim collisions
@@ -4862,59 +4795,80 @@ namespace Aurora.Region
         /// <param name="sendChangedEvent"></param>
         public void UpdateTextureEntry(byte[] textureEntry, bool sendChangedEvent)
         {
-            bool same = true;
-            byte[] old = m_shape.TextureEntry;
-            if (old.Length == textureEntry.Length)
+            Primitive.TextureEntry newTex = new Primitive.TextureEntry(textureEntry, 0, textureEntry.Length);
+            Primitive.TextureEntry oldTex = Shape.Textures;
+
+            Changed changeFlags = 0;
+
+            Primitive.TextureEntryFace fallbackNewFace = newTex.DefaultTexture;
+            Primitive.TextureEntryFace fallbackOldFace = oldTex.DefaultTexture;
+
+            // On Incoming packets, sometimes newText.DefaultTexture is null.  The assumption is that all 
+            // other prim-sides are set, but apparently that's not always the case.  Lets assume packet/data corruption at this point.
+            if (fallbackNewFace == null)
             {
-                if (textureEntry.Where((t, i) => old[i] != t).Any())
-                {
-                    same = false;
-                }
+                fallbackNewFace = new Primitive.TextureEntry(Util.BLANK_TEXTURE_UUID).CreateFace(0);
+                newTex.DefaultTexture = fallbackNewFace;
             }
-            else
-                same = false;
-            if (same)
-                return;
-            Primitive.TextureEntry oldEntry = m_shape.Textures;
-            m_shape.TextureEntry = textureEntry;
-            bool textureChanged = false;
-            bool colorChanged = false;
-            if (m_shape.Textures.DefaultTexture.RGBA.A != oldEntry.DefaultTexture.RGBA.A ||
-                m_shape.Textures.DefaultTexture.RGBA.R != oldEntry.DefaultTexture.RGBA.R ||
-                m_shape.Textures.DefaultTexture.RGBA.G != oldEntry.DefaultTexture.RGBA.G ||
-                m_shape.Textures.DefaultTexture.RGBA.B != oldEntry.DefaultTexture.RGBA.B)
+            if (fallbackOldFace == null)
             {
-                colorChanged = true;
-            }
-            if (m_shape.Textures.DefaultTexture.TextureID != oldEntry.DefaultTexture.TextureID)
-            {
-                textureChanged = true;
+                fallbackOldFace = new Primitive.TextureEntry(Util.BLANK_TEXTURE_UUID).CreateFace(0);
+                oldTex.DefaultTexture = fallbackOldFace;
             }
 
-            if (!(colorChanged && textureChanged)) // if both already changed so don't bother checking further
+            bool otherFieldsChanged = false;
+
+            for (int i = 0; i < GetNumberOfSides(); i++)
             {
-                for (int i = 0; i < GetNumberOfSides(); i++)
+
+                Primitive.TextureEntryFace newFace = newTex.DefaultTexture;
+                Primitive.TextureEntryFace oldFace = oldTex.DefaultTexture;
+
+                if (oldTex.FaceTextures[i] != null)
+                    oldFace = oldTex.FaceTextures[i];
+                if (newTex.FaceTextures[i] != null)
+                    newFace = newTex.FaceTextures[i];
+
+                Color4 oldRGBA = oldFace.RGBA;
+                Color4 newRGBA = newFace.RGBA;
+
+                if (oldRGBA.R != newRGBA.R ||
+                    oldRGBA.G != newRGBA.G ||
+                    oldRGBA.B != newRGBA.B ||
+                    oldRGBA.A != newRGBA.A)
+                    changeFlags |= Changed.COLOR;
+
+                if (oldFace.TextureID != newFace.TextureID)
+                    changeFlags |= Changed.TEXTURE;
+
+                // Max change, skip the rest of testing
+                if (changeFlags == (Changed.TEXTURE | Changed.COLOR))
+                    break;
+
+                if (!otherFieldsChanged)
                 {
-                    if (m_shape.Textures.FaceTextures[i] != null &&
-                        oldEntry.FaceTextures[i] != null)
-                    {
-                        if (m_shape.Textures.FaceTextures[i].RGBA.A != oldEntry.FaceTextures[i].RGBA.A ||
-                            m_shape.Textures.FaceTextures[i].RGBA.R != oldEntry.FaceTextures[i].RGBA.R ||
-                            m_shape.Textures.FaceTextures[i].RGBA.G != oldEntry.FaceTextures[i].RGBA.G ||
-                            m_shape.Textures.FaceTextures[i].RGBA.B != oldEntry.FaceTextures[i].RGBA.B)
-                        {
-                            colorChanged = true;
-                        }
-                        if (m_shape.Textures.FaceTextures[i].TextureID != oldEntry.FaceTextures[i].TextureID)
-                        {
-                            textureChanged = true;
-                        }
-                    }
+                    if (oldFace.Bump != newFace.Bump) otherFieldsChanged = true;
+                    if (oldFace.Fullbright != newFace.Fullbright) otherFieldsChanged = true;
+                    if (oldFace.Glow != newFace.Glow) otherFieldsChanged = true;
+                    if (oldFace.MediaFlags != newFace.MediaFlags) otherFieldsChanged = true;
+                    if (oldFace.OffsetU != newFace.OffsetU) otherFieldsChanged = true;
+                    if (oldFace.OffsetV != newFace.OffsetV) otherFieldsChanged = true;
+                    if (oldFace.RepeatU != newFace.RepeatU) otherFieldsChanged = true;
+                    if (oldFace.RepeatV != newFace.RepeatV) otherFieldsChanged = true;
+                    if (oldFace.Rotation != newFace.Rotation) otherFieldsChanged = true;
+                    if (oldFace.Shiny != newFace.Shiny) otherFieldsChanged = true;
+                    if (oldFace.TexMapType != newFace.TexMapType) otherFieldsChanged = true;
                 }
             }
+            if (changeFlags == 0 && !otherFieldsChanged)
+                return; //They are the same
 
-            if (colorChanged && sendChangedEvent) TriggerScriptChangedEvent(Changed.COLOR);
-            if (textureChanged && sendChangedEvent) TriggerScriptChangedEvent(Changed.TEXTURE);
+            Shape.TextureEntry = textureEntry;
+
+            if ((changeFlags & Changed.COLOR) == Changed.COLOR && sendChangedEvent) 
+                TriggerScriptChangedEvent(Changed.COLOR);
+            if ((changeFlags & Changed.TEXTURE) == Changed.TEXTURE && sendChangedEvent)
+                TriggerScriptChangedEvent(Changed.TEXTURE);
             ParentGroup.HasGroupChanged = true;
             ScheduleUpdate(PrimUpdateFlags.FullUpdate);
         }

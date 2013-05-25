@@ -238,14 +238,14 @@ namespace Aurora.ClientStack
 
                 m_defaultRTO = config.GetInt("DefaultRTO", 1000);
                 m_maxRTO = config.GetInt("MaxRTO", 20000);
-                ClientTimeOut = config.GetInt("ClientTimeOut", 500);
+                ClientTimeOut = config.GetInt("ClientTimeOut", 120);
             }
             else
             {
                 PrimUpdatesPerCallback = 60;
                 AvatarUpdatesPerCallBack = 80;
                 TextureSendLimit = 25;
-                ClientTimeOut = 500;
+                ClientTimeOut = 120;
             }
 
             #region BinaryStats

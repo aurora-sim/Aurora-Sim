@@ -142,8 +142,8 @@ namespace Aurora.Framework.SceneInfo.Entities
         bool IsAttachment { get; }
         UUID GroupID { get; set; }
         bool IsSelected { get; set; }
-        ISceneChildEntity LoopSoundMasterPrim { get; set; }
-        List<ISceneChildEntity> LoopSoundSlavePrims { get; set; }
+        UUID LoopSoundMasterPrim { get; set; }
+        List<UUID> LoopSoundSlavePrims { get; set; }
         Vector3 OOBsize { get; }
 
         #endregion

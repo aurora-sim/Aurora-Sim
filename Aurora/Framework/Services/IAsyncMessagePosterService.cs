@@ -30,6 +30,7 @@ using Aurora.Framework.Modules;
 using Aurora.Framework.PresenceInfo;
 using OpenMetaverse;
 using OpenMetaverse.StructuredData;
+using System.Collections.Generic;
 
 namespace Aurora.Framework.Services
 {
@@ -135,7 +136,7 @@ namespace Aurora.Framework.Services
         /// </summary>
         /// <param name="region"></param>
         /// <param name="aCircuit"></param>
-        LoginAgentArgs LoginAgent(GridRegion region, AgentCircuitData aCircuit);
+        LoginAgentArgs LoginAgent(GridRegion region, AgentCircuitData aCircuit, List<UUID> friendsToInform);
 
         /// <summary>
         ///     Logout all agents in the given region

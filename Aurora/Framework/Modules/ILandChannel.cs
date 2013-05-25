@@ -164,5 +164,13 @@ namespace Aurora.Framework.Modules
         ///     Resets the sim to have no land objects
         /// </summary>
         void ClearAllParcels();
+
+        /// <summary>
+        /// Inports the given parcels at the given offset, and properly manages merging
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="merge"></param>
+        /// <param name="parcelOffset"></param>
+        void IncomingLandDataFromOAR(List<LandData> data, bool merge, Vector2 parcelOffset);
     }
 }

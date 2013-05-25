@@ -1056,11 +1056,13 @@ namespace Aurora.Region.Serialization
             string idStr;
 
             reader.ReadStartElement(name);
-
-            idStr = reader.ReadElementString(reader.Name == "Guid" ? "Guid" : "UUID");
+            if (reader.Name == "")
+                idStr = reader.ReadString();
+            else
+                idStr = reader.ReadElementString(reader.Name == "Guid" ? "Guid" : "UUID");
+            reader.ReadEndElement();
 
             UUID.TryParse(idStr, out id);
-            reader.ReadEndElement();
 
             return id;
         }

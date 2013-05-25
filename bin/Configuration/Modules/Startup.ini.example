@@ -18,6 +18,10 @@
 	
 	;; Adding this password allows people to remotely manage regions and the console, must not be blank
 	RemoteAccessPassword = ""
+	
+[MaterialsDemoModule]
+	;; Change this to true to enable the new render materials module
+	Enabled = false
 
 [Animations]
 

@@ -181,10 +181,6 @@ namespace Aurora.Modules.Chat
             string message = c.Message;
             IScene scene = c.Scene;
             Vector3 fromPos = c.Position;
-            Vector3 regionPos = scene != null
-                                    ? new Vector3(scene.RegionInfo.RegionLocX,
-                                                  scene.RegionInfo.RegionLocY, 0)
-                                    : Vector3.Zero;
 
             if (c.Channel == DEBUG_CHANNEL) c.Type = ChatTypeEnum.DebugChannel;
 
@@ -222,14 +218,10 @@ namespace Aurora.Modules.Chat
             if (message.Length >= 1000) // libomv limit
                 message = message.Substring(0, 1000);
 
-            // MainConsole.Instance.DebugFormat("[CHAT]: DCTA: fromID {0} fromName {1}, cType {2}, sType {3}", fromID, fromName, c.Type, sourceType);
-
             foreach (IScenePresence presence in from presence in m_Scene.GetScenePresences()
                                                 where !presence.IsChildAgent
-                                                let fromRegionPos = fromPos + regionPos
-                                                let toRegionPos = presence.AbsolutePosition +
-                                                                  new Vector3(presence.Scene.RegionInfo.RegionLocX,
-                                                                              presence.Scene.RegionInfo.RegionLocY, 0)
+                                                let fromRegionPos = fromPos
+                                                let toRegionPos = presence.AbsolutePosition
                                                 let dis = (int) Util.GetDistanceTo(toRegionPos, fromRegionPos)
                                                 where
                                                     (c.Type != ChatTypeEnum.Whisper || dis <= m_whisperdistance) &&
@@ -245,23 +237,18 @@ namespace Aurora.Modules.Chat
                                                 select presence)
             {
                 //If one of them is in a private parcel, and the other isn't in the same parcel, don't send the chat message
-                TrySendChatMessage(presence, fromPos, regionPos, fromID, fromName, c.Type, message, sourceType,
+                TrySendChatMessage(presence, fromPos, fromID, fromName, c.Type, message, sourceType,
                                    c.Range);
             }
         }
 
-        public virtual void TrySendChatMessage(IScenePresence presence, Vector3 fromPos, Vector3 regionPos,
+        public virtual void TrySendChatMessage(IScenePresence presence, Vector3 fromPos,
                                                UUID fromAgentID, string fromName, ChatTypeEnum type,
                                                string message, ChatSourceType src, float Range)
         {
             if (type == ChatTypeEnum.Custom)
             {
-                Vector3 fromRegionPos = fromPos + regionPos;
-                Vector3 toRegionPos = presence.AbsolutePosition +
-                                      new Vector3(presence.Scene.RegionInfo.RegionLocX,
-                                                  presence.Scene.RegionInfo.RegionLocY, 0);
-
-                int dis = (int) Util.GetDistanceTo(toRegionPos, fromRegionPos);
+                int dis = (int)Util.GetDistanceTo(fromPos, presence.AbsolutePosition);
                 //Set the best fitting setting for custom
                 if (dis < m_whisperdistance)
                     type = ChatTypeEnum.Whisper;
@@ -271,7 +258,6 @@ namespace Aurora.Modules.Chat
                     type = ChatTypeEnum.Say;
             }
 
-            // TODO: should change so the message is sent through the avatar rather than direct to the ClientView
             presence.ControllingClient.SendChatMessage(message, (byte) type, fromPos, fromName,
                                                        fromAgentID, (byte) src, (byte) ChatAudibleLevel.Fully);
         }
@@ -718,7 +704,7 @@ namespace Aurora.Modules.Chat
         /// <param name="im"></param>
         private void OnInstantMessage(IClientAPI client, GridInstantMessage im)
         {
-            byte dialog = im.dialog;
+            byte dialog = im.Dialog;
             switch (dialog)
             {
                 case (byte) InstantMessageDialog.SessionGroupStart:

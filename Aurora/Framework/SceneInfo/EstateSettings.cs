@@ -228,8 +228,6 @@ namespace Aurora.Framework.SceneInfo
             set { l_EstateGroups = value; }
         }
 
-        public event SaveDelegate OnSave;
-
         public override void FromOSD(OSDMap v)
         {
             OSDMap values = (OSDMap) v;
@@ -322,12 +320,6 @@ namespace Aurora.Framework.SceneInfo
             values["EstateAccess"] = EstateAccess.ToOSDArray();
 
             return values;
-        }
-
-        public void Save()
-        {
-            if (OnSave != null)
-                OnSave(this);
         }
 
         public void AddEstateUser(UUID avatarID)

@@ -659,7 +659,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     try
                     {
-                        m_ScriptEngine.Compiler.PerformScriptCompile(Source, ItemID, Part.OwnerID, out AssemblyName);
+                        m_ScriptEngine.Compiler.PerformScriptCompile(Source, Part.OwnerID, out AssemblyName);
 
                         #region Errors and Warnings
 

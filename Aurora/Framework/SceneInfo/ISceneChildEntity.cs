@@ -7,6 +7,7 @@ using Aurora.Framework.PresenceInfo;
 using Aurora.Framework.SceneInfo.Entities;
 using OpenMetaverse;
 using OpenMetaverse.Packets;
+using OpenMetaverse.StructuredData;
 
 namespace Aurora.Framework.SceneInfo
 {
@@ -229,7 +230,7 @@ namespace Aurora.Framework.SceneInfo
 
         double SoundRadius { get; set; }
 
-        void SendSound(string p, double volume, bool p_2, byte p_3, float p_4, bool p_5, bool p_6);
+        void SendSound(string sound, double volume, bool triggered, byte flags, float radius);
 
         void PreloadSound(string sound);
 
@@ -363,6 +364,7 @@ namespace Aurora.Framework.SceneInfo
 
         List<UUID> SitTargetAvatar { get; set; }
         Dictionary<int, string> CollisionFilter { get; }
+        OSDArray RenderMaterials { get; set; }
 
         bool GetBlockGrab(bool wholeObjectBlock);
 
