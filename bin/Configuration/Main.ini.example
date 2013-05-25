@@ -8,10 +8,6 @@
 
     ;;If you would like to use Aurora in grid mode, select this file.
     ;Include-Grid = Configuration/Grid/AuroraGridCommon.ini
-
-    ;;If you plan on connecting to a Robust based grid, select this file
-    ;; Note: This defaults to OSGrid
-    ;Include-RobustGrid = Configuration/RobustGrid/RobustGrid.ini
 	
     ;; Don't touch this, look above
     Include-Includes = Configuration/Includes.ini
