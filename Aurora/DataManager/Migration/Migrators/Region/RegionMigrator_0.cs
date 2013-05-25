@@ -47,6 +47,7 @@ namespace Aurora.DataManager.Migration.Migrators.Region
                     new ColumnDefinition {Name = "TelehubRotX", Type = ColumnTypeDef.Integer11},
                     new ColumnDefinition {Name = "TelehubRotY", Type = ColumnTypeDef.Integer11},
                     new ColumnDefinition {Name = "TelehubRotZ", Type = ColumnTypeDef.Integer11},
+                    new ColumnDefinition {Name = "Spawns", Type = ColumnTypeDef.String255},
                     new ColumnDefinition {Name = "ObjectUUID", Type = ColumnTypeDef.Char36},
                     new ColumnDefinition {Name = "Name", Type = ColumnTypeDef.String50},
                 },
