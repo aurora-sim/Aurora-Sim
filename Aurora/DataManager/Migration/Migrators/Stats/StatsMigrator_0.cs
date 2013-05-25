@@ -56,6 +56,7 @@ namespace Aurora.DataManager.Migration.Migrators.Stats
                     new ColumnDefinition {Name = "s_gpu", Type = ColumnTypeDef.String128},
                     new ColumnDefinition {Name = "s_gpuclass", Type = ColumnTypeDef.String50},
                     new ColumnDefinition {Name = "s_gpuvendor", Type = ColumnTypeDef.String50},
+                    new ColumnDefinition {Name = "s_gpuversion", Type = ColumnTypeDef.String50},
                     new ColumnDefinition {Name = "s_os", Type = ColumnTypeDef.String50},
                     new ColumnDefinition {Name = "s_ram", Type = ColumnTypeDef.String50},
                     new ColumnDefinition {Name = "d_object_kb", Type = ColumnTypeDef.Integer11},
