@@ -181,9 +181,6 @@ namespace Aurora.Modules.Estate
 
         public void FinishStartup(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-            if (scene.RegionInfo.EstateSettings != null)
-                return;
-
             IEstateConnector EstateConnector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
             if (EstateConnector != null)
             {
