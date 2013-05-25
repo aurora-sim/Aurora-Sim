@@ -868,8 +868,7 @@ namespace Aurora.Services.SQLServices.GridService
         private void HandleClearAllDownRegions(string[] cmd)
         {
             //Delete any flags with (Flags & 254) == 254
-            m_Database.DeleteAll(new[] {"Flags", "Flags", "Flags", "Flags"},
-                                 new object[] {254, 267, 275, 296});
+            m_Database.DeleteAll(new[] {"Flags"}, new object[] {0});
             MainConsole.Instance.Warn("[GridService]: Cleared all down regions");
         }
 
