@@ -318,8 +318,9 @@ namespace Aurora.Framework.Utilities
             }
 
             if (MainConsole.Instance != null)
-                MainConsole.Instance.WarnFormat("[WebUtils]: request failed: {0} to {1}, data {2}", errorMessage,
-                                                url, buffer != null ? OSDParser.SerializeJsonString(buffer) : "");
+                using (MemoryStream stream = new MemoryStream(buffer))
+                    MainConsole.Instance.WarnFormat("[WebUtils]: request failed: {0} to {1}, data {2}", errorMessage,
+                                                    url, buffer != null ? OSDParser.SerializeJsonString(OSDParser.DeserializeJson(stream)) : "");
             return new byte[0];
         }
 
