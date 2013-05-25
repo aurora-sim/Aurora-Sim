@@ -5231,225 +5231,171 @@ namespace Aurora.ClientStack
                                                                                          CompressedFlags updateFlags,
                                                                                          PrimUpdateFlags flags)
         {
-            System.IO.MemoryStream objectData = new System.IO.MemoryStream();
-            byte[] byteData = new byte[16];
-            int i = 0;
-            objectData.Write(part.UUID.GetBytes(), i, 16);
-            i += 16;
-            Utils.UIntToBytes(part.LocalId, byteData, 0);
-            objectData.Write(byteData, i, 4);
-            i += 4;
-            objectData.WriteByte(part.Shape.PCode); //Type of prim
-            i += 1;
-
-            if (part.Shape.PCode == (byte) PCode.Tree || part.Shape.PCode == (byte) PCode.NewTree)
-                updateFlags |= CompressedFlags.Tree;
-
-            //Attachment point
-            objectData.WriteByte((byte) part.AttachmentPoint);
-            i += 1;
-            //CRC
-            Utils.UIntToBytes(part.CRC, byteData, 0);
-            objectData.Write(byteData, i, 4);
-            i += 4;
-            objectData.WriteByte((byte)part.Material);
-            i++;
-            objectData.WriteByte((byte)part.ClickAction);
-            i++;
-            objectData.Write(part.Shape.Scale.GetBytes(), i, 12);
-            i += 12;
-            objectData.Write(part.RelativePosition.GetBytes(), i, 12);
-            i += 12;
-            objectData.Write(part.GetRotationOffset().GetBytes(), i, 12);
-            i += 12;
-            Utils.UIntToBytes((uint)updateFlags, byteData, 0);
-            objectData.Write(byteData, i, 4);
-            i += 4;
-            objectData.Write(part.OwnerID.GetBytes(), i, 16);
-            i += 16;
-
-            if ((updateFlags & CompressedFlags.HasAngularVelocity) != 0)
+            using (System.IO.MemoryStream objectData = new System.IO.MemoryStream())
             {
-                objectData.Write(part.AngularVelocity.GetBytes(), i, 12);
-                i += 12;
-            }
-            if ((updateFlags & CompressedFlags.HasParent) != 0)
-            {
-                if (part.IsAttachment)
+                byte[] byteData = new byte[16];
+                objectData.Write(part.UUID.GetBytes(), 0, 16);
+                Utils.UIntToBytes(part.LocalId, byteData, 0);
+                objectData.Write(byteData, 0, 4);
+                objectData.WriteByte(part.Shape.PCode); //Type of prim
+
+                if (part.Shape.PCode == (byte)PCode.Tree || part.Shape.PCode == (byte)PCode.NewTree)
+                    updateFlags |= CompressedFlags.Tree;
+
+                objectData.WriteByte((byte)part.AttachmentPoint);
+                Utils.UIntToBytes(part.CRC, byteData, 0);
+                objectData.Write(byteData, 0, 4);
+                objectData.WriteByte((byte)part.Material);
+                objectData.WriteByte((byte)part.ClickAction);
+                objectData.Write(part.Shape.Scale.GetBytes(), 0, 12);
+                objectData.Write(part.RelativePosition.GetBytes(), 0, 12);
+                objectData.Write(part.GetRotationOffset().GetBytes(), 0, 12);
+                Utils.UIntToBytes((uint)updateFlags, byteData, 0);
+                objectData.Write(byteData, 0, 4);
+                objectData.Write(part.OwnerID.GetBytes(), 0, 16);
+
+                if ((updateFlags & CompressedFlags.HasAngularVelocity) != 0)
+                    objectData.Write(part.AngularVelocity.GetBytes(), 0, 12);
+                if ((updateFlags & CompressedFlags.HasParent) != 0)
                 {
-                    IScenePresence us = m_scene.GetScenePresence(AgentId);
-                    Utils.UIntToBytes(us.LocalId, byteData, 0);
+                    if (part.IsAttachment)
+                    {
+                        IScenePresence us = m_scene.GetScenePresence(AgentId);
+                        Utils.UIntToBytes(us.LocalId, byteData, 0);
+                    }
+                    else
+                        Utils.UIntToBytes(part.ParentID, byteData, 0);
+                    objectData.Write(byteData, 0, 4);
+                }
+                if ((updateFlags & CompressedFlags.Tree) != 0)
+                {
+                    objectData.WriteByte(part.Shape.State); //Tree type
+                }
+                else if ((updateFlags & CompressedFlags.ScratchPad) != 0)
+                {
+                    //Remove the flag, we have no clue what to do with this
+                    updateFlags &= ~(CompressedFlags.ScratchPad);
+                }
+                if ((updateFlags & CompressedFlags.HasText) != 0)
+                {
+                    byte[] text = Utils.StringToBytes(part.Text);
+                    objectData.Write(text, 0, text.Length);
+
+                    byte[] textcolor = part.GetTextColor().GetBytes(false);
+                    objectData.Write(textcolor, 0, textcolor.Length);
+                }
+                if ((updateFlags & CompressedFlags.MediaURL) != 0)
+                {
+                    byte[] text = Util.StringToBytes256(part.CurrentMediaVersion);
+                    objectData.Write(text, 0, text.Length);
+                }
+
+                if ((updateFlags & CompressedFlags.HasParticles) != 0)
+                {
+                    if (part.ParticleSystem.Length == 0)
+                    {
+                        Primitive.ParticleSystem Sys = new Primitive.ParticleSystem();
+                        byte[] pdata = Sys.GetBytes();
+                        objectData.Write(pdata, 0, pdata.Length);
+                        //updateFlags = updateFlags & ~CompressedFlags.HasParticles;
+                    }
+                    else
+                        objectData.Write(part.ParticleSystem, 0, part.ParticleSystem.Length);
+                }
+
+                byte[] ExtraData = part.Shape.ExtraParamsToBytes();
+                objectData.Write(ExtraData, 0, ExtraData.Length);
+
+                if ((updateFlags & CompressedFlags.HasSound) != 0)
+                {
+                    objectData.Write(part.Sound.GetBytes(), 0, 16);
+                    Utils.FloatToBytes((float)part.SoundGain, byteData, 0);
+                    objectData.Write(byteData, 0, 4);
+                    objectData.WriteByte(part.SoundFlags);
+                    Utils.FloatToBytes((float)part.SoundRadius, byteData, 0);
+                    objectData.Write(byteData, 0, 4);
+                }
+                if ((updateFlags & CompressedFlags.HasNameValues) != 0)
+                {
+                    if (part.IsAttachment)
+                    {
+                        byte[] NV = Util.StringToBytes256("AttachItemID STRING RW SV " + part.FromUserInventoryItemID);
+                        objectData.Write(NV, 0, NV.Length);
+                    }
+                }
+
+                objectData.WriteByte(part.Shape.PathCurve);
+                Utils.UInt16ToBytes(part.Shape.PathBegin, byteData, 0);
+                objectData.Write(byteData, 0, 2);
+                Utils.UInt16ToBytes(part.Shape.PathEnd, byteData, 0);
+                objectData.Write(byteData, 0, 2);
+                objectData.WriteByte(part.Shape.PathScaleX);
+                objectData.WriteByte(part.Shape.PathScaleY);
+                objectData.WriteByte(part.Shape.PathShearX);
+                objectData.WriteByte(part.Shape.PathShearY);
+                objectData.WriteByte((byte)part.Shape.PathTwist);
+                objectData.WriteByte((byte)part.Shape.PathTwistBegin);
+                objectData.WriteByte((byte)part.Shape.PathRadiusOffset);
+                objectData.WriteByte((byte)part.Shape.PathTaperX);
+                objectData.WriteByte((byte)part.Shape.PathTaperY);
+                objectData.WriteByte(part.Shape.PathRevolutions);
+                objectData.WriteByte((byte)part.Shape.PathSkew);
+                objectData.WriteByte(part.Shape.ProfileCurve);
+                Utils.UInt16ToBytes(part.Shape.ProfileBegin, byteData, 0);
+                objectData.Write(byteData, 0, 2);
+                Utils.UInt16ToBytes(part.Shape.ProfileEnd, byteData, 0);
+                objectData.Write(byteData, 0, 2);
+                Utils.UInt16ToBytes(part.Shape.ProfileHollow, byteData, 0);
+                objectData.Write(byteData, 0, 2);
+
+                if (part.Shape.TextureEntry != null && part.Shape.TextureEntry.Length > 0)
+                {
+                    // Texture Length
+                    Utils.IntToBytes(part.Shape.TextureEntry.Length, byteData, 0);
+                    objectData.Write(byteData, 0, 4);
+                    // Texture
+                    objectData.Write(part.Shape.TextureEntry, 0, part.Shape.TextureEntry.Length);
                 }
                 else
-                    Utils.UIntToBytes(part.ParentID, byteData, 0);
-                objectData.Write(byteData, i, 4);
-                i += 4;
-            }
-            if ((updateFlags & CompressedFlags.Tree) != 0)
-            {
-                objectData.WriteByte(part.Shape.State); //Tree type
-                i++;
-            }
-            else if ((updateFlags & CompressedFlags.ScratchPad) != 0)
-            {
-                //Remove the flag, we have no clue what to do with this
-                updateFlags &= ~(CompressedFlags.ScratchPad);
-            }
-            if ((updateFlags & CompressedFlags.HasText) != 0)
-            {
-                byte[] text = Utils.StringToBytes(part.Text);
-                objectData.Write(text, i, text.Length);
-                i += text.Length;
-
-                byte[] textcolor = part.GetTextColor().GetBytes(false);
-                objectData.Write(textcolor, i, textcolor.Length);
-                i += 4;
-            }
-            if ((updateFlags & CompressedFlags.MediaURL) != 0)
-            {
-                byte[] text = Util.StringToBytes256(part.CurrentMediaVersion);
-                objectData.Write(text, i, text.Length);
-                i += text.Length;
-            }
-
-            if ((updateFlags & CompressedFlags.HasParticles) != 0)
-            {
-                if (part.ParticleSystem.Length == 0)
                 {
-                    Primitive.ParticleSystem Sys = new Primitive.ParticleSystem();
-                    byte[] pdata = Sys.GetBytes();
-                    objectData.Write(pdata, i, pdata.Length);
-                    i += pdata.Length; //86
-                    //updateFlags = updateFlags & ~CompressedFlags.HasParticles;
+                    Utils.IntToBytes(0, byteData, 0);
+                    objectData.Write(byteData, 0, 4);
                 }
-                else
+
+                if ((updateFlags & CompressedFlags.TextureAnimation) != 0)
                 {
-                    objectData.Write(part.ParticleSystem, i, part.ParticleSystem.Length);
-                    i += part.ParticleSystem.Length; //86
+                    Utils.UInt64ToBytes((ulong)part.TextureAnimation.Length, byteData, 0);
+                    objectData.Write(byteData, 0, 4);
+                    objectData.Write(part.TextureAnimation, 0, part.TextureAnimation.Length);
                 }
-            }
 
-            byte[] ExtraData = part.Shape.ExtraParamsToBytes();
-            objectData.Write(ExtraData, i, ExtraData.Length);
-            i += ExtraData.Length;
+                ObjectUpdateCompressedPacket.ObjectDataBlock update = new ObjectUpdateCompressedPacket.ObjectDataBlock();
 
-            if ((updateFlags & CompressedFlags.HasSound) != 0)
-            {
-                objectData.Write(part.Sound.GetBytes(), i, 16);
-                i += 16;
-                Utils.FloatToBytes((float)part.SoundGain, byteData, 0);
-                objectData.Write(byteData, i, 4);
-                i += 4;
-                objectData.WriteByte(part.SoundFlags);
-                i++;
-                Utils.FloatToBytes((float)part.SoundRadius, byteData, 0);
-                objectData.Write(byteData, i, 4);
-                i += 4;
-            }
-            if ((updateFlags & CompressedFlags.HasNameValues) != 0)
-            {
-                if (part.IsAttachment)
+                #region PrimFlags
+
+                PrimFlags primflags = (PrimFlags)m_scene.Permissions.GenerateClientFlags(AgentId, part);
+
+                // Don't send the CreateSelected flag to everyone
+                primflags &= ~PrimFlags.CreateSelected;
+
+                if (AgentId == part.OwnerID)
                 {
-                    byte[] NV = Util.StringToBytes256("AttachItemID STRING RW SV " + part.FromUserInventoryItemID);
-                    objectData.Write(NV, i, NV.Length);
-                    i += NV.Length;
+                    if (part.CreateSelected)
+                    {
+                        // Only send this flag once, then unset it
+                        primflags |= PrimFlags.CreateSelected;
+                        part.CreateSelected = false;
+                    }
                 }
+
+                update.UpdateFlags = (uint)primflags;
+
+                #endregion PrimFlags
+
+                update.Data = objectData.ToArray();
+
+                return update;
             }
-
-            objectData.WriteByte(part.Shape.PathCurve);
-            i++;
-            Utils.UInt16ToBytes(part.Shape.PathBegin, byteData, 0);
-            objectData.Write(byteData, i, 2);
-            i += 2;
-            Utils.UInt16ToBytes(part.Shape.PathEnd, byteData, 0);
-            objectData.Write(byteData, i, 2);
-            i += 2;
-            objectData.WriteByte(part.Shape.PathScaleX);
-            i++;
-            objectData.WriteByte(part.Shape.PathScaleY);
-            i++;
-            objectData.WriteByte(part.Shape.PathShearX);
-            i++;
-            objectData.WriteByte(part.Shape.PathShearY);
-            i++;
-            objectData.WriteByte((byte)part.Shape.PathTwist);
-            i++;
-            objectData.WriteByte((byte)part.Shape.PathTwistBegin);
-            i++;
-            objectData.WriteByte((byte)part.Shape.PathRadiusOffset);
-            i++;
-            objectData.WriteByte((byte)part.Shape.PathTaperX);
-            i++;
-            objectData.WriteByte((byte)part.Shape.PathTaperY);
-            i++;
-            objectData.WriteByte(part.Shape.PathRevolutions);
-            i++;
-            objectData.WriteByte((byte)part.Shape.PathSkew);
-            i++;
-            objectData.WriteByte(part.Shape.ProfileCurve);
-            i++;
-            Utils.UInt16ToBytes(part.Shape.ProfileBegin, byteData, 0);
-            objectData.Write(byteData, i, 2);
-            i += 2;
-            Utils.UInt16ToBytes(part.Shape.ProfileEnd, byteData, 0);
-            objectData.Write(byteData, i, 2);
-            i += 2;
-            Utils.UInt16ToBytes(part.Shape.ProfileHollow, byteData, 0);
-            objectData.Write(byteData, i, 2);
-            i += 2;
-
-            if (part.Shape.TextureEntry != null && part.Shape.TextureEntry.Length > 0)
-            {
-                // Texture Length
-                Utils.IntToBytes(part.Shape.TextureEntry.Length, byteData, 0);
-                objectData.Write(byteData, i, 4);
-                i += 4;
-                // Texture
-                objectData.Write(part.Shape.TextureEntry, i, part.Shape.TextureEntry.Length);
-                i += part.Shape.TextureEntry.Length;
-            }
-            else
-            {
-                Utils.IntToBytes(0, byteData, 0);
-                objectData.Write(byteData, i, 4);
-                i += 4;
-            }
-
-            if ((updateFlags & CompressedFlags.TextureAnimation) != 0)
-            {
-                Utils.UInt64ToBytes((ulong)part.TextureAnimation.Length, byteData, 0);
-                objectData.Write(byteData, i, 4);
-                i += 4;
-                objectData.Write(part.TextureAnimation, i, part.TextureAnimation.Length);
-                i += part.TextureAnimation.Length;
-            }
-
-            ObjectUpdateCompressedPacket.ObjectDataBlock update = new ObjectUpdateCompressedPacket.ObjectDataBlock();
-
-            #region PrimFlags
-
-            PrimFlags primflags = (PrimFlags) m_scene.Permissions.GenerateClientFlags(AgentId, part);
-
-            // Don't send the CreateSelected flag to everyone
-            primflags &= ~PrimFlags.CreateSelected;
-
-            if (AgentId == part.OwnerID)
-            {
-                if (part.CreateSelected)
-                {
-                    // Only send this flag once, then unset it
-                    primflags |= PrimFlags.CreateSelected;
-                    part.CreateSelected = false;
-                }
-            }
-
-            update.UpdateFlags = (uint) primflags;
-
-            #endregion PrimFlags
-
-            update.Data = objectData.ToArray();
-
-            return update;
         }
 
         public void SendNameReply(UUID profileId, string name)
