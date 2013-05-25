@@ -40,7 +40,7 @@ namespace Simple.Currency
 
             m_config = new SimpleCurrencyConfig(source.Configs["Currency"]);
 
-            Init(m_registry, InterfaceName, "", "/currency/", "CurrencyServerURI");
+            Init(simBase, InterfaceName, "", "/currency/", "CurrencyServerURI");
 
             if (!m_doRemoteCalls)
             {
