@@ -1633,5 +1633,7 @@ namespace Aurora.Framework.PresenceInfo
 
         UUID ScopeID { get; set; }
         List<UUID> AllScopeIDs { get; set; }
+
+        void IncomingInstantMessage(GridInstantMessage im);
     }
 }

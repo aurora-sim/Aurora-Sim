@@ -6173,37 +6173,39 @@ namespace Aurora.ClientStack
 
             string IMfromName = Util.FieldToString(msgpack.MessageBlock.FromAgentName);
             string IMmessage = Utils.BytesToString(msgpack.MessageBlock.Message);
-            ImprovedInstantMessage handlerInstantMessage = OnInstantMessage;
-
-            if (handlerInstantMessage != null)
+            
+            GridInstantMessage im = new GridInstantMessage()
             {
-                GridInstantMessage im = new GridInstantMessage()
-                    {
-                        RegionID = Scene.RegionInfo.RegionID,
-                        FromAgentID = msgpack.AgentData.AgentID,
-                        FromAgentName = IMfromName,
-                        ToAgentID = msgpack.MessageBlock.ToAgentID,
-                        Dialog = msgpack.MessageBlock.Dialog,
-                        FromGroup = msgpack.MessageBlock.FromGroup,
-                        Message = IMmessage,
-                        SessionID = msgpack.MessageBlock.ID,
-                        Offline = msgpack.MessageBlock.Offline,
-                        Position = msgpack.MessageBlock.Position,
-                        BinaryBucket = msgpack.MessageBlock.BinaryBucket
-                    };
-
-                PreSendImprovedInstantMessage handlerPreSendInstantMessage = OnPreSendInstantMessage;
-                if (handlerPreSendInstantMessage != null)
-                {
-                    if (handlerPreSendInstantMessage.GetInvocationList().Cast<PreSendImprovedInstantMessage>().Any(
-                        d => d(this, im)))
-                    {
-                        return true; //handled
-                    }
-                }
-                handlerInstantMessage(this, im);
-            }
+                RegionID = Scene.RegionInfo.RegionID,
+                FromAgentID = msgpack.AgentData.AgentID,
+                FromAgentName = IMfromName,
+                ToAgentID = msgpack.MessageBlock.ToAgentID,
+                Dialog = msgpack.MessageBlock.Dialog,
+                FromGroup = msgpack.MessageBlock.FromGroup,
+                Message = IMmessage,
+                SessionID = msgpack.MessageBlock.ID,
+                Offline = msgpack.MessageBlock.Offline,
+                Position = msgpack.MessageBlock.Position,
+                BinaryBucket = msgpack.MessageBlock.BinaryBucket
+            };
+            IncomingInstantMessage(im);
             return true;
+        }
+
+        public void IncomingInstantMessage(GridInstantMessage im)
+        {
+            PreSendImprovedInstantMessage handlerPreSendInstantMessage = OnPreSendInstantMessage;
+            if (handlerPreSendInstantMessage != null)
+            {
+                if (handlerPreSendInstantMessage.GetInvocationList().Cast<PreSendImprovedInstantMessage>().Any(
+                    d => d(this, im)))
+                {
+                    return; //handled
+                }
+            }
+            ImprovedInstantMessage handlerInstantMessage = OnInstantMessage;
+            if (handlerInstantMessage != null)
+                handlerInstantMessage(this, im);
         }
 
         private bool HandlerAcceptFriendship(IClientAPI sender, Packet Pack)
