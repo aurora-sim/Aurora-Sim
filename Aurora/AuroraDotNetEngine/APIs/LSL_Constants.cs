@@ -318,9 +318,17 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.Runtime
         public static readonly LSL_Types.LSLInteger HTTP_VERBOSE_THROTTLE = 4;
         public static readonly LSL_Types.LSLInteger HTTP_CUSTOM_HEADER = 5;
         public static readonly LSL_Types.LSLInteger HTTP_PRAGMA_NO_CACHE = 6;
-
-        public static readonly LSL_Types.LSLInteger CONTENT_TYPE_TEXT = 0;
-        public static readonly LSL_Types.LSLInteger CONTENT_TYPE_HTML = 1;
+        
+        // llSetContentType
+        public static readonly LSL_Types.LSLInteger CONTENT_TYPE_TEXT = 0; //text/plain
+        public static readonly LSL_Types.LSLInteger CONTENT_TYPE_HTML = 1; //text/html
+        public static readonly LSL_Types.LSLInteger CONTENT_TYPE_XML = 2; //application/xml
+        public static readonly LSL_Types.LSLInteger CONTENT_TYPE_XHTML = 3; //application/xhtml+xml
+        public static readonly LSL_Types.LSLInteger CONTENT_TYPE_ATOM = 4; //application/atom+xml
+        public static readonly LSL_Types.LSLInteger CONTENT_TYPE_JSON = 5; //application/json
+        public static readonly LSL_Types.LSLInteger CONTENT_TYPE_LLSD = 6; //application/llsd+xml
+        public static readonly LSL_Types.LSLInteger CONTENT_TYPE_FORM = 7; //application/x-www-form-urlencoded
+        public static readonly LSL_Types.LSLInteger CONTENT_TYPE_RSS = 8; //application/rss+xml 
 
         public static readonly LSL_Types.LSLInteger PRIM_MATERIAL = 2;
         public static readonly LSL_Types.LSLInteger PRIM_PHYSICS = 3;
