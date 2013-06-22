@@ -29,6 +29,7 @@ using Aurora.Framework;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.DatabaseInterfaces;
 using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Services;
 using Aurora.Framework.Services.ClassHelpers.Profile;
 using Aurora.Framework.Utilities;
@@ -74,35 +75,35 @@ namespace Aurora.Services.SQLServices.UserAccountService
                     MainConsole.Instance.Commands.AddCommand(
                         "create user",
                         "create user [<first> [<last> [<pass> [<email>]]]]",
-                        "Create a new user", HandleCreateUser);
+                        "Create a new user", HandleCreateUser, false, true);
                     MainConsole.Instance.Commands.AddCommand(
                         "delete user",
                         "delete user",
-                        "Deletes an existing user", HandleDeleteUser);
+                        "Deletes an existing user", HandleDeleteUser, false, true);
                     MainConsole.Instance.Commands.AddCommand("reset user password",
                                                              "reset user password [<first> [<last> [<password>]]]",
-                                                             "Reset a user password", HandleResetUserPassword);
+                                                             "Reset a user password", HandleResetUserPassword, false, true);
                     MainConsole.Instance.Commands.AddCommand(
                         "show account",
                         "show account <first> <last>",
-                        "Show account details for the given user", HandleShowAccount);
+                        "Show account details for the given user", HandleShowAccount, false, true);
                     MainConsole.Instance.Commands.AddCommand(
                         "set user level",
                         "set user level [<first> [<last> [<level>]]]",
                         "Set user level. If the user's level is > 0, "
                         + "this account will be treated as god-moded. "
                         + "It will also affect the 'login level' command. ",
-                        HandleSetUserLevel);
+                        HandleSetUserLevel, false, true);
                     MainConsole.Instance.Commands.AddCommand(
                         "set user profile title",
                         "set user profile title [<first> [<last> [<Title>]]]",
                         "Sets the title (Normally resident) in a user's title to some custom value.",
-                        HandleSetTitle);
+                        HandleSetTitle, false, true);
                     MainConsole.Instance.Commands.AddCommand(
                         "set partner",
                         "set partner",
                         "Sets the partner in a user's profile.",
-                        HandleSetPartner);
+                        HandleSetPartner, false, true);
                 }
             }
             registry.RegisterModuleInterface<IUserAccountService>(this);
@@ -401,7 +402,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
 
         #region Console commands
 
-        protected void HandleSetPartner(string[] cmdParams)
+        protected void HandleSetPartner(IScene scene, string[] cmdParams)
         {
             string first = MainConsole.Instance.Prompt("First User's name");
             string second = MainConsole.Instance.Prompt("Second User's name");
@@ -423,7 +424,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
             }
         }
 
-        protected void HandleSetTitle(string[] cmdparams)
+        protected void HandleSetTitle(IScene scene, string[] cmdparams)
         {
             string firstName;
             string lastName;
@@ -456,7 +457,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
                                                 title);
         }
 
-        protected void HandleSetUserLevel(string[] cmdparams)
+        protected void HandleSetUserLevel(IScene scene, string[] cmdparams)
         {
             string firstName;
             string lastName;
@@ -491,7 +492,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
                 MainConsole.Instance.InfoFormat("User level set for user {0} {1} to {2}", firstName, lastName, level);
         }
 
-        protected void HandleShowAccount(string[] cmdparams)
+        protected void HandleShowAccount(IScene scene, string[] cmdparams)
         {
             if (cmdparams.Length != 4)
             {
@@ -522,7 +523,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
         ///     Handle the create user command from the console.
         /// </summary>
         /// <param name="cmdparams">string array with parameters: firstname, lastname, password, locationX, locationY, email</param>
-        protected void HandleCreateUser(string[] cmdparams)
+        protected void HandleCreateUser(IScene scene, string[] cmdparams)
         {
             string name, password, email, uuid, scopeID;
 
@@ -540,7 +541,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
             CreateUser(UUID.Parse(uuid), UUID.Parse(scopeID), name, Util.Md5Hash(password), email);
         }
 
-        protected void HandleDeleteUser(string[] cmd)
+        protected void HandleDeleteUser(IScene scene, string[] cmd)
         {
             string name = MainConsole.Instance.Prompt("Name", "");
             if (name == "")
@@ -560,7 +561,7 @@ namespace Aurora.Services.SQLServices.UserAccountService
             DeleteUser(account.PrincipalID, account.Name, pass, archive, all);
         }
 
-        protected void HandleResetUserPassword(string[] cmdparams)
+        protected void HandleResetUserPassword(IScene scene, string[] cmdparams)
         {
             string name;
             string newPassword;

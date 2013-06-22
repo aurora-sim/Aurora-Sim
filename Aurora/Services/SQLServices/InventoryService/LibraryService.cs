@@ -37,6 +37,7 @@ using OpenMetaverse;
 using System;
 using System.IO;
 using System.Collections.Generic;
+using Aurora.Framework.SceneInfo;
 
 namespace Aurora.Services.SQLServices.InventoryService
 {
@@ -105,7 +106,7 @@ namespace Aurora.Services.SQLServices.InventoryService
                 if (MainConsole.Instance != null)
                     MainConsole.Instance.Commands.AddCommand("clear default inventory", "clear default inventory",
                                                              "Clears the Default Inventory stored for this grid",
-                                                             ClearDefaultInventory);
+                                                             ClearDefaultInventory, false, true);
             }
         }
 
@@ -152,7 +153,7 @@ namespace Aurora.Services.SQLServices.InventoryService
             }
         }
 
-        private void ClearDefaultInventory(string[] cmd)
+        private void ClearDefaultInventory(IScene scene, string[] cmd)
         {
             string sure = MainConsole.Instance.Prompt("Are you sure you want to delete the default inventory?", "yes");
             if (!sure.Equals("yes", StringComparison.CurrentCultureIgnoreCase))

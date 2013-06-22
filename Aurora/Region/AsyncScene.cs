@@ -279,8 +279,8 @@ namespace Aurora.Region
             m_regInfo = regionInfo;
         }
 
-        public void Initialize(RegionInfo regionInfo, AgentCircuitManager authen,
-                               List<IClientNetworkServer> clientServers)
+        public void Initialize(RegionInfo regionInfo, ISimulationDataStore dataStore, 
+            AgentCircuitManager authen, List<IClientNetworkServer> clientServers)
         {
             Initialize(regionInfo);
 
@@ -292,7 +292,7 @@ namespace Aurora.Region
             }
 
             m_sceneManager = RequestModuleInterface<ISceneManager>();
-            m_simDataStore = m_sceneManager.GetSimulationDataStore();
+            m_simDataStore = dataStore;
 
             m_config = m_sceneManager.ConfigSource;
             m_authenticateHandler = authen;
@@ -436,8 +436,8 @@ namespace Aurora.Region
         private bool PhysUpdate()
         {
             IMonitorModule monitorModule = RequestModuleInterface<IMonitorModule>();
-            IPhysicsFrameMonitor physicsFrameMonitor = monitorModule.GetMonitor<IPhysicsFrameMonitor>();
-            IPhysicsUpdateFrameMonitor physicsFrameTimeMonitor = monitorModule.GetMonitor<IPhysicsUpdateFrameMonitor>();
+            IPhysicsFrameMonitor physicsFrameMonitor = monitorModule.GetMonitor<IPhysicsFrameMonitor>(this);
+            IPhysicsUpdateFrameMonitor physicsFrameTimeMonitor = monitorModule.GetMonitor<IPhysicsUpdateFrameMonitor>(this);
 
             IPhysicsMonitor monitor2 = RequestModuleInterface<IPhysicsMonitor>();
             ILLClientInventory inventoryModule = RequestModuleInterface<ILLClientInventory>();
@@ -522,11 +522,11 @@ namespace Aurora.Region
         private bool Update()
         {
             IMonitorModule monitorModule = RequestModuleInterface<IMonitorModule>();
-            ISimFrameMonitor simFrameMonitor = monitorModule.GetMonitor<ISimFrameMonitor>();
-            ITotalFrameTimeMonitor totalFrameMonitor = monitorModule.GetMonitor<ITotalFrameTimeMonitor>();
-            ILastFrameTimeMonitor lastFrameMonitor = monitorModule.GetMonitor<ILastFrameTimeMonitor>();
-            IOtherFrameMonitor otherFrameMonitor = monitorModule.GetMonitor<IOtherFrameMonitor>();
-            ISleepFrameMonitor sleepFrameMonitor = monitorModule.GetMonitor<ISleepFrameMonitor>();
+            ISimFrameMonitor simFrameMonitor = monitorModule.GetMonitor<ISimFrameMonitor>(this);
+            ITotalFrameTimeMonitor totalFrameMonitor = monitorModule.GetMonitor<ITotalFrameTimeMonitor>(this);
+            ILastFrameTimeMonitor lastFrameMonitor = monitorModule.GetMonitor<ILastFrameTimeMonitor>(this);
+            IOtherFrameMonitor otherFrameMonitor = monitorModule.GetMonitor<IOtherFrameMonitor>(this);
+            ISleepFrameMonitor sleepFrameMonitor = monitorModule.GetMonitor<ISleepFrameMonitor>(this);
 
             while (true)
             {
@@ -715,7 +715,7 @@ namespace Aurora.Region
                     }
 
                     //Add the client to login stats
-                    ILoginMonitor monitor3 = RequestModuleInterface<IMonitorModule>().GetMonitor<ILoginMonitor>();
+                    ILoginMonitor monitor3 = RequestModuleInterface<IMonitorModule>().GetMonitor<ILoginMonitor>(null);
                     if ((aCircuit.TeleportFlags & (uint)TeleportFlags.ViaLogin) != 0 &&
                         monitor3 != null)
                         monitor3.AddSuccessfulLogin();

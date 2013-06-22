@@ -29,6 +29,7 @@ using System;
 using Aurora.Framework.ClientInterfaces;
 using Aurora.Framework.Services.ClassHelpers.Assets;
 using OpenMetaverse;
+using Aurora.Framework.SceneInfo;
 
 namespace Aurora.Framework.Modules
 {
@@ -41,13 +42,13 @@ namespace Aurora.Framework.Modules
         /// </summary>
         event SendStatResult OnSendStatsResult;
 
-        T GetMonitor<T>() where T : IMonitor;
+        T GetMonitor<T>(IScene scene) where T : IMonitor;
 
         /// <summary>
         ///     Get the latest stats
         /// </summary>
         /// <returns></returns>
-        float[] GetRegionStats();
+        float[] GetRegionStats(IScene scene);
     }
 
     public interface IMonitor

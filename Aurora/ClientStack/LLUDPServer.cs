@@ -280,6 +280,16 @@ namespace Aurora.ClientStack
             m_throttleRates = new ThrottleRates(configSource);
         }
 
+        public void UpdatePort(uint port)
+        {
+            IConfig networkConfig = m_scene.Config.Configs["Network"];
+            IPAddress internalIP = IPAddress.Any;
+            if (networkConfig != null)
+                IPAddress.TryParse(networkConfig.GetString("internal_ip", "0.0.0.0"), out internalIP);
+            
+            base.Initialise(internalIP, (int)port);
+        }
+
         public void Start()
         {
             if (m_scene == null)
@@ -580,7 +590,7 @@ namespace Aurora.ClientStack
             {
                 MainConsole.Instance.Warn("[LLUDPSERVER]: Ack timeout, disconnecting " + udpClient.AgentID);
 
-                ILoginMonitor monitor = m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor<ILoginMonitor>();
+                ILoginMonitor monitor = m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor<ILoginMonitor>(null);
                 if (monitor != null)
                     monitor.AddAbnormalClientThreadTermination();
 
@@ -1027,7 +1037,7 @@ namespace Aurora.ClientStack
             if (client.IsActive)
                 RemoveClient(((LLClientView)client).UDPClient);
 
-            ILoginMonitor monitor = m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor<ILoginMonitor>();
+            ILoginMonitor monitor = m_scene.RequestModuleInterface<IMonitorModule>().GetMonitor<ILoginMonitor>(null);
             if (monitor != null)
                 monitor.AddLogout();
         }

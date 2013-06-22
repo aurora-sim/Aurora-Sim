@@ -81,13 +81,19 @@ namespace Aurora.Services
             {
                 AvatarAppearance appearance = new AvatarAppearance(message["AgentID"], (OSDMap)message["Appearance"]);
                 ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
-                if (manager != null && manager.Scene != null)
+                if (manager != null)
                 {
-                    IAvatarFactory factory = manager.Scene.RequestModuleInterface<IAvatarFactory>();
-                    IScenePresence sp = manager.Scene.GetScenePresence(appearance.Owner);
-                    sp.RequestModuleInterface<IAvatarAppearanceModule>().Appearance = appearance;
-                    sp.RequestModuleInterface<IAvatarAppearanceModule>().SendAppearanceToAgent(sp);
-                    sp.RequestModuleInterface<IAvatarAppearanceModule>().SendAppearanceToAllOtherAgents();
+                    foreach (IScene scene in manager.Scenes)
+                    {
+                        IScenePresence sp = scene.GetScenePresence(appearance.Owner);
+                        if (sp != null && !sp.IsChildAgent)
+                        {
+                            IAvatarFactory factory = scene.RequestModuleInterface<IAvatarFactory>();
+                            sp.RequestModuleInterface<IAvatarAppearanceModule>().Appearance = appearance;
+                            sp.RequestModuleInterface<IAvatarAppearanceModule>().SendAppearanceToAgent(sp);
+                            sp.RequestModuleInterface<IAvatarAppearanceModule>().SendAppearanceToAllOtherAgents();
+                        }
+                    }
                 }
             }
             return null;

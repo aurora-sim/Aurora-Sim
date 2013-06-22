@@ -15,35 +15,33 @@ namespace Aurora.Framework.SceneInfo
     public interface ISceneManager
     {
         /// <summary>
-        ///     Starts a region
+        ///     Starts the region
         /// </summary>
         /// <param name="newRegion"></param>
-        void StartRegion(out bool newRegion);
+        void StartRegions(out bool newRegion);
 
         /// <summary>
         ///     Shuts down the given region
         /// </summary>
         /// <param name="shutdownType"></param>
         /// <param name="p"></param>
-        void CloseRegion(ShutdownType shutdownType, int p);
+        void CloseRegion(IScene scene, ShutdownType shutdownType, int p);
 
         /// <summary>
         ///     Removes and resets terrain and objects from the database
         /// </summary>
-        void ResetRegion();
+        void ResetRegion(IScene scene);
 
         /// <summary>
         ///     Restart the given region
         /// </summary>
-        void RestartRegion();
+        void RestartRegion(IScene scene);
 
         void HandleStartupComplete(List<string> data);
 
-        ISimulationDataStore GetSimulationDataStore();
-
         IConfigSource ConfigSource { get; }
 
-        IScene Scene { get; }
+        List<IScene> Scenes { get; }
 
         event NewScene OnCloseScene;
         event NewScene OnAddedScene;

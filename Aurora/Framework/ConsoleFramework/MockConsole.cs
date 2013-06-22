@@ -49,7 +49,7 @@ namespace Aurora.Framework.ConsoleFramework
             baseOpenSim.ApplicationRegistry.RegisterModuleInterface<ICommandConsole>(this);
             MainConsole.Instance = this;
 
-            m_Commands.AddCommand("help", "help", "Get a general command list", Help);
+            m_Commands.AddCommand("help", "help", "Get a general command list", Help, false, true);
         }
 
         public override void Output(string text, Level level)

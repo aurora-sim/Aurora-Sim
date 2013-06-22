@@ -29,6 +29,7 @@ using Aurora.Framework;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.DatabaseInterfaces;
 using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Servers;
 using Aurora.Framework.Servers.HttpServer;
 using Aurora.Framework.Servers.HttpServer.Implementation;
@@ -93,23 +94,23 @@ namespace Aurora.Services
 
         public void Start(IConfigSource config, IRegistryCore registry)
         {
-            MainConsole.Instance.Commands.AddCommand("user metrics", "user metrics", "Gives metrics on users", Metrics);
+            MainConsole.Instance.Commands.AddCommand("user metrics", "user metrics", "Gives metrics on users", Metrics, false, true);
             MainConsole.Instance.Commands.AddCommand("clear user metrics", "clear user metrics",
-                                                     "Clear all saved user metrics", ClearMetrics);
+                                                     "Clear all saved user metrics", ClearMetrics, false, true);
         }
 
         public void FinishedStartup()
         {
         }
 
-        public void ClearMetrics(string[] cmd)
+        public void ClearMetrics(IScene scene, string[] cmd)
         {
             IUserStatsDataConnector dc = Framework.Utilities.DataManager.RequestPlugin<IUserStatsDataConnector>();
             if (dc != null)
                 dc.RemoveAllSessions();
         }
 
-        public void Metrics(string[] cmd)
+        public void Metrics(IScene scene, string[] cmd)
         {
             IUserStatsDataConnector dc = Framework.Utilities.DataManager.RequestPlugin<IUserStatsDataConnector>();
             if (dc != null)

@@ -116,8 +116,9 @@ namespace Aurora.Services
                     return retrieveAgentResponse.ToOSD();
                 case "CreateObjectRequest":
                     CreateObjectRequest createObjectRequest = new CreateObjectRequest();
-                    createObjectRequest.Scene = Scene;
                     createObjectRequest.FromOSD(message);
+                    createObjectRequest.Scene = GetScene(createObjectRequest.Destination.RegionID);
+                    createObjectRequest.DeserializeObject();
                     return new OSDMap() { new KeyValuePair<string, OSD>("Success", CreateObject(createObjectRequest.Destination, createObjectRequest.Object)) };
             }
             return null;
@@ -131,15 +132,12 @@ namespace Aurora.Services
 
         #region ISimulation
 
-        public IScene Scene
+        private IScene GetScene(UUID regionID)
         {
-            get
-            {
-                ISceneManager man = m_registry.RequestModuleInterface<ISceneManager>();
-                if (man != null)
-                    return man.Scene;
-                return null;
-            }
+            ISceneManager man = m_registry.RequestModuleInterface<ISceneManager>();
+            if (man != null)
+                return man.Scenes.Find((s) => s.RegionInfo.RegionID == regionID);
+            return null;
         }
 
         /**
@@ -149,6 +147,7 @@ namespace Aurora.Services
         public bool CreateAgent(GridRegion destination, AgentCircuitData aCircuit, uint teleportFlags, out CreateAgentResponse response)
         {
             response = new CreateAgentResponse();
+            IScene Scene = destination == null ? null : GetScene(destination.RegionID);
             if (destination == null || Scene == null)
             {
                 response.Reason = "Given destination was null";
@@ -173,6 +172,7 @@ namespace Aurora.Services
 
         public bool UpdateAgent(GridRegion destination, AgentData agentData)
         {
+            IScene Scene = destination == null ? null : GetScene(destination.RegionID);
             if (destination == null || Scene == null || agentData == null)
                 return false;
 
@@ -187,6 +187,7 @@ namespace Aurora.Services
 
         public bool UpdateAgent(GridRegion destination, AgentPosition agentData)
         {
+            IScene Scene = destination == null ? null : GetScene(destination.RegionID);
             if (Scene == null || destination == null)
                 return false;
 
@@ -200,6 +201,7 @@ namespace Aurora.Services
 
         public bool FailedToMoveAgentIntoNewRegion(UUID AgentID, UUID RegionID)
         {
+            IScene Scene = GetScene(RegionID);
             if (Scene == null)
                 return false;
 
@@ -211,6 +213,7 @@ namespace Aurora.Services
 
         public bool MakeChildAgent(UUID AgentID, GridRegion destination, bool isCrossing)
         {
+            IScene Scene = destination == null ? null : GetScene(destination.RegionID);
             if (Scene == null)
                 return false;
 
@@ -223,6 +226,7 @@ namespace Aurora.Services
         public bool FailedToTeleportAgent(GridRegion destination, UUID failedRegionID, UUID agentID, string reason,
                                           bool isCrossing)
         {
+            IScene Scene = destination == null ? null : GetScene(destination.RegionID);
             if (Scene == null)
                 return false;
 
@@ -238,6 +242,7 @@ namespace Aurora.Services
             agentData = null;
             circuitData = null;
 
+            IScene Scene = destination == null ? null : GetScene(destination.RegionID);
             if (Scene == null || destination == null)
                 return false;
 
@@ -252,6 +257,7 @@ namespace Aurora.Services
 
         public bool CloseAgent(GridRegion destination, UUID agentID)
         {
+            IScene Scene = destination == null ? null : GetScene(destination.RegionID);
             if (Scene == null || destination == null)
                 return false;
 
@@ -267,6 +273,7 @@ namespace Aurora.Services
 
         public bool CreateObject(GridRegion destination, ISceneEntity sog)
         {
+            IScene Scene = destination == null ? null : GetScene(destination.RegionID);
             if (Scene == null || destination == null)
                 return false;
 

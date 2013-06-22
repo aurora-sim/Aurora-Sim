@@ -228,16 +228,16 @@ namespace Aurora.Services
                     if (MainConsole.Instance != null)
                     {
                         MainConsole.Instance.Commands.AddCommand("fcache status", "fcache status",
-                                                                 "Display cache status", HandleConsoleCommand);
+                                                                 "Display cache status", HandleConsoleCommand, false, true);
                         MainConsole.Instance.Commands.AddCommand("fcache clear", "fcache clear [file] [memory]",
                                                                  "Remove all assets in the file and/or memory cache",
-                                                                 HandleConsoleCommand);
+                                                                 HandleConsoleCommand, false, true);
                         MainConsole.Instance.Commands.AddCommand("fcache assets", "fcache assets",
                                                                  "Attempt a deep scan and cache of all assets in all scenes",
-                                                                 HandleConsoleCommand);
+                                                                 HandleConsoleCommand, false, true);
                         MainConsole.Instance.Commands.AddCommand("fcache expire", "fcache expire <datetime>",
                                                                  "Purge cached assets older then the specified date/time",
-                                                                 HandleConsoleCommand);
+                                                                 HandleConsoleCommand, false, true);
                     }
                     registry.RegisterModuleInterface<IImprovedAssetCache>(this);
                 }
@@ -258,7 +258,7 @@ namespace Aurora.Services
         {
             IMonitorModule monitor = m_simulationBase.ApplicationRegistry.RequestModuleInterface<IMonitorModule>();
             if (monitor != null)
-                _assetMonitor = monitor.GetMonitor<IAssetMonitor>();
+                _assetMonitor = monitor.GetMonitor<IAssetMonitor>(null);
         }
 
         #endregion
@@ -904,8 +904,11 @@ namespace Aurora.Services
             {
                 UuidGatherer gatherer = new UuidGatherer(m_AssetService);
 
-                StampRegionStatusFile(manager.Scene.RegionInfo.RegionID);
-                manager.Scene.ForEachSceneEntity(e => gatherer.GatherAssetUuids(e, assets));
+                foreach (IScene scene in manager.Scenes)
+                {
+                    StampRegionStatusFile(scene.RegionInfo.RegionID);
+                    scene.ForEachSceneEntity(e => gatherer.GatherAssetUuids(e, assets));
+                }
 
                 foreach (UUID assetID in assets.Keys)
                 {
@@ -960,7 +963,7 @@ namespace Aurora.Services
 
         #region Console Commands
 
-        private void HandleConsoleCommand(string[] cmdparams)
+        private void HandleConsoleCommand(IScene scene, string[] cmdparams)
         {
             if (cmdparams.Length >= 2)
             {

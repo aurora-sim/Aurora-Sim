@@ -33,7 +33,7 @@ namespace Aurora.Modules.Installer
             MainConsole.Instance.Commands.AddCommand("compile module",
                                                      "compile module <gui>",
                                                      "Compiles and adds a given addon-module to Aurora, adding the gui parameter opens a file picker in Windows",
-                                                     consoleCommand);
+                                                     consoleCommand, false, true);
         }
 
         public void FinishedStartup()
@@ -42,7 +42,7 @@ namespace Aurora.Modules.Installer
 
         #endregion
 
-        private void consoleCommand(string[] commands)
+        private void consoleCommand(IScene scene, string[] commands)
         {
             if (commands[2] == "gui")
             {
@@ -338,10 +338,13 @@ namespace Aurora.Modules.Installer
             {
                 foreach (INonSharedRegionModule nsrm in nsregionModule)
                 {
-                    nsrm.Initialise(m_config);
-                    nsrm.AddRegion(manager.Scene);
-                    nsrm.RegionLoaded(manager.Scene);
-                    rmc.AllModules.Add(nsrm);
+                    foreach (IScene scene in manager.Scenes)
+                    {
+                        nsrm.Initialise(m_config);
+                        nsrm.AddRegion(scene);
+                        nsrm.RegionLoaded(scene);
+                        rmc.AllModules.Add(nsrm);
+                    }
                 }
             }
         }

@@ -90,7 +90,7 @@ namespace Aurora.Framework.ConsoleFramework
             MainConsole.Instance = this;
 
             m_Commands.AddCommand("help", "help",
-                                  "Get a general command list", base.Help);
+                                  "Get a general command list", base.Help, false, true);
 
             string logName = "";
             if (source.Configs["Console"] != null)

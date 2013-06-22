@@ -40,7 +40,7 @@ namespace Aurora.Framework.Modules
         ///     Squash the entire heightmap into a single dimensioned array
         /// </summary>
         /// <returns></returns>
-        short[] GetSerialised(IScene scene);
+        short[] GetSerialised();
 
         bool Tainted(int x, int y);
         ITerrainChannel MakeCopy();

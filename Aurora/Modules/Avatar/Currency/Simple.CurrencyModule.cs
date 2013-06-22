@@ -21,7 +21,7 @@ namespace Simple.Currency
         {
             get { return m_connector.GetConfig(); }
         }
-        private IScene m_scene;
+        private List<IScene> m_scenes = new List<IScene>();
         private SimpleCurrencyConnector m_connector;
         private IRegistryCore m_registry;
 
@@ -60,7 +60,7 @@ namespace Simple.Currency
             {
                 manager.OnAddedScene += (scene) =>
                 {
-                                                m_scene = scene;
+                                                m_scenes.Add(scene);
                                                 scene.EventManager.OnNewClient += OnNewClient;
                                                 scene.EventManager.OnClosingClient += OnClosingClient;
                                                 scene.EventManager.OnMakeRootAgent += OnMakeRootAgent;
@@ -69,12 +69,12 @@ namespace Simple.Currency
                                             };
                 manager.OnCloseScene += (scene) =>
                                             {
-                                                m_scene.EventManager.OnNewClient -= OnNewClient;
-                                                m_scene.EventManager.OnClosingClient -= OnClosingClient;
-                                                m_scene.EventManager.OnMakeRootAgent -= OnMakeRootAgent;
+                                                scene.EventManager.OnNewClient -= OnNewClient;
+                                                scene.EventManager.OnClosingClient -= OnClosingClient;
+                                                scene.EventManager.OnMakeRootAgent -= OnMakeRootAgent;
                                                 scene.EventManager.OnValidateBuyLand -= EventManager_OnValidateBuyLand;
-                                                m_scene.RegisterModuleInterface<IMoneyModule>(this);
-                                                m_scene = null;
+                                                scene.RegisterModuleInterface<IMoneyModule>(this);
+                                                m_scenes.Remove(scene);
                                             };
             }
 
@@ -87,7 +87,7 @@ namespace Simple.Currency
 
         private bool EventManager_OnValidateBuyLand(EventManager.LandBuyArgs e)
         {
-            IParcelManagementModule parcelMangaement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+            IParcelManagementModule parcelMangaement = GetSceneFor(e.agentId).RequestModuleInterface<IParcelManagementModule>();
             if (parcelMangaement == null)
                 return false;
             ILandObject lob = parcelMangaement.GetLandObject(e.parcelLocalID);
@@ -185,11 +185,14 @@ namespace Simple.Currency
             if (toObjectID != UUID.Zero)
             {
                 ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
-                if(manager != null && manager.Scene != null)
+                if (manager != null)
                 {
-                    ISceneChildEntity ent = manager.Scene.GetSceneObjectPart(toObjectID);
-                    if(ent != null)
-                        FireObjectPaid(toObjectID, fromID, amount);
+                    foreach (IScene scene in manager.Scenes)
+                    {
+                        ISceneChildEntity ent = scene.GetSceneObjectPart(toObjectID);
+                        if (ent != null)
+                            FireObjectPaid(toObjectID, fromID, amount);
+                    }
                 }
             }
             return result;
@@ -235,20 +238,23 @@ namespace Simple.Currency
             if (toID != UUID.Zero)
             {
                 ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
-                if (manager != null && manager.Scene != null)
+                if (manager != null)
                 {
-                    ISceneChildEntity ent = manager.Scene.GetSceneObjectPart(toID);
-                    if (ent != null)
+                    foreach (IScene scene in manager.Scenes)
                     {
-                        bool success = m_connector.UserCurrencyTransfer(ent.OwnerID, fromID, ent.UUID, ent.Name, UUID.Zero, "", 
-                            (uint)amount, description, (TransactionType)type, UUID.Random());
-                        if (success)
-                            FireObjectPaid(toID, fromID, amount);
-                    }
-                    else
-                    {
-                        m_connector.UserCurrencyTransfer(toID, fromID, (uint)amount, description,
-                                                 (TransactionType)type, UUID.Random());
+                        ISceneChildEntity ent = scene.GetSceneObjectPart(toID);
+                        if (ent != null)
+                        {
+                            bool success = m_connector.UserCurrencyTransfer(ent.OwnerID, fromID, ent.UUID, ent.Name, UUID.Zero, "",
+                                (uint)amount, description, (TransactionType)type, UUID.Random());
+                            if (success)
+                                FireObjectPaid(toID, fromID, amount);
+                        }
+                        else
+                        {
+                            m_connector.UserCurrencyTransfer(toID, fromID, (uint)amount, description,
+                                                     (TransactionType)type, UUID.Random());
+                        }
                     }
                 }
             }
@@ -311,8 +317,8 @@ namespace Simple.Currency
                 int Amount = message["Amount"];
                 string Message = message["Message"];
                 UUID TransactionID = message["TransactionID"];
-                IDialogModule dialogModule = m_scene.RequestModuleInterface<IDialogModule>();
-                IScenePresence sp = m_scene.GetScenePresence(agentID);
+                IDialogModule dialogModule = GetSceneFor(agentID).RequestModuleInterface<IDialogModule>();
+                IScenePresence sp = GetSceneFor(agentID).GetScenePresence(agentID);
                 if (sp != null)
                 {
                     if (dialogModule != null && !string.IsNullOrEmpty(Message))
@@ -325,10 +331,10 @@ namespace Simple.Currency
             else if (method == "GetLandData")
             {
                 UUID agentID = message["AgentID"];
-                IParcelManagementModule parcelManagement = m_scene.RequestModuleInterface<IParcelManagementModule>();
+                IParcelManagementModule parcelManagement = GetSceneFor(agentID).RequestModuleInterface<IParcelManagementModule>();
                 if (parcelManagement != null)
                 {
-                    IScenePresence sp = m_scene.GetScenePresence(agentID);
+                    IScenePresence sp = GetSceneFor(agentID).GetScenePresence(agentID);
                     if (sp != null)
                     {
                         ILandObject lo = sp.CurrentParcel;
@@ -347,6 +353,16 @@ namespace Simple.Currency
             return null;
         }
 
+        private IScene GetSceneFor(UUID userID)
+        {
+            foreach (IScene scene in m_scenes)
+                if (scene.GetScenePresence(userID) != null)
+                    return scene;
+            if (m_scenes.Count == 0)
+                return null;
+            return m_scenes[0];
+        }
+
         /// <summary>
         ///     All message for money actually go through this function. Which also update the balance
         /// </summary>
@@ -356,10 +372,10 @@ namespace Simple.Currency
         /// <returns></returns>
         public bool SendGridMessage(UUID toId, string message, UUID transactionId)
         {
-            IDialogModule dialogModule = m_scene.RequestModuleInterface<IDialogModule>();
+            IDialogModule dialogModule = GetSceneFor(toId).RequestModuleInterface<IDialogModule>();
             if (dialogModule != null)
             {
-                IScenePresence icapiTo = m_scene.GetScenePresence(toId);
+                IScenePresence icapiTo = GetSceneFor(toId).GetScenePresence(toId);
                 if (icapiTo != null)
                 {
                     icapiTo.ControllingClient.SendMoneyBalance(transactionId, true, Utils.StringToBytes(message),

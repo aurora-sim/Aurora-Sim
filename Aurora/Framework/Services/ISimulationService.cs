@@ -538,6 +538,7 @@ namespace Aurora.Framework.Services
         public ISceneEntity Object;
         [ProtoMember(3)]
         public GridRegion Destination;
+        private byte[] ObjectBlob = null;
 
         public IScene Scene;
 
@@ -554,9 +555,18 @@ namespace Aurora.Framework.Services
         {
             Destination = new GridRegion();
             Destination.FromOSD((OSDMap)map["Destination"]);
-            System.IO.MemoryStream stream = new System.IO.MemoryStream(map["Object"].AsBinary());
+            ObjectBlob = map["Object"].AsBinary();
+        }
+
+        public void DeserializeObject()
+        {
+            if (ObjectBlob == null || Scene == null)
+                return;
+
+            System.IO.MemoryStream stream = new System.IO.MemoryStream(ObjectBlob);
             Aurora.Framework.Serialization.SceneEntitySerializer.SceneObjectSerializer.FromXml2Format(ref stream, Scene);
             stream.Close();
+            ObjectBlob = null;
         }
     }
 

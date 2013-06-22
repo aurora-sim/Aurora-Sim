@@ -93,30 +93,42 @@ namespace Aurora.Modules
             _regionData = null;
         }
 
-        public virtual void Initialise()
+        public FileBasedSimulationData()
         {
-            _regionLoader = new ProtobufRegionDataLoader();
             _oldRegionLoader = new TarRegionDataLoader();
+            _regionLoader = new ProtobufRegionDataLoader();
         }
 
-        public virtual RegionInfo LoadRegionInfo(ISimulationBase simBase, out bool newRegion)
-        {
-            newRegion = false;
-            ReadConfig(simBase);
-            ReadBackup();
-            RegionInfo info;
+        public void Initialise() { }
 
-            if (_regionData == null || _regionData.RegionInfo == null)
-            {
-            retry:
-                info = CreateRegionFromConsole(null);
-                if (info == null)
-                    goto retry;
-                newRegion = true;
-            }
-            else
-                info = _regionData.RegionInfo;
+        public virtual List<string> FindRegionInfos(out bool newRegion)
+        {
+            List<string> regions = new List<string>(Directory.GetFiles(".", "*.sim", SearchOption.TopDirectoryOnly));
+            newRegion = regions.Count == 0;
+            List<string> retVals = new List<string>();
+            foreach (string r in regions)
+                retVals.Add(Path.GetFileNameWithoutExtension(r));
+            return retVals;
+        }
+
+        public virtual RegionInfo CreateNewRegion(ISimulationBase simBase)
+        {
+            ReadConfig(simBase);
+            _regionData = new RegionData();
+            _regionData.Init();
+            RegionInfo info = CreateRegionFromConsole(null);
+            if (info == null)
+                return CreateNewRegion(simBase);
+            m_fileName = info.RegionName;
             return info;
+        }
+
+        public virtual RegionInfo LoadRegionInfo(string fileName, ISimulationBase simBase)
+        {
+            ReadConfig(simBase);
+            ReadBackup(fileName);
+            m_fileName = fileName;
+            return _regionData.RegionInfo;
         }
 
         private RegionInfo CreateRegionFromConsole(RegionInfo info)
@@ -125,6 +137,7 @@ namespace Aurora.Modules
             {
                 info = new RegionInfo();
                 info.RegionID = UUID.Random();
+                info.RegionPort = 9000;
             }
             info.RegionName = MainConsole.Instance.Prompt("Region Name: ", info.RegionName);
             
@@ -139,6 +152,8 @@ namespace Aurora.Modules
             
             info.RegionSizeX = int.Parse(MainConsole.Instance.Prompt("Region size X: ", info.RegionSizeX.ToString()));
             info.RegionSizeY = int.Parse(MainConsole.Instance.Prompt("Region size Y: ", info.RegionSizeY.ToString()));
+            
+            info.RegionPort = int.Parse(MainConsole.Instance.Prompt("Region Port: ", info.RegionPort.ToString()));
             
             info.RegionType = MainConsole.Instance.Prompt("Region Type: ",
                                                           (info.RegionType == "" ? "Mainland" : info.RegionType));
@@ -182,10 +197,10 @@ namespace Aurora.Modules
             if (!MainConsole.Instance.Commands.ContainsCommand("update region info"))
                 MainConsole.Instance.Commands.AddCommand("update region info", "update region info",
                                                          "Updates a region's info (and the resulting .ini file)",
-                                                         UpdateRegionInfo);
+                                                         UpdateRegionInfo, true, false);
         }
 
-        public void UpdateRegionInfo(string[] info)
+        public void UpdateRegionInfo(IScene scene, string[] info)
         {
             m_scene.RegionInfo = CreateRegionFromConsole(m_scene.RegionInfo);
         }
@@ -200,7 +215,7 @@ namespace Aurora.Modules
             ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule>();
             if (RevertMap)
             {
-                terrainModule.TerrainRevertMap = ReadFromData(_regionData.RevertTerrain, m_scene);
+                terrainModule.TerrainRevertMap = ReadFromData(_regionData.RevertTerrain);
                 //Make sure the size is right!
                 if (terrainModule.TerrainRevertMap != null &&
                     terrainModule.TerrainRevertMap.Height != m_scene.RegionInfo.RegionSizeX)
@@ -208,7 +223,7 @@ namespace Aurora.Modules
             }
             else
             {
-                terrainModule.TerrainMap = ReadFromData(_regionData.Terrain, m_scene);
+                terrainModule.TerrainMap = ReadFromData(_regionData.Terrain);
                 //Make sure the size is right!
                 if (terrainModule.TerrainMap != null &&
                     terrainModule.TerrainMap.Height != m_scene.RegionInfo.RegionSizeX)
@@ -221,14 +236,14 @@ namespace Aurora.Modules
             ITerrainModule terrainModule = m_scene.RequestModuleInterface<ITerrainModule>();
             if (RevertMap)
             {
-                terrainModule.TerrainWaterRevertMap = ReadFromData(_regionData.RevertWater, m_scene);
+                terrainModule.TerrainWaterRevertMap = ReadFromData(_regionData.RevertWater);
                 //Make sure the size is right!
                 if (terrainModule.TerrainWaterRevertMap.Height != m_scene.RegionInfo.RegionSizeX)
                     terrainModule.TerrainWaterRevertMap = null;
             }
             else
             {
-                terrainModule.TerrainWaterMap = ReadFromData(_regionData.Water, m_scene);
+                terrainModule.TerrainWaterMap = ReadFromData(_regionData.Water);
                 //Make sure the size is right!
                 if (terrainModule.TerrainWaterMap.Height != m_scene.RegionInfo.RegionSizeX)
                     terrainModule.TerrainWaterMap = null;
@@ -330,11 +345,6 @@ namespace Aurora.Modules
                 m_backupSaveTimer.Elapsed += m_backupSaveTimer_Elapsed;
                 m_backupSaveTimer.Start();
             }
-
-            config = simBase.ConfigSource.Configs["Startup"];
-            m_fileName = "sim";
-            if (config != null)
-                m_fileName = config.GetString("RegionDataFileName", m_fileName);
         }
 
         /// <summary>
@@ -548,58 +558,71 @@ namespace Aurora.Modules
         private string BuildOldSaveFileName()
         {
             return Path.Combine(m_oldSaveDirectory,
-                                m_scene.RegionInfo.RegionName + SerializeDateTime() +
-                                _regionLoader.FileType);
+                                m_scene.RegionInfo.RegionName + SerializeDateTime() + ".sim");
         }
 
         private string BuildSaveFileName()
         {
             return (m_storeDirectory == "" || m_storeDirectory == "/")
-                       ? m_fileName + _regionLoader.FileType
-                       : Path.Combine(m_storeDirectory, m_fileName + _regionLoader.FileType);
+                       ? m_fileName + ".sim"
+                       : Path.Combine(m_storeDirectory, m_fileName + ".sim");
         }
 
         private byte[] WriteTerrainToStream(ITerrainChannel tModule)
         {
             int tMapSize = tModule.Height*tModule.Height;
             byte[] sdata = new byte[tMapSize*2];
-            Buffer.BlockCopy(tModule.GetSerialised(tModule.Scene), 0, sdata, 0, sdata.Length);
+            Buffer.BlockCopy(tModule.GetSerialised(), 0, sdata, 0, sdata.Length);
             return sdata;
         }
 
         protected virtual string SerializeDateTime()
         {
             return String.Format("--{0:yyyy-MM-dd-HH-mm}", DateTime.Now);
-            //return "--" + DateTime.Now.Month + "-" + DateTime.Now.Day + "-" + DateTime.Now.Hour + "-" + DateTime.Now.Minute;
         }
 
-        protected virtual void ReadBackup()
+        protected virtual void ReadBackup(string fileName)
         {
             MainConsole.Instance.Info("[FileBasedSimulationData]: Restoring sim backup...");
+            m_fileName = fileName;
             _regionData = _regionLoader.LoadBackup(BuildSaveFileName());
             if (_regionData == null)
-                _regionData =
-                    _oldRegionLoader.LoadBackup(Path.ChangeExtension(BuildSaveFileName(), _oldRegionLoader.FileType));
+                _regionData = _oldRegionLoader.LoadBackup(Path.ChangeExtension(BuildSaveFileName(), 
+                    _oldRegionLoader.FileType));
             if (_regionData == null)
             {
                 _regionData = new RegionData();
                 _regionData.Init();
             }
+            else
+            {
+                //Make sure the region port is set
+                if (_regionData.RegionInfo.RegionPort == 0)
+                {
+                    _regionData.RegionInfo.RegionPort = int.Parse(MainConsole.Instance.Prompt("Region Port: ", 
+                        (9000).ToString()));
+                }
+            }
             GC.Collect();
         }
 
-        private ITerrainChannel ReadFromData(byte[] data, IScene scene)
+        private ITerrainChannel ReadFromData(byte[] data)
         {
             if (data == null) return null;
             short[] sdata = new short[data.Length/2];
             Buffer.BlockCopy(data, 0, sdata, 0, data.Length);
-            return new TerrainChannel(sdata, scene);
+            return new TerrainChannel(sdata, m_scene);
         }
 
         public void Dispose()
         {
             m_backupSaveTimer.Close();
             m_saveTimer.Close();
+        }
+
+        public ISimulationDataStore Copy()
+        {
+            return new FileBasedSimulationData();
         }
     }
 

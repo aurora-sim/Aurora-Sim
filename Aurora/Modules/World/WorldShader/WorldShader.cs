@@ -36,9 +36,9 @@ namespace Aurora.Modules.WorldShader
             if (MainConsole.Instance != null && !initialized)
             {
                 MainConsole.Instance.Commands.AddCommand("revert shade world", "revert shade world",
-                                                         "Reverts the shading of the world", RevertShadeWorld);
+                                                         "Reverts the shading of the world", RevertShadeWorld, true, false);
                 MainConsole.Instance.Commands.AddCommand("shade world", "shade world", "Shades the world with a color",
-                                                         ShadeWorld);
+                                                         ShadeWorld, true, false);
             }
             initialized = true;
         }
@@ -63,14 +63,9 @@ namespace Aurora.Modules.WorldShader
 
         #endregion
 
-        public void RevertShadeWorld(string[] cmd)
+        public void RevertShadeWorld(IScene scene, string[] cmd)
         {
-            if (MainConsole.Instance.ConsoleScene == null)
-            {
-                MainConsole.Instance.Format(Level.Off, "Select a scene first");
-                return;
-            }
-            ISceneEntity[] entities = MainConsole.Instance.ConsoleScene.Entities.GetEntities();
+            ISceneEntity[] entities = scene.Entities.GetEntities();
             foreach (ISceneEntity entity in entities)
             {
                 foreach (ISceneChildEntity child in entity.ChildrenEntities())
@@ -87,7 +82,7 @@ namespace Aurora.Modules.WorldShader
                         }
 
                         UUID newID;
-                        while ((oldAsset = MainConsole.Instance.ConsoleScene.AssetService.Get(oldID.ToString())) != null && UUID.TryParse(oldAsset.Description, out newID))
+                        while ((oldAsset = scene.AssetService.Get(oldID.ToString())) != null && UUID.TryParse(oldAsset.Description, out newID))
                         {
                             child.Shape.Textures = SetTexture(child.Shape, newID, oldID);
                         }
@@ -98,13 +93,8 @@ namespace Aurora.Modules.WorldShader
             m_previouslyConverted.Clear();
         }
 
-        public void ShadeWorld(string[] cmd)
+        public void ShadeWorld(IScene scene, string[] cmd)
         {
-            if (MainConsole.Instance.ConsoleScene == null)
-            {
-                MainConsole.Instance.Format(Level.Off, "Select a scene first");
-                return;
-            }
             bool greyScale = MainConsole.Instance.Prompt("Greyscale (yes or no)?").ToLower() == "yes";
             int R = 0;
             int G = 0;
@@ -121,8 +111,8 @@ namespace Aurora.Modules.WorldShader
                 percent /= 100;
             Color shader = Color.FromArgb(R, G, B);
 
-            IJ2KDecoder j2kDecoder = MainConsole.Instance.ConsoleScene.RequestModuleInterface<IJ2KDecoder>();
-            ISceneEntity[] entities = MainConsole.Instance.ConsoleScene.Entities.GetEntities();
+            IJ2KDecoder j2kDecoder = scene.RequestModuleInterface<IJ2KDecoder>();
+            ISceneEntity[] entities = scene.Entities.GetEntities();
             foreach (ISceneEntity entity in entities)
             {
                 foreach (ISceneChildEntity child in entity.ChildrenEntities())
@@ -136,7 +126,7 @@ namespace Aurora.Modules.WorldShader
                         }
                         else
                         {
-                            AssetBase a = MainConsole.Instance.ConsoleScene.AssetService.Get(t.ToString());
+                            AssetBase a = scene.AssetService.Get(t.ToString());
                             if (a != null)
                             {
                                 Bitmap texture = (Bitmap) j2kDecoder.DecodeToImage(a.Data);
@@ -147,7 +137,7 @@ namespace Aurora.Modules.WorldShader
                                 a.Data = OpenJPEG.EncodeFromImage(texture, false);
                                 a.Description = t.ToString();
                                 texture.Dispose();
-                                a.ID = MainConsole.Instance.ConsoleScene.AssetService.Store(a);
+                                a.ID = scene.AssetService.Store(a);
                                 child.Shape.Textures = SetTexture(child.Shape, a.ID, t);
                                 m_previouslyConverted.Add(t, a.ID);
                                 m_revertConverted.Add(a.ID, t);

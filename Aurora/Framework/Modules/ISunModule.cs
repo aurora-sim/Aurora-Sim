@@ -25,13 +25,15 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using Aurora.Framework.SceneInfo;
+
 namespace Aurora.Framework.Modules
 {
     public interface ISunModule : INonSharedRegionModule
     {
         double GetSunParameter(string param);
 
-        void SetSunParameter(string param, double value);
+        void SetSunParameter(IScene scene, string param, double value);
 
         float GetCurrentSunHour();
 

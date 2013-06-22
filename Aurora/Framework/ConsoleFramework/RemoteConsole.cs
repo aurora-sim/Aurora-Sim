@@ -92,8 +92,7 @@ namespace Aurora.Framework.ConsoleFramework
 
             SetServer(m_consolePort == 0 ? MainServer.Instance : baseOpenSim.GetHttpServer(m_consolePort));
 
-            m_Commands.AddCommand("help", "help",
-                                  "Get a general command list", base.Help);
+            m_Commands.AddCommand("help", "help", "Get a general command list", base.Help, false, true);
         }
 
         public void SetServer(IHttpServer server)

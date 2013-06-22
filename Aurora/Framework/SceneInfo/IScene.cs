@@ -101,7 +101,8 @@ namespace Aurora.Framework.SceneInfo
         bool ShouldRunHeartbeat { get; set; }
         bool CloseQuietly { get; set; }
         void Initialize(RegionInfo regionInfo);
-        void Initialize(RegionInfo regionInfo, AgentCircuitManager authen, List<IClientNetworkServer> clientServers);
+        void Initialize(RegionInfo regionInfo, ISimulationDataStore simulationStore, 
+            AgentCircuitManager authen, List<IClientNetworkServer> clientServers);
         void StartHeartbeat();
         void FinishedStartup(string p, List<string> list);
         void Close(bool killAgents);

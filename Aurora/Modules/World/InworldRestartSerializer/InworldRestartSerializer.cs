@@ -39,7 +39,7 @@ namespace Aurora.Modules
             config = source.Configs["Startup"];
             if (config != null)
                 m_fileName = config.GetString("RegionDataFileName", m_fileName);
-            MainConsole.Instance.Commands.AddCommand("quit serialized", "quit serialized", "Closes the scene and saves all agents", quitSerialized);
+            MainConsole.Instance.Commands.AddCommand("quit serialized", "quit serialized", "Closes the scene and saves all agents", quitSerialized, true, false);
         }
 
         public void AddRegion(IScene scene)
@@ -65,19 +65,19 @@ namespace Aurora.Modules
         {
         }
 
-        private void quitSerialized(string[] args)
+        private void quitSerialized(IScene scene, string[] args)
         {
-            SerializeUsers();
-            m_scene.CloseQuietly = true;
-            m_scene.Close(false);
+            SerializeUsers(scene);
+            scene.CloseQuietly = true;
+            scene.Close(false);
 
-            m_scene.RequestModuleInterface<ISimulationBase>().Shutdown(true);
+            scene.RequestModuleInterface<ISimulationBase>().Shutdown(true);
         }
 
-        private void SerializeUsers()
+        private void SerializeUsers(IScene scene)
         {
             OSDMap userMap = new OSDMap();
-            foreach (IScenePresence presence in m_scene.GetScenePresences())
+            foreach (IScenePresence presence in scene.GetScenePresences())
             {
                 OSDMap user = new OSDMap();
                 OSDMap remoteIP = new OSDMap();

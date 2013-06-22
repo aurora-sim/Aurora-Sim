@@ -235,16 +235,16 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 {
                     MainConsole.Instance.Commands.AddCommand("ADNE restart", "ADNE restart",
                                                              "Restarts all scripts and clears all script caches",
-                                                             AuroraDotNetRestart);
+                                                             AuroraDotNetRestart, false, false);
                     MainConsole.Instance.Commands.AddCommand("ADNE stop", "ADNE stop", "Stops all scripts",
-                                                             AuroraDotNetStop);
+                                                             AuroraDotNetStop, false, false);
                     MainConsole.Instance.Commands.AddCommand("ADNE stats", "ADNE stats",
-                                                             "Tells stats about the script engine", AuroraDotNetStats);
+                                                             "Tells stats about the script engine", AuroraDotNetStats, false, false);
                     MainConsole.Instance.Commands.AddCommand("ADNE disable", "ADNE disable",
                                                              "Disables the script engine temperarily",
-                                                             AuroraDotNetDisable);
+                                                             AuroraDotNetDisable, false, false);
                     MainConsole.Instance.Commands.AddCommand("ADNE enable", "ADNE enable", "Reenables the script engine",
-                                                             AuroraDotNetEnable);
+                                                             AuroraDotNetEnable, false, false);
                 }
 
                 // Create all objects we'll be using
@@ -401,7 +401,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        protected void AuroraDotNetRestart(string[] cmdparams)
+        protected void AuroraDotNetRestart(IScene scene, string[] cmdparams)
         {
             string go =
                 MainConsole.Instance.Prompt(
@@ -436,7 +436,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        protected void AuroraDotNetStop(string[] cmdparams)
+        protected void AuroraDotNetStop(IScene scene, string[] cmdparams)
         {
             string go = MainConsole.Instance.Prompt("Are you sure you want to stop all scripts?", "no");
             if (go.Contains("yes") || go.Contains("Yes"))
@@ -451,7 +451,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             }
         }
 
-        protected void AuroraDotNetStats(string[] cmdparams)
+        protected void AuroraDotNetStats(IScene scene, string[] cmdparams)
         {
             MainConsole.Instance.Info("Aurora DotNet Script Engine Stats:"
                                       + "\nNumber of scripts compiled: " + Compiler.ScriptCompileCounter
@@ -471,13 +471,13 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             MaintenanceThread.Stats();
         }
 
-        protected void AuroraDotNetDisable(string[] cmdparams)
+        protected void AuroraDotNetDisable(IScene scene, string[] cmdparams)
         {
             ConsoleDisabled = true;
             MainConsole.Instance.Warn("[ADNE]: ADNE has been disabled.");
         }
 
-        protected void AuroraDotNetEnable(string[] cmdparams)
+        protected void AuroraDotNetEnable(IScene scene, string[] cmdparams)
         {
             ConsoleDisabled = false;
             MaintenanceThread.Started = true;

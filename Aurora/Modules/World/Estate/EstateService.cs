@@ -77,7 +77,7 @@ namespace Aurora.Modules.Estate
 
         #region Console Commands
 
-        protected void ProcessLoginCommands(string[] cmd)
+        protected void ProcessLoginCommands(IScene scene, string[] cmd)
         {
             if (cmd.Length < 2)
             {
@@ -106,19 +106,18 @@ namespace Aurora.Modules.Estate
             }
         }
 
-        protected void BanUser(string[] cmdparams)
+        protected void BanUser(IScene scene, string[] cmdparams)
         {
             string userName = MainConsole.Instance.Prompt("User name:", "");
-            IScenePresence SP = MainConsole.Instance.ConsoleScene.SceneGraph.GetScenePresence(userName);
+            IScenePresence SP = scene.SceneGraph.GetScenePresence(userName);
             if (SP == null)
             {
                 MainConsole.Instance.Warn("Could not find user");
                 return;
             }
             string alert = MainConsole.Instance.Prompt("Alert message:", "");
-            EstateSettings ES = MainConsole.Instance.ConsoleScene.RegionInfo.EstateSettings;
-            AgentCircuitData circuitData =
-                MainConsole.Instance.ConsoleScene.AuthenticateHandler.GetAgentCircuitData(SP.UUID);
+            EstateSettings ES = scene.RegionInfo.EstateSettings;
+            AgentCircuitData circuitData = scene.AuthenticateHandler.GetAgentCircuitData(SP.UUID);
 
             ES.AddBan(new EstateBan
                           {
@@ -141,22 +140,22 @@ namespace Aurora.Modules.Estate
                 transferModule.IncomingCloseAgent(SP.Scene, SP.UUID);
         }
 
-        protected void UnBanUser(string[] cmdparams)
+        protected void UnBanUser(IScene scene, string[] cmdparams)
         {
             string userName = MainConsole.Instance.Prompt("User name:", "");
-            UserAccount account = MainConsole.Instance.ConsoleScene.UserAccountService.GetUserAccount(null, userName);
+            UserAccount account = scene.UserAccountService.GetUserAccount(null, userName);
             if (account == null)
             {
                 MainConsole.Instance.Warn("Could not find user");
                 return;
             }
-            EstateSettings ES = MainConsole.Instance.ConsoleScene.RegionInfo.EstateSettings;
+            EstateSettings ES = scene.RegionInfo.EstateSettings;
             ES.RemoveBan(account.PrincipalID);
             Aurora.Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>().
                 SaveEstateSettings(ES);
         }
 
-        protected void SetRegionInfoOption(string[] cmdparams)
+        protected void SetRegionInfoOption(IScene scene, string[] cmdparams)
         {
             #region 3 Params needed
 
@@ -995,48 +994,48 @@ namespace Aurora.Modules.Estate
             {
                 MainConsole.Instance.Commands.AddCommand(
                     "set regionsetting maturity", "set regionsetting maturity [value]",
-                    "Sets a region's maturity - 0(PG),1(Mature),2(Adult)", SetRegionInfoOption);
+                    "Sets a region's maturity - 0(PG),1(Mature),2(Adult)", SetRegionInfoOption, true, false);
                 MainConsole.Instance.Commands.AddCommand(
                     "set regionsetting addestateban", "set regionsetting addestateban [first] [last]",
-                    "Add a user to the estate ban list", SetRegionInfoOption);
+                    "Add a user to the estate ban list", SetRegionInfoOption, true, false);
                 MainConsole.Instance.Commands.AddCommand(
                     "set regionsetting removeestateban", "set regionsetting removeestateban [first] [last]",
-                    "Remove a user from the estate ban list", SetRegionInfoOption);
+                    "Remove a user from the estate ban list", SetRegionInfoOption, true, false);
                 MainConsole.Instance.Commands.AddCommand(
                     "set regionsetting addestatemanager", "set regionsetting addestatemanager [first] [last]",
-                    "Add a user to the estate manager list", SetRegionInfoOption);
+                    "Add a user to the estate manager list", SetRegionInfoOption, true, false);
                 MainConsole.Instance.Commands.AddCommand(
                     "set regionsetting removeestatemanager", "set regionsetting removeestatemanager [first] [last]",
-                    "Remove a user from the estate manager list", SetRegionInfoOption);
+                    "Remove a user from the estate manager list", SetRegionInfoOption, true, false);
                 MainConsole.Instance.Commands.AddCommand(
                     "set regionsetting addestateaccess", "set regionsetting addestateaccess [first] [last]",
-                    "Add a user to the estate access list", SetRegionInfoOption);
+                    "Add a user to the estate access list", SetRegionInfoOption, true, false);
                 MainConsole.Instance.Commands.AddCommand(
                     "set regionsetting removeestateaccess", "set regionsetting removeestateaccess [first] [last]",
-                    "Remove a user from the estate access list", SetRegionInfoOption);
+                    "Remove a user from the estate access list", SetRegionInfoOption, true, false);
 
 
                 MainConsole.Instance.Commands.AddCommand(
-                    "estate ban user", "estate ban user", "Bans a user from the current estate", BanUser);
+                    "estate ban user", "estate ban user", "Bans a user from the current estate", BanUser, true, false);
                 MainConsole.Instance.Commands.AddCommand(
-                    "estate unban user", "estate unban user", "Bans a user from the current estate", UnBanUser);
+                    "estate unban user", "estate unban user", "Bans a user from the current estate", UnBanUser, true, false);
                 MainConsole.Instance.Commands.AddCommand(
                     "login enable",
                     "login enable",
                     "Enable simulator logins",
-                    ProcessLoginCommands);
+                    ProcessLoginCommands, true, false);
 
                 MainConsole.Instance.Commands.AddCommand(
                     "login disable",
                     "login disable",
                     "Disable simulator logins",
-                    ProcessLoginCommands);
+                    ProcessLoginCommands, true, false);
 
                 MainConsole.Instance.Commands.AddCommand(
                     "login status",
                     "login status",
                     "Show login status",
-                    ProcessLoginCommands);
+                    ProcessLoginCommands, true, false);
             }
         }
 

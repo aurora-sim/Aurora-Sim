@@ -236,7 +236,7 @@ namespace Aurora.ClientStack
             IMonitorModule module = m_client.Scene.RequestModuleInterface<IMonitorModule>();
             if (module != null)
             {
-                IImageFrameTimeMonitor monitor = module.GetMonitor<IImageFrameTimeMonitor>();
+                IImageFrameTimeMonitor monitor = module.GetMonitor<IImageFrameTimeMonitor>(m_client.Scene);
                 monitor.AddImageTime(EndTime);
             }
 

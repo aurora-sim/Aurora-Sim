@@ -29,6 +29,7 @@ using Aurora.Framework;
 using Aurora.Framework.ClientInterfaces;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Services;
 using Aurora.Framework.Services.ClassHelpers.Assets;
 using Aurora.Framework.Services.ClassHelpers.Inventory;
@@ -75,7 +76,7 @@ namespace Aurora.Services.SQLServices.AvatarService
             if (MainConsole.Instance != null)
                 MainConsole.Instance.Commands.AddCommand("reset avatar appearance", "reset avatar appearance [Name]",
                                                          "Resets the given avatar's appearance to the default",
-                                                         ResetAvatarAppearance);
+                                                         ResetAvatarAppearance, false, true);
             Init(registry, Name, serverPath: "/avatar/", serverHandlerName: "AvatarServerURI");
         }
 
@@ -179,7 +180,7 @@ namespace Aurora.Services.SQLServices.AvatarService
 
         #region Console Commands
 
-        public void ResetAvatarAppearance(string[] cmd)
+        public void ResetAvatarAppearance(IScene scene, string[] cmd)
         {
             string name = "";
             name = cmd.Length == 3 ? MainConsole.Instance.Prompt("Avatar Name") : Util.CombineParams(cmd, 3);

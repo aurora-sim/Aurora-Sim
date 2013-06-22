@@ -190,13 +190,13 @@ namespace Aurora.Modules.SimProtection
             if (MainConsole.Instance != null)
             {
                 MainConsole.Instance.Commands.AddCommand(
-                    "physics stats", "physics stats", "physics stats <region>", PhysicsStatsCommand);
+                    "physics stats", "physics stats", "physics stats <region>", PhysicsStatsCommand, true, false);
                 MainConsole.Instance.Commands.AddCommand(
-                    "physics profiler", "physics profiler", "physics profiler <region>", PhysicsProfilerCommand);
+                    "physics profiler", "physics profiler", "physics profiler <region>", PhysicsProfilerCommand, true, false);
                 MainConsole.Instance.Commands.AddCommand(
                     "physics current stats", "physics current stats",
                     "physics current stats <region> NOTE: these are not calculated and are in milliseconds per unknown time",
-                    CurrentPhysicsStatsCommand);
+                    CurrentPhysicsStatsCommand, true, false);
             }
         }
 
@@ -212,7 +212,7 @@ namespace Aurora.Modules.SimProtection
 
         #endregion
 
-        protected virtual void PhysicsStatsCommand(string[] cmd)
+        protected virtual void PhysicsStatsCommand(IScene scene, string[] cmd)
         {
             if (cmd.Length == 3)
             {
@@ -239,7 +239,7 @@ namespace Aurora.Modules.SimProtection
             DumpStatsToConsole(m_Scene, stats);
         }
 
-        protected virtual void PhysicsProfilerCommand(string[] cmd)
+        protected virtual void PhysicsProfilerCommand(IScene scene, string[] cmd)
         {
             if (cmd.Length == 3)
             {
@@ -276,7 +276,7 @@ namespace Aurora.Modules.SimProtection
             }
         }
 
-        protected virtual void CurrentPhysicsStatsCommand(string[] cmd)
+        protected virtual void CurrentPhysicsStatsCommand(IScene scene, string[] cmd)
         {
             if (cmd.Length == 3)
             {

@@ -63,11 +63,11 @@ namespace Aurora.Modules.Restart
                 MainConsole.Instance.Commands.AddCommand(
                     "region restart",
                     "region restart <message> <time (in seconds)>",
-                    "Restart the region", HandleRegionRestart);
+                    "Restart the region", HandleRegionRestart, true, false);
                 MainConsole.Instance.Commands.AddCommand(
                     "region restart abort",
                     "region restart abort [<message>]",
-                    "Restart the region", HandleRegionRestart);
+                    "Restart the region", HandleRegionRestart, true, false);
             }
         }
 
@@ -161,7 +161,7 @@ namespace Aurora.Modules.Restart
         public void RestartScene()
         {
             MainConsole.Instance.Error("[Scene]: Restaring Now");
-            m_scene.RequestModuleInterface<ISceneManager>().RestartRegion();
+            m_scene.RequestModuleInterface<ISceneManager>().RestartRegion(m_scene);
         }
 
         #endregion
@@ -240,11 +240,8 @@ namespace Aurora.Modules.Restart
             SetTimer(nextInterval);
         }
 
-        private void HandleRegionRestart(string[] args)
+        private void HandleRegionRestart(IScene scene, string[] args)
         {
-            if (MainConsole.Instance.ConsoleScene != m_scene)
-                return;
-
             if (args.Length < 4)
             {
                 if (args.Length >= 3)

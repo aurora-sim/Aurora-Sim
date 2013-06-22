@@ -142,7 +142,7 @@ namespace Aurora.Modules.Archivers
                         +
                         string.Format("  If this is not given then the filename {0} in the current directory is used",
                                       DEFAULT_INV_BACKUP_FILENAME),
-                        HandleLoadInvConsoleCommand);
+                        HandleLoadInvConsoleCommand, false, true);
 
                     MainConsole.Instance.Commands.AddCommand(
                         "save iar",
@@ -155,7 +155,7 @@ namespace Aurora.Modules.Archivers
                         +
                         string.Format("  If this is not given then the filename {0} in the current directory is used",
                                       DEFAULT_INV_BACKUP_FILENAME),
-                        HandleSaveInvConsoleCommand);
+                        HandleSaveInvConsoleCommand, false, true);
 
                     MainConsole.Instance.Commands.AddCommand(
                         "save iar withoutassets",
@@ -169,7 +169,7 @@ namespace Aurora.Modules.Archivers
                         +
                         string.Format("  If this is not given then the filename {0} in the current directory is used",
                                       DEFAULT_INV_BACKUP_FILENAME),
-                        HandleSaveInvWOAssetsConsoleCommand);
+                        HandleSaveInvWOAssetsConsoleCommand, false, true);
                 }
             }
         }
@@ -271,7 +271,7 @@ namespace Aurora.Modules.Archivers
         ///     Load inventory from an inventory file archive
         /// </summary>
         /// <param name="cmdparams"></param>
-        protected void HandleLoadInvConsoleCommand(string[] cmdparams)
+        protected void HandleLoadInvConsoleCommand(IScene scene, string[] cmdparams)
         {
             try
             {
@@ -325,7 +325,7 @@ namespace Aurora.Modules.Archivers
         ///     Save inventory to a file archive
         /// </summary>
         /// <param name="cmdparams"></param>
-        protected void HandleSaveInvWOAssetsConsoleCommand(string[] cmdparams)
+        protected void HandleSaveInvWOAssetsConsoleCommand(IScene scene, string[] cmdparams)
         {
             if (cmdparams.Length < 7)
             {
@@ -358,7 +358,7 @@ namespace Aurora.Modules.Archivers
         ///     Save inventory to a file archive
         /// </summary>
         /// <param name="cmdparams"></param>
-        protected void HandleSaveInvConsoleCommand(string[] cmdparams)
+        protected void HandleSaveInvConsoleCommand(IScene scene, string[] cmdparams)
         {
             try
             {

@@ -39,6 +39,7 @@ using Aurora.Framework.Utilities;
 using Aurora.Modules.Monitoring.Alerts;
 using Aurora.Modules.Monitoring.Monitors;
 using Nini.Config;
+using OpenMetaverse;
 using OpenMetaverse.Packets;
 using System;
 using System.Collections.Generic;
@@ -58,6 +59,7 @@ namespace Aurora.Modules.Monitoring
         #region Declares
 
         protected MonitorRegistry m_registry;
+        protected Dictionary<UUID, MonitorRegistry> m_regionRegistry = new Dictionary<UUID, MonitorRegistry>();
         protected ISimulationBase m_simulationBase;
 
         #region Enums
@@ -675,9 +677,13 @@ namespace Aurora.Modules.Monitoring
         /// <param name="Key"></param>
         /// <param name="Name"></param>
         /// <returns></returns>
-        public T GetMonitor<T>() where T : IMonitor
+        public T GetMonitor<T>(IScene scene) where T : IMonitor
         {
-            return (T)m_registry.GetMonitor<T>();
+            if (scene == null)
+                return (T)m_registry.GetMonitor<T>();
+            else
+                lock (m_regionRegistry)
+                    return (T)m_regionRegistry[scene.RegionInfo.RegionID].GetMonitor<T>();
         }
 
         /// <summary>
@@ -685,9 +691,10 @@ namespace Aurora.Modules.Monitoring
         /// </summary>
         /// <param name="Key"></param>
         /// <returns></returns>
-        public float[] GetRegionStats()
+        public float[] GetRegionStats(IScene scene)
         {
-            return m_registry.LastReportedSimStats;
+            lock (m_regionRegistry)
+                return m_regionRegistry[scene.RegionInfo.RegionID].LastReportedSimStats;
         }
 
         #endregion
@@ -698,10 +705,16 @@ namespace Aurora.Modules.Monitoring
         ///     This shows stats for ALL regions in the instance
         /// </summary>
         /// <param name="args"></param>
-        protected void DebugMonitors(string[] args)
+        protected void DebugMonitors(IScene scene, string[] args)
         {
             //Dump all monitors to the console
-            MainConsole.Instance.Info("[Stats] " + m_registry.Report());
+            if (scene != null)
+            {
+                lock (m_regionRegistry)
+                    MainConsole.Instance.Info("[Stats] " + m_regionRegistry[scene.RegionInfo.RegionID].Report());
+            }
+            else
+                MainConsole.Instance.Info("[Stats] " + m_registry.Report());
             MainConsole.Instance.Info("");
         }
 
@@ -709,37 +722,43 @@ namespace Aurora.Modules.Monitoring
         ///     This shows the stats for the given region
         /// </summary>
         /// <param name="args"></param>
-        protected void DebugMonitorsInCurrentRegion(string[] args)
+        protected void DebugMonitorsInCurrentRegion(IScene scene, string[] args)
         {
             ISceneManager manager = m_simulationBase.ApplicationRegistry.RequestModuleInterface<ISceneManager>();
             if (manager != null)
             {
-                MainConsole.Instance.Info("[Stats] " + m_registry.Report());
+                if (scene != null)
+                {
+                    lock (m_regionRegistry)
+                        MainConsole.Instance.Info("[Stats] " + m_regionRegistry[scene.RegionInfo.RegionID].Report());
+                }
+                else
+                    MainConsole.Instance.Info("[Stats] " + m_registry.Report());
                 MainConsole.Instance.Info("");
             }
             else
             {
                 //Dump all the monitors to the console
-                DebugMonitors(args);
+                DebugMonitors(scene, args);
             }
         }
 
-        protected void HandleShowThreads(string[] cmd)
+        protected void HandleShowThreads(IScene scene, string[] cmd)
         {
             MainConsole.Instance.Info(GetThreadsReport());
         }
 
-        protected void HandleShowUptime(string[] cmd)
+        protected void HandleShowUptime(IScene scene, string[] cmd)
         {
             MainConsole.Instance.Info(GetUptimeReport());
         }
 
-        protected void HandleShowStats(string[] cmd)
+        protected void HandleShowStats(IScene scene, string[] cmd)
         {
-            DebugMonitorsInCurrentRegion(cmd);
+            DebugMonitorsInCurrentRegion(scene, cmd);
         }
 
-        protected void HandleShowQueues(string[] cmd)
+        protected void HandleShowQueues(IScene scene, string[] cmd)
         {
             List<string> args = new List<string>(cmd);
             args.RemoveAt(0);
@@ -898,19 +917,19 @@ namespace Aurora.Modules.Monitoring
             if (MainConsole.Instance != null)
             {
                 MainConsole.Instance.Commands.AddCommand("show threads", "show threads", "List tracked threads",
-                                                         HandleShowThreads);
+                                                         HandleShowThreads, false, true);
                 MainConsole.Instance.Commands.AddCommand("show uptime", "show uptime",
-                                                         "Show server startup time and uptime", HandleShowUptime);
+                                                         "Show server startup time and uptime", HandleShowUptime, false, true);
                 MainConsole.Instance.Commands.AddCommand("show queues", "show queues [full]",
                                                          "Shows the queues for the given agent (if full is given as a parameter, child agents are displayed as well)",
-                                                         HandleShowQueues);
+                                                         HandleShowQueues, false, true);
                 MainConsole.Instance.Commands.AddCommand("show stats", "show stats",
-                                                         "Show statistical information for this server", HandleShowStats);
+                                                         "Show statistical information for this server", HandleShowStats, false, true);
 
                 MainConsole.Instance.Commands.AddCommand("stats report",
                                                          "stats report",
                                                          "Returns a variety of statistics about the current region and/or simulator",
-                                                         DebugMonitors);
+                                                         DebugMonitors, false, true);
             }
 
             m_simulationBase.ApplicationRegistry.RegisterModuleInterface<IMonitorModule>(this);
@@ -966,13 +985,20 @@ namespace Aurora.Modules.Monitoring
         public void OnAddedScene(IScene scene)
         {
             //Register all the commands for this region
-            m_registry.AddScene(scene);
+            MonitorRegistry reg = new MonitorRegistry(this);
+            reg.AddScene(scene);
+            lock (m_regionRegistry)
+                m_regionRegistry[scene.RegionInfo.RegionID] = reg;
             scene.RegisterModuleInterface<IMonitorModule>(this);
         }
 
         public void OnCloseScene(IScene scene)
         {
-            m_registry.Close();
+            lock (m_regionRegistry)
+            {
+                m_regionRegistry[scene.RegionInfo.RegionID].Close();
+                m_regionRegistry.Remove(scene.RegionInfo.RegionID);
+            }
         }
 
         public void Dispose()

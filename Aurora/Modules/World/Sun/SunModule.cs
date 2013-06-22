@@ -148,9 +148,9 @@ namespace Aurora.Modules.Sun
             }
         }
 
-        public void SetSunParameter(string param, double value)
+        public void SetSunParameter(IScene scene, string param, double value)
         {
-            HandleSunConsoleCommand(new[] {param, value.ToString()});
+            HandleSunConsoleCommand(scene, new[] {param, value.ToString()});
         }
 
         public float GetCurrentSunHour()
@@ -182,7 +182,7 @@ namespace Aurora.Modules.Sun
                 {
                     MainConsole.Instance.Commands.AddCommand(
                         String.Format("sun {0}", kvp.Key), String.Format("{0} - {1}", kvp.Key, kvp.Value), "",
-                        HandleSunConsoleCommand);
+                        HandleSunConsoleCommand, true, false);
                 }
             }
 
@@ -539,14 +539,8 @@ namespace Aurora.Modules.Sun
                                              });
         }
 
-        public void HandleSunConsoleCommand(string[] cmdparams)
+        public void HandleSunConsoleCommand(IScene scene, string[] cmdparams)
         {
-            if (MainConsole.Instance.ConsoleScene != m_scene)
-            {
-                MainConsole.Instance.InfoFormat("[Sun]: Console Scene is not my scene.");
-                return;
-            }
-
             MainConsole.Instance.InfoFormat("[Sun]: Processing command.");
 
             foreach (string output in ParseCmdParams(cmdparams))

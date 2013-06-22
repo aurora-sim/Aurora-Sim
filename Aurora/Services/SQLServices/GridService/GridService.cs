@@ -29,6 +29,7 @@ using Aurora.Framework;
 using Aurora.Framework.ClientInterfaces;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Services;
 using Aurora.Framework.Services.ClassHelpers.Other;
 using Aurora.Framework.Utilities;
@@ -145,42 +146,42 @@ namespace Aurora.Services.SQLServices.GridService
                 MainConsole.Instance.Commands.AddCommand("show region",
                                                          "show region [Region name]",
                                                          "Show details on a region",
-                                                         HandleShowRegion);
+                                                         HandleShowRegion, false, true);
 
                 MainConsole.Instance.Commands.AddCommand("set region flags",
                                                          "set region flags [Region name] [flags]",
                                                          "Set database flags for region",
-                                                         HandleSetFlags);
+                                                         HandleSetFlags, false, true);
 
                 MainConsole.Instance.Commands.AddCommand("set region scope",
                                                          "set region scope [Region name] [UUID]",
                                                          "Set database scope for region",
-                                                         HandleSetScope);
+                                                         HandleSetScope, false, true);
 
                 MainConsole.Instance.Commands.AddCommand("grid clear all regions",
                                                          "grid clear all regions",
                                                          "Clears all regions from the database",
-                                                         HandleClearAllRegions);
+                                                         HandleClearAllRegions, false, true);
 
                 MainConsole.Instance.Commands.AddCommand("grid clear down regions",
                                                          "grid clear down regions",
                                                          "Clears all regions that are offline from the database",
-                                                         HandleClearAllDownRegions);
+                                                         HandleClearAllDownRegions, false, true);
 
                 MainConsole.Instance.Commands.AddCommand("grid clear region",
                                                          "grid clear region [RegionName]",
                                                          "Clears the regions with the given name from the database",
-                                                         HandleClearRegion);
+                                                         HandleClearRegion, false, true);
 
                 MainConsole.Instance.Commands.AddCommand("grid enable region registration",
                                                          "grid enable region registration",
                                                          "Allows new regions to be registered with the grid",
-                                                         HandleRegionRegistration);
+                                                         HandleRegionRegistration, false, true);
 
                 MainConsole.Instance.Commands.AddCommand("grid disable region registration",
                                                          "grid disable region registration",
                                                          "Disallows new regions to be registered with the grid",
-                                                         HandleRegionRegistration);
+                                                         HandleRegionRegistration, false, true);
             }
             registry.RegisterModuleInterface<IGridService>(this);
             Init(registry, Name, serverPath: "/grid/", serverHandlerName: "GridServerURI");
@@ -828,14 +829,14 @@ namespace Aurora.Services.SQLServices.GridService
 
         #region Console Members
 
-        private void HandleClearAllRegions(string[] cmd)
+        private void HandleClearAllRegions(IScene scene, string[] cmd)
         {
             //Delete everything... give no criteria to just do 'delete from gridregions'
             m_Database.DeleteAll(new[] {"1"}, new object[] {1});
             MainConsole.Instance.Warn("[GridService]: Cleared all regions");
         }
 
-        private void HandleClearRegion(string[] cmd)
+        private void HandleClearRegion(IScene scene, string[] cmd)
         {
             if (cmd.Length <= 3)
             {
@@ -854,7 +855,7 @@ namespace Aurora.Services.SQLServices.GridService
             MainConsole.Instance.Warn("[GridService]: Region was removed");
         }
 
-        private void HandleRegionRegistration(string[] cmd)
+        private void HandleRegionRegistration(IScene scene, string[] cmd)
         {
             bool enabled = cmd[1] == "enable";
             m_AllowNewRegistrations = enabled;
@@ -865,14 +866,14 @@ namespace Aurora.Services.SQLServices.GridService
                                       " for new regions");
         }
 
-        private void HandleClearAllDownRegions(string[] cmd)
+        private void HandleClearAllDownRegions(IScene scene, string[] cmd)
         {
             //Delete any flags with (Flags & 254) == 254
             m_Database.DeleteAll(new[] {"Flags"}, new object[] {0});
             MainConsole.Instance.Warn("[GridService]: Cleared all down regions");
         }
 
-        private void HandleShowRegion(string[] cmd)
+        private void HandleShowRegion(IScene scene, string[] cmd)
         {
             if (cmd.Length < 3)
             {
@@ -947,7 +948,7 @@ namespace Aurora.Services.SQLServices.GridService
             return (int) f;
         }
 
-        private void HandleSetFlags(string[] cmd)
+        private void HandleSetFlags(IScene scene, string[] cmd)
         {
             if (cmd.Length < 5)
             {
@@ -982,7 +983,7 @@ namespace Aurora.Services.SQLServices.GridService
             }
         }
 
-        private void HandleSetScope(string[] cmd)
+        private void HandleSetScope(IScene scene, string[] cmd)
         {
             if (cmd.Length < 5)
             {

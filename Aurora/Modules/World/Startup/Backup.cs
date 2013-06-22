@@ -51,7 +51,6 @@ namespace Aurora.Modules.Startup
     {
         #region Declares
 
-        protected ISceneManager m_manager;
         protected Dictionary<IScene, InternalSceneBackup> m_backup = new Dictionary<IScene, InternalSceneBackup>();
 
         #endregion
@@ -63,17 +62,17 @@ namespace Aurora.Modules.Startup
             if (MainConsole.Instance != null && m_backup.Count == 0) //Only add them once
             {
                 MainConsole.Instance.Commands.AddCommand("edit scale", "edit scale <name> <X> <Y> <Z>",
-                                                         "Change the scale of a named prim", EditScale);
+                                                         "Change the scale of a named prim", EditScale, true, false);
                 MainConsole.Instance.Commands.AddCommand("offset region prims", "offset region prims <X> <Y> <Z>",
-                                                         "Offset all prims by the same amount", OffsetPrims);
+                                                         "Offset all prims by the same amount", OffsetPrims, true, false);
                 MainConsole.Instance.Commands.AddCommand("backup", "backup",
                                                          "Persist objects to the database now, if [all], will force the persistence of all prims",
-                                                         RunCommand);
+                                                         RunCommand, true, false);
                 MainConsole.Instance.Commands.AddCommand("disable backup", "disable backup",
-                                                         "Disables persistance until reenabled", DisableBackup);
+                                                         "Disables persistance until reenabled", DisableBackup, true, false);
                 MainConsole.Instance.Commands.AddCommand("enable backup", "disable backup",
                                                          "Enables persistance after 'disable persistance' has been run",
-                                                         EnableBackup);
+                                                         EnableBackup, true, false);
             }
             //Set up the backup for the scene
             m_backup[scene] = new InternalSceneBackup(scene);
@@ -89,13 +88,13 @@ namespace Aurora.Modules.Startup
 
         public void PostFinishStartup(IScene scene, IConfigSource source, ISimulationBase openSimBase)
         {
-            m_manager = scene.RequestModuleInterface<ISceneManager>();
             m_backup[scene].FinishStartup();
         }
 
         public void StartupComplete()
         {
-            EnableBackup(null);
+            foreach(IScene scene in m_backup.Keys)
+                EnableBackup(scene, null);
         }
 
         public void Close(IScene scene)
@@ -115,14 +114,14 @@ namespace Aurora.Modules.Startup
         ///     Runs commands issued by the server console from the operator
         /// </summary>
         /// <param name="cmdparams">Additional arguments passed to the command</param>
-        public void RunCommand(string[] cmdparams)
+        public void RunCommand(IScene scene, string[] cmdparams)
         {
-            m_manager.Scene.AuroraEventManager.FireGenericEventHandler("Backup", null);
+            scene.AuroraEventManager.FireGenericEventHandler("Backup", null);
         }
 
-        public void EditScale(string[] cmdparams)
+        public void EditScale(IScene scene, string[] cmdparams)
         {
-            m_manager.Scene.ForEachSceneEntity(delegate(ISceneEntity entity)
+            scene.ForEachSceneEntity(delegate(ISceneEntity entity)
                                                    {
                                                        foreach (ISceneChildEntity child in entity.ChildrenEntities())
                                                        {
@@ -140,7 +139,7 @@ namespace Aurora.Modules.Startup
                                                    });
         }
 
-        public void OffsetPrims(string[] cmdParams)
+        public void OffsetPrims(IScene scene, string[] cmdParams)
         {
             if (cmdParams.Length < 6)
             {
@@ -148,7 +147,7 @@ namespace Aurora.Modules.Startup
                 return;
             }
             Vector3 offset = new Vector3(float.Parse(cmdParams[3]), float.Parse(cmdParams[4]), float.Parse(cmdParams[5]));
-            m_manager.Scene.ForEachSceneEntity(delegate(ISceneEntity entity)
+            scene.ForEachSceneEntity(delegate(ISceneEntity entity)
             {
                 entity.AbsolutePosition += offset;
                 entity.ScheduleGroupTerseUpdate();
@@ -156,15 +155,15 @@ namespace Aurora.Modules.Startup
             MainConsole.Instance.Info("Region has been offset");
         }
 
-        public void DisableBackup(string[] cmdparams)
+        public void DisableBackup(IScene scene, string[] cmdparams)
         {
-            m_manager.Scene.SimulationDataService.SaveBackups = false;
+            scene.SimulationDataService.SaveBackups = false;
             MainConsole.Instance.Warn("Disabled backup");
         }
 
-        public void EnableBackup(string[] cmdparams)
+        public void EnableBackup(IScene scene, string[] cmdparams)
         {
-            m_manager.Scene.SimulationDataService.SaveBackups = true;
+            scene.SimulationDataService.SaveBackups = true;
             if (cmdparams != null) //so that it doesn't show on startup
                 MainConsole.Instance.Warn("Enabled backup");
         }
@@ -194,16 +193,16 @@ namespace Aurora.Modules.Startup
                 {
                     MainConsole.Instance.Commands.AddCommand("delete object owner",
                                                              "delete object owner <UUID>",
-                                                             "Delete object by owner", HandleDeleteObject);
+                                                             "Delete object by owner", HandleDeleteObject, true, false);
                     MainConsole.Instance.Commands.AddCommand("delete object creator",
                                                              "delete object creator <UUID>",
-                                                             "Delete object by creator", HandleDeleteObject);
+                                                             "Delete object by creator", HandleDeleteObject, true, false);
                     MainConsole.Instance.Commands.AddCommand("delete object uuid",
                                                              "delete object uuid <UUID>",
-                                                             "Delete object by uuid", HandleDeleteObject);
+                                                             "Delete object by uuid", HandleDeleteObject, true, false);
                     MainConsole.Instance.Commands.AddCommand("delete object name",
                                                              "delete object name <name>",
-                                                             "Delete object by name", HandleDeleteObject);
+                                                             "Delete object by name", HandleDeleteObject, true, false);
                 }
             }
 
@@ -211,7 +210,7 @@ namespace Aurora.Modules.Startup
 
             #region Console Commands
 
-            private void HandleDeleteObject(string[] cmd)
+            private void HandleDeleteObject(IScene scene, string[] cmd)
             {
                 if (cmd.Length < 4)
                     return;
@@ -228,7 +227,7 @@ namespace Aurora.Modules.Startup
                     case "owner":
                         if (!UUID.TryParse(o, out match))
                             return;
-                        m_scene.ForEachSceneEntity(delegate(ISceneEntity g)
+                        scene.ForEachSceneEntity(delegate(ISceneEntity g)
                                                        {
                                                            if (g.OwnerID == match && !g.IsAttachment)
                                                                deletes.Add(g);
@@ -237,7 +236,7 @@ namespace Aurora.Modules.Startup
                     case "creator":
                         if (!UUID.TryParse(o, out match))
                             return;
-                        m_scene.ForEachSceneEntity(delegate(ISceneEntity g)
+                        scene.ForEachSceneEntity(delegate(ISceneEntity g)
                                                        {
                                                            if (g.RootChild.CreatorID == match && !g.IsAttachment)
                                                                deletes.Add(g);
@@ -246,14 +245,14 @@ namespace Aurora.Modules.Startup
                     case "uuid":
                         if (!UUID.TryParse(o, out match))
                             return;
-                        m_scene.ForEachSceneEntity(delegate(ISceneEntity g)
+                        scene.ForEachSceneEntity(delegate(ISceneEntity g)
                                                        {
                                                            if (g.UUID == match && !g.IsAttachment)
                                                                deletes.Add(g);
                                                        });
                         break;
                     case "name":
-                        m_scene.ForEachSceneEntity(delegate(ISceneEntity g)
+                        scene.ForEachSceneEntity(delegate(ISceneEntity g)
                                                        {
                                                            if (g.RootChild.Name == o && !g.IsAttachment)
                                                                deletes.Add(g);
@@ -699,7 +698,7 @@ namespace Aurora.Modules.Startup
             {
                 int tMapSize = tModule.Height*tModule.Height;
                 byte[] sdata = new byte[tMapSize*2];
-                Buffer.BlockCopy(tModule.GetSerialised(tModule.Scene), 0, sdata, 0, sdata.Length);
+                Buffer.BlockCopy(tModule.GetSerialised(), 0, sdata, 0, sdata.Length);
                 return sdata;
             }
 

@@ -2,6 +2,7 @@
 using Aurora.Framework;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Services;
 using Aurora.Framework.Utilities;
 using Nini.Config;
@@ -58,13 +59,13 @@ namespace Simple.Currency
             if (!m_doRemoteCalls)
             {
                 MainConsole.Instance.Commands.AddCommand("money add", "money add", "Adds money to a user's account.",
-                                                         AddMoney);
+                                                         AddMoney, false, true);
                 MainConsole.Instance.Commands.AddCommand("money set", "money set",
                                                          "Sets the amount of money a user has.",
-                                                         SetMoney);
+                                                         SetMoney, false, true);
                 MainConsole.Instance.Commands.AddCommand("money get", "money get",
                                                          "Gets the amount of money a user has.",
-                                                         GetMoney);
+                                                         GetMoney, false, true);
             }
         }
 
@@ -381,7 +382,7 @@ namespace Simple.Currency
 
         #region Console Methods
 
-        public void AddMoney(string[] cmd)
+        public void AddMoney(IScene scene, string[] cmd)
         {
             string name = MainConsole.Instance.Prompt("User Name: ");
             uint amount = 0;
@@ -423,7 +424,7 @@ namespace Simple.Currency
             }
         }
 
-        public void SetMoney(string[] cmd)
+        public void SetMoney(IScene scene, string[] cmd)
         {
             string name = MainConsole.Instance.Prompt("User Name: ");
             uint amount = 0;
@@ -464,7 +465,7 @@ namespace Simple.Currency
             }
         }
 
-        public void GetMoney(string[] cmd)
+        public void GetMoney(IScene scene, string[] cmd)
         {
             string name = MainConsole.Instance.Prompt("User Name: ");
             UserAccount account =

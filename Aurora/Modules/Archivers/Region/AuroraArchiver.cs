@@ -113,9 +113,9 @@ namespace Aurora.Modules.Archivers
             if (MainConsole.Instance != null)
             {
                 MainConsole.Instance.Commands.AddCommand("save archive", "save archive", "Saves an Aurora Archive",
-                                                         SaveAuroraArchive);
+                                                         SaveAuroraArchive, true, false);
                 MainConsole.Instance.Commands.AddCommand("load archive", "load archive", "Loads an Aurora Archive",
-                                                         LoadAuroraArchive);
+                                                         LoadAuroraArchive, true, false);
             }
             //Register the extention
             const string ext = ".abackup";
@@ -145,15 +145,8 @@ namespace Aurora.Modules.Archivers
 
         #endregion
 
-        private void LoadAuroraArchive(string[] cmd)
+        private void LoadAuroraArchive(IScene scene, string[] cmd)
         {
-            IScene scene = MainConsole.Instance.ConsoleScene;
-            if (scene == null)
-            {
-                MainConsole.Instance.Warn("Select a region first.");
-                return;
-            }
-
             string fileName = MainConsole.Instance.Prompt("What file name should we load?",
                                                           scene.RegionInfo.RegionName + ".abackup");
 
@@ -171,15 +164,8 @@ namespace Aurora.Modules.Archivers
             GC.Collect();
         }
 
-        private void SaveAuroraArchive(string[] cmd)
+        private void SaveAuroraArchive(IScene scene, string[] cmd)
         {
-            IScene scene = MainConsole.Instance.ConsoleScene;
-            if (scene == null)
-            {
-                MainConsole.Instance.Warn("Select a region first.");
-                return;
-            }
-
             string fileName = MainConsole.Instance.Prompt("What file name will this be saved as?",
                                                           scene.RegionInfo.RegionName + ".abackup");
 

@@ -80,13 +80,20 @@ namespace Aurora.Services
 
                 //Do this since IFriendsModule is a scene module, not a ISimulationBase module (not interchangable)
                 ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
-                if (manager != null && manager.Scene != null)
+                if (manager != null)
                 {
-                    IFriendsModule friendsModule = manager.Scene.RequestModuleInterface<IFriendsModule>();
-                    if (friendsModule != null)
+                    foreach (IScene scene in manager.Scenes)
                     {
-                        //Send the message
-                        friendsModule.SendFriendsStatusMessage(FriendToInformID, new [] { AgentID }, NewStatus);
+                        if (scene.GetScenePresence(FriendToInformID) != null &&
+                            !scene.GetScenePresence(FriendToInformID).IsChildAgent)
+                        {
+                            IFriendsModule friendsModule = scene.RequestModuleInterface<IFriendsModule>();
+                            if (friendsModule != null)
+                            {
+                                //Send the message
+                                friendsModule.SendFriendsStatusMessage(FriendToInformID, new[] { AgentID }, NewStatus);
+                            }
+                        }
                     }
                 }
             }
@@ -100,13 +107,20 @@ namespace Aurora.Services
 
                 //Do this since IFriendsModule is a scene module, not a ISimulationBase module (not interchangable)
                 ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
-                if (manager != null && manager.Scene != null)
+                if (manager != null)
                 {
-                    IFriendsModule friendsModule = manager.Scene.RequestModuleInterface<IFriendsModule>();
-                    if (friendsModule != null)
+                    foreach (IScene scene in manager.Scenes)
                     {
-                        //Send the message
-                        friendsModule.SendFriendsStatusMessage(FriendToInformID, AgentIDs.ToArray(), NewStatus);
+                        if (scene.GetScenePresence(FriendToInformID) != null &&
+                            !scene.GetScenePresence(FriendToInformID).IsChildAgent)
+                        {
+                            IFriendsModule friendsModule = scene.RequestModuleInterface<IFriendsModule>();
+                            if (friendsModule != null)
+                            {
+                                //Send the message
+                                friendsModule.SendFriendsStatusMessage(FriendToInformID, AgentIDs.ToArray(), NewStatus);
+                            }
+                        }
                     }
                 }
             }

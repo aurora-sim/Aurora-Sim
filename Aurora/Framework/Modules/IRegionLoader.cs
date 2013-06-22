@@ -102,6 +102,6 @@ namespace Aurora.Framework.Modules
         /// </summary>
         /// <param name="regionInfo"></param>
         /// <returns></returns>
-        IScene CreateScene(RegionInfo regionInfo);
+        IScene CreateScene(ISimulationDataStore dataStore, RegionInfo regionInfo);
     }
 }

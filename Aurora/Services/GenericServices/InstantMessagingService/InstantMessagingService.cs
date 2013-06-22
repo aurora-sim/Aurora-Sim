@@ -72,12 +72,19 @@ namespace Aurora.Services
                 ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
                 if (manager != null)
                 {
-                    IMessageTransferModule messageTransfer =
-                        manager.Scene.RequestModuleInterface<IMessageTransferModule>();
-                    if (messageTransfer != null)
+                    foreach (GridInstantMessage im in messages)
                     {
-                        foreach (GridInstantMessage im in messages)
-                            messageTransfer.SendInstantMessage(im);
+                        foreach (IScene scene in manager.Scenes)
+                        {
+                            if (scene.GetScenePresence(im.ToAgentID) != null)
+                            {
+                                IMessageTransferModule messageTransfer = scene.RequestModuleInterface<IMessageTransferModule>();
+                                if (messageTransfer != null)
+                                {
+                                    messageTransfer.SendInstantMessage(im);
+                                }
+                            }
+                        }
                     }
                 }
             }

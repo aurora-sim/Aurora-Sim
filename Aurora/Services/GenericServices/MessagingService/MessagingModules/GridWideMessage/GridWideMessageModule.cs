@@ -137,13 +137,13 @@ namespace Aurora.Services
             {
                 MainConsole.Instance.Commands.AddCommand("grid send alert",
                                                          "grid send alert <message>",
-                                                         "Sends a message to all users in the grid", SendGridAlert);
+                                                         "Sends a message to all users in the grid", SendGridAlert, false, true);
                 MainConsole.Instance.Commands.AddCommand("grid send message",
                                                          "grid send message <first> <last> <message>",
-                                                         "Sends a message to a user in the grid", SendGridMessage);
+                                                         "Sends a message to a user in the grid", SendGridMessage, false, true);
                 MainConsole.Instance.Commands.AddCommand("grid kick user",
                                                          "grid kick user <first> <last> <message>",
-                                                         "Kicks a user from the grid", KickUserMessage);
+                                                         "Kicks a user from the grid", KickUserMessage, false, true);
             }
         }
 
@@ -159,7 +159,7 @@ namespace Aurora.Services
 
         #region Commands
 
-        protected void SendGridAlert(string[] cmd)
+        protected void SendGridAlert(IScene scene, string[] cmd)
         {
             //Combine the params and figure out the message
             string message = CombineParams(cmd, 3);
@@ -167,7 +167,7 @@ namespace Aurora.Services
             SendAlert(message);
         }
 
-        protected void SendGridMessage(string[] cmd)
+        protected void SendGridMessage(IScene scene, string[] cmd)
         {
             //Combine the params and figure out the message
             string user = CombineParams(cmd, 3, 5);
@@ -183,7 +183,7 @@ namespace Aurora.Services
             MessageUser(account.PrincipalID, message);
         }
 
-        protected void KickUserMessage(string[] cmd)
+        protected void KickUserMessage(IScene scene, string[] cmd)
         {
             //Combine the params and figure out the message
             string user = CombineParams(cmd, 3, 5);
@@ -248,16 +248,19 @@ namespace Aurora.Services
 
                 //Get the Scene registry since IDialogModule is a region module, and isn't in the ISimulationBase registry
                 ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
-                if (manager != null && manager.Scene != null)
+                if (manager != null)
                 {
-                    IScenePresence sp = null;
-                    if (manager.Scene.TryGetScenePresence(UUID.Parse(user), out sp) && !sp.IsChildAgent)
+                    foreach (IScene scene in manager.Scenes)
                     {
-                        IDialogModule dialogModule = manager.Scene.RequestModuleInterface<IDialogModule>();
-                        if (dialogModule != null)
+                        IScenePresence sp = null;
+                        if (scene.TryGetScenePresence(UUID.Parse(user), out sp) && !sp.IsChildAgent)
                         {
-                            //Send the message to the user now
-                            dialogModule.SendAlertToUser(UUID.Parse(user), value);
+                            IDialogModule dialogModule = scene.RequestModuleInterface<IDialogModule>();
+                            if (dialogModule != null)
+                            {
+                                //Send the message to the user now
+                                dialogModule.SendAlertToUser(UUID.Parse(user), value);
+                            }
                         }
                     }
                 }
@@ -270,16 +273,19 @@ namespace Aurora.Services
 
                 //Get the Scene registry since IDialogModule is a region module, and isn't in the ISimulationBase registry
                 ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
-                if (manager != null && manager.Scene != null)
+                if (manager != null)
                 {
-                    IScenePresence sp = null;
-                    if (manager.Scene.TryGetScenePresence(UUID.Parse(user), out sp))
+                    foreach (IScene scene in manager.Scenes)
                     {
-                        sp.ControllingClient.Kick(value == "" ? "The Aurora Grid Manager kicked you out." : value);
-                        IEntityTransferModule transferModule =
-                            manager.Scene.RequestModuleInterface<IEntityTransferModule>();
-                        if (transferModule != null)
-                            transferModule.IncomingCloseAgent(manager.Scene, sp.UUID);
+                        IScenePresence sp = null;
+                        if (scene.TryGetScenePresence(UUID.Parse(user), out sp))
+                        {
+                            sp.ControllingClient.Kick(value == "" ? "The Aurora Grid Manager kicked you out." : value);
+                            IEntityTransferModule transferModule =
+                                scene.RequestModuleInterface<IEntityTransferModule>();
+                            if (transferModule != null)
+                                transferModule.IncomingCloseAgent(scene, sp.UUID);
+                        }
                     }
                 }
             }

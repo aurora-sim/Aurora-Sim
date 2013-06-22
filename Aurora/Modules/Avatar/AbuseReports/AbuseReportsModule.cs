@@ -60,7 +60,7 @@ namespace Aurora.Modules.AbuseReports
             if (MainConsole.Instance != null)
                 MainConsole.Instance.Commands.AddCommand("open abusereportsGUI",
                                                          "open abusereportsGUI",
-                                                         "Opens the abuse reports GUI", OpenGUI);
+                                                         "Opens the abuse reports GUI", OpenGUI, false, true);
         }
 
         public void Start(IConfigSource config, IRegistryCore registry)
@@ -75,7 +75,7 @@ namespace Aurora.Modules.AbuseReports
 
         #region GUI Code
 
-        protected void OpenGUI(string[] cmdparams)
+        protected void OpenGUI(IScene scene, string[] cmdparams)
         {
             Thread t = new Thread(ThreadProcARGUI);
             t.Start();

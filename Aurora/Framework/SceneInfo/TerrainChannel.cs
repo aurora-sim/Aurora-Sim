@@ -111,7 +111,7 @@ namespace Aurora.Framework.SceneInfo
             set { m_scene = value; }
         }
 
-        public short[] GetSerialised(IScene scene)
+        public short[] GetSerialised()
         {
             return m_map;
         }

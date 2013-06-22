@@ -28,6 +28,7 @@ using Aurora.Framework;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.DatabaseInterfaces;
 using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Services;
 using Aurora.Framework.Services.ClassHelpers.Profile;
 using Aurora.Framework.Utilities;
@@ -167,17 +168,17 @@ namespace Aurora.Modules.Ban
             if (MainConsole.Instance != null)
             {
                 MainConsole.Instance.Commands.AddCommand(
-                    "show user info", "show user info", "Info on a given user", UserInfo);
+                    "show user info", "show user info", "Info on a given user", UserInfo, false, true);
                 MainConsole.Instance.Commands.AddCommand(
-                    "set user info", "set user info", "Sets the info of the given user", SetUserInfo);
+                    "set user info", "set user info", "Sets the info of the given user", SetUserInfo, false, true);
                 MainConsole.Instance.Commands.AddCommand(
-                    "block user", "block user", "Blocks a given user from connecting anymore", BlockUser);
+                    "block user", "block user", "Blocks a given user from connecting anymore", BlockUser, false, true);
                 MainConsole.Instance.Commands.AddCommand(
-                    "ban user", "ban user", "Blocks a given user from connecting anymore", BlockUser);
+                    "ban user", "ban user", "Blocks a given user from connecting anymore", BlockUser, false, true);
                 MainConsole.Instance.Commands.AddCommand(
-                    "unblock user", "unblock user", "Removes the block for logging in on a given user", UnBlockUser);
+                    "unblock user", "unblock user", "Removes the block for logging in on a given user", UnBlockUser, false, true);
                 MainConsole.Instance.Commands.AddCommand(
-                    "unban user", "unban user", "Removes the block for logging in on a given user", UnBlockUser);
+                    "unban user", "unban user", "Removes the block for logging in on a given user", UnBlockUser, false, true);
             }
         }
 
@@ -249,7 +250,7 @@ namespace Aurora.Modules.Ban
             return oldInfo;
         }
 
-        protected void UserInfo(string[] cmdparams)
+        protected void UserInfo(IScene scene, string[] cmdparams)
         {
             string name = MainConsole.Instance.Prompt("Name: ");
             UserAccount account = m_accountService.GetUserAccount(null, name);
@@ -268,7 +269,7 @@ namespace Aurora.Modules.Ban
             DisplayUserInfo(info);
         }
 
-        protected void BlockUser(string[] cmdparams)
+        protected void BlockUser(IScene scene, string[] cmdparams)
         {
             string name = MainConsole.Instance.Prompt("Name: ");
             UserAccount account = m_accountService.GetUserAccount(null, name);
@@ -308,7 +309,7 @@ namespace Aurora.Modules.Ban
             MainConsole.Instance.Fatal("User blocked from logging in");
         }
 
-        protected void UnBlockUser(string[] cmdparams)
+        protected void UnBlockUser(IScene scene, string[] cmdparams)
         {
             string name = MainConsole.Instance.Prompt("Name: ");
             UserAccount account = m_accountService.GetUserAccount(null, name);
@@ -339,7 +340,7 @@ namespace Aurora.Modules.Ban
             MainConsole.Instance.Fatal("User block removed");
         }
 
-        protected void SetUserInfo(string[] cmdparams)
+        protected void SetUserInfo(IScene scene, string[] cmdparams)
         {
             string name = MainConsole.Instance.Prompt("Name: ");
             UserAccount account = m_accountService.GetUserAccount(null, name);

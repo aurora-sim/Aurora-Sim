@@ -873,8 +873,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
                                    World);
 
             var comms =
-                m_host.ParentEntity.Scene.RequestModuleInterface<ISceneManager>()
-                      .Scene.RequestModuleInterface<IWorldComm>();
+                m_host.ParentEntity.Scene.RequestModuleInterface<IWorldComm>();
             comms.DeliverMessage(ChatTypeEnum.Say, channelID, m_host.Name, m_host.UUID, text);
         }
 

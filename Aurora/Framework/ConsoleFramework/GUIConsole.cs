@@ -59,12 +59,12 @@ namespace Aurora.Framework.ConsoleFramework
             baseOpenSim.ApplicationRegistry.RegisterModuleInterface<ICommandConsole>(this);
             MainConsole.Instance = this;
 
-            m_Commands.AddCommand("help", "help", "Get a general command list", Help);
+            m_Commands.AddCommand("help", "help", "Get a general command list", Help, false, true);
 
             MainConsole.Instance.Info("[GUIConsole] initialised.");
         }
 
-        public void Help(string[] cmd)
+        public void Help(IScene scene, string[] cmd)
         {
             List<string> help = m_Commands.GetHelp(cmd);
 
@@ -267,13 +267,20 @@ namespace Aurora.Framework.ConsoleFramework
             set { m_Commands = value; }
         }
 
+        public List<IScene> ConsoleScenes
+        {
+            get { return m_ConsoleScenes; }
+            set { m_ConsoleScenes = value; }
+        }
+
         public IScene ConsoleScene
         {
             get { return m_ConsoleScene; }
             set { m_ConsoleScene = value; }
         }
 
-        public IScene m_ConsoleScene;
+        public List<IScene> m_ConsoleScenes = new List<IScene>();
+        public IScene m_ConsoleScene = null;
 
         public void Dispose()
         {

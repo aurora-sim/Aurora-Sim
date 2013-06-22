@@ -44,10 +44,11 @@ namespace Aurora.Services
         public bool IsAuthorizedForRegion(GridRegion region, AgentCircuitData agent, bool isRootAgent, out string reason)
         {
             ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
-            if (manager != null && manager.Scene != null && manager.Scene.RegionInfo.RegionID == region.RegionID)
+            IScene scene = manager == null ? null : manager.Scenes.Find((s) => s.RegionInfo.RegionID == region.RegionID);
+            if (scene != null)
             {
                 //Found the region, check permissions
-                return manager.Scene.Permissions.AllowedIncomingAgent(agent, isRootAgent, out reason);
+                return scene.Permissions.AllowedIncomingAgent(agent, isRootAgent, out reason);
             }
             reason = "Not Authorized as region does not exist.";
             return false;

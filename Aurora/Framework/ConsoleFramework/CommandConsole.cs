@@ -62,13 +62,17 @@ namespace Aurora.Framework.ConsoleFramework
         /// <param name="commandHelp">The message that will show the user how to use the command</param>
         /// <param name="infomessage">Any information about how the command works or what it does</param>
         /// <param name="fn"></param>
-        public void AddCommand(string command, string commandHelp, string infomessage, CommandDelegate fn)
+        /// <param name="requiresAScene">Whether this command requires a scene to be fired</param>
+        /// <param name="fireOnceForAllScenes">Whether this command will only be executed once if there is no current scene</param>
+        public void AddCommand(string command, string commandHelp, string infomessage, CommandDelegate fn, bool requiresAScene, bool fireOnceForAllScenes)
         {
             CommandInfo info = new CommandInfo
                                    {
                                        command = command,
                                        commandHelp = commandHelp,
                                        info = infomessage,
+                                       fireOnceForAllScenes = fireOnceForAllScenes,
+                                       requiresAScene = requiresAScene,
                                        fn = new List<CommandDelegate> {fn}
                                    };
             tree.AddCommand(info);
@@ -110,6 +114,16 @@ namespace Aurora.Framework.ConsoleFramework
             ///     The method to invoke for this command
             /// </value>
             public List<CommandDelegate> fn;
+
+            /// <summary>
+            ///     Whether this command will only be executed once if there is no current scene
+            /// </summary>
+            public bool fireOnceForAllScenes;
+
+            /// <summary>
+            ///     Whether this command requires a scene to be fired
+            /// </summary>
+            public bool requiresAScene;
 
             /// <summary>
             ///     Any info about this command
@@ -163,11 +177,7 @@ namespace Aurora.Framework.ConsoleFramework
                     //Only one command after our path, its ours
 
                     //Add commands together if there is more than one event hooked to one command
-                    if (commands.ContainsKey(info.command))
-                    {
-                        commands[info.command].fn.AddRange(info.fn);
-                    }
-                    else
+                    if (!commands.ContainsKey(info.command))
                     {
                         commands[info.command] = info;
                     }
@@ -227,7 +237,8 @@ namespace Aurora.Framework.ConsoleFramework
                                 {
                                     cmdList = new List<string>(commandPath);
                                     cmdList.AddRange(commandOptions);
-                                    fn(cmdList.ToArray());
+                                    foreach (IScene scene in GetScenes(commands[com]))
+                                        fn(scene, cmdList.ToArray());
                                 }
                                 return new string[0];
                             }
@@ -262,7 +273,8 @@ namespace Aurora.Framework.ConsoleFramework
                                             {
                                                 if (fn != null)
                                                 {
-                                                    fn(commandPath);
+                                                    foreach (IScene scene in GetScenes(cmd.Value))
+                                                        fn(scene, commandPath);
                                                 }
                                             }
                                             return new string[0];
@@ -309,7 +321,8 @@ namespace Aurora.Framework.ConsoleFramework
                                 {
                                     cmdList = new List<string>(commandPath);
                                     cmdList.AddRange(commandOptions);
-                                    fn(cmdList.ToArray());
+                                    foreach(IScene scene in GetScenes(commands[cmdToExecute]))
+                                        fn(scene, cmdList.ToArray());
                                 }
                                 return new string[0];
                             }
@@ -318,6 +331,31 @@ namespace Aurora.Framework.ConsoleFramework
                 }
 
                 return new string[0];
+            }
+
+            private List<IScene> GetScenes(CommandInfo cmd)
+            {
+                if (cmd.requiresAScene)
+                {
+                    if (MainConsole.Instance.ConsoleScene == null)
+                    {
+                        if (cmd.fireOnceForAllScenes)
+                        {
+                            if (MainConsole.Instance.ConsoleScenes.Count == 1)
+                                return new List<IScene> { MainConsole.Instance.ConsoleScenes[0] };
+                            else
+                                return new List<IScene>();
+                        }
+                        else
+                            return MainConsole.Instance.ConsoleScenes;
+                    }
+                    else
+                        return new List<IScene> { MainConsole.Instance.ConsoleScene };
+                }
+                if (MainConsole.Instance.ConsoleScene == null)
+                    return cmd.fireOnceForAllScenes ? new List<IScene> { null } : MainConsole.Instance.ConsoleScenes;
+                else
+                    return new List<IScene> { MainConsole.Instance.ConsoleScene };
             }
 
             public string[] FindCommands(string[] command)
@@ -429,7 +467,7 @@ namespace Aurora.Framework.ConsoleFramework
                 }
                 paths.Clear();
 
-				paths.AddRange(
+                paths.AddRange(
                     commands.Values.Select(
                         command =>
                         string.Format("-- {0}  [{1}]:   {2}", command.command, command.commandHelp, command.info)));
@@ -442,7 +480,7 @@ namespace Aurora.Framework.ConsoleFramework
         #endregion
     }
 
-    public delegate void CommandDelegate(string[] cmd);
+    public delegate void CommandDelegate(IScene scene, string[] cmd);
 
     public class Parser
     {
@@ -495,7 +533,7 @@ namespace Aurora.Framework.ConsoleFramework
             baseOpenSim.ApplicationRegistry.RegisterModuleInterface<ICommandConsole>(this);
             MainConsole.Instance = this;
 
-            m_Commands.AddCommand("help", "help", "Get a general command list", Help);
+            m_Commands.AddCommand("help", "help", "Get a general command list", Help, false, true);
             string logName = "";
             if (source.Configs["Console"] != null)
                 logName = source.Configs["Console"].GetString("LogAppendName", "");
@@ -512,7 +550,7 @@ namespace Aurora.Framework.ConsoleFramework
             m_logFile.Close();
         }
 
-        public void Help(string[] cmd)
+        public void Help(IScene scene, string[] cmd)
         {
             List<string> help = m_Commands.GetHelp(cmd);
 
@@ -607,7 +645,7 @@ namespace Aurora.Framework.ConsoleFramework
             string optstr = options.Aggregate(String.Empty, (current, s) => current + (" " + s));
             string temp = InternalPrompt(prompt, defaultresponse, options);
  
-			while (!itisdone && options.Count > 0)
+            while (!itisdone && options.Count > 0)
             {
                 if (options.Contains(temp))
                 {
@@ -716,15 +754,22 @@ namespace Aurora.Framework.ConsoleFramework
             set { m_Commands = value; }
         }
 
+        public List<IScene> ConsoleScenes
+        {
+            get { return m_ConsoleScenes; }
+            set { m_ConsoleScenes = value; }
+        }
+
         public IScene ConsoleScene
         {
-            get { return m_ConsoleScene; }
-            set { m_ConsoleScene = value; }
+            get { return m_consoleScene; }
+            set { m_consoleScene = value; }
         }
 
         public bool HasProcessedCurrentCommand { get; set; }
 
-        public IScene m_ConsoleScene;
+        public List<IScene> m_ConsoleScenes = new List<IScene>();
+        public IScene m_consoleScene = null;
 
         /// <summary>
         ///     Starts the prompt for the console. This will never stop until the region is closed.

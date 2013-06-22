@@ -65,6 +65,11 @@ namespace Aurora.Framework.Modules
         /// </summary>
         IScene ConsoleScene { get; set; }
 
+        /// <summary>
+        ///     All scenes that the console has
+        /// </summary>
+        List<IScene> ConsoleScenes { get; set; }
+
         bool HasProcessedCurrentCommand { get; set; }
 
         /// <summary>

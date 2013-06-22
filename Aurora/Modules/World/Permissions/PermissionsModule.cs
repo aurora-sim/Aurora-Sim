@@ -373,37 +373,37 @@ namespace Aurora.Modules.Permissions
                     "bypass permissions",
                     "bypass permissions <true / false>",
                     "Bypass permission checks",
-                    HandleBypassPermissions);
+                    HandleBypassPermissions, false, false);
 
                 MainConsole.Instance.Commands.AddCommand(
                     "force permissions",
                     "force permissions <true / false>",
                     "Force permissions on or off",
-                    HandleForcePermissions);
+                    HandleForcePermissions, false, false);
 
                 MainConsole.Instance.Commands.AddCommand(
                     "debug permissions",
                     "debug permissions <true / false>",
                     "Enable permissions debugging",
-                    HandleDebugPermissions);
+                    HandleDebugPermissions, true, false);
 
                 MainConsole.Instance.Commands.AddCommand(
                     "transfer sim ownership",
                     "transfer sim ownership",
                     "Transfers all objects and land on the region to another user.",
-                    HandleTransferOwnership);
+                    HandleTransferOwnership, true, false);
 
                 MainConsole.Instance.Commands.AddCommand(
                     "transfer objects ownership",
                     "transfer objects ownership",
                     "Transfers ownership of all objects on the region to another user.",
-                    HandleTransferObjectOwnership);
+                    HandleTransferObjectOwnership, true, false);
 
                 MainConsole.Instance.Commands.AddCommand(
                     "transfer parcel ownership",
                     "transfer parcel ownership",
                     "Transfers ownership of all land in the region to another user.",
-                    HandleTransferLandOwnership);
+                    HandleTransferLandOwnership, true, false);
             }
 
 
@@ -501,11 +501,8 @@ namespace Aurora.Modules.Permissions
 
         #endregion
 
-        public void HandleBypassPermissions(string[] args)
+        public void HandleBypassPermissions(IScene scene, string[] args)
         {
-            if (MainConsole.Instance.ConsoleScene != m_scene && MainConsole.Instance.ConsoleScene != null)
-                return;
-
             if (args.Length > 2)
             {
                 bool val;
@@ -515,8 +512,7 @@ namespace Aurora.Modules.Permissions
 
                 m_bypassPermissions = val;
 
-                if (MainConsole.Instance.ConsoleScene != null ||
-                    (MainConsole.Instance.ConsoleScene == null && !MainConsole.Instance.HasProcessedCurrentCommand))
+                if (!MainConsole.Instance.HasProcessedCurrentCommand)
                 {
                     MainConsole.Instance.HasProcessedCurrentCommand = true;
                     MainConsole.Instance.InfoFormat(
@@ -526,11 +522,8 @@ namespace Aurora.Modules.Permissions
             }
         }
 
-        public void HandleForcePermissions(string[] args)
+        public void HandleForcePermissions(IScene scene, string[] args)
         {
-            if (MainConsole.Instance.ConsoleScene != m_scene && MainConsole.Instance.ConsoleScene != null)
-                return;
-
             if (!m_bypassPermissions)
             {
                 MainConsole.Instance.Error("[PERMISSIONS] Permissions can't be forced unless they are bypassed first");
@@ -546,8 +539,7 @@ namespace Aurora.Modules.Permissions
 
                 m_bypassPermissionsValue = val;
 
-                if (MainConsole.Instance.ConsoleScene != null ||
-                    (MainConsole.Instance.ConsoleScene == null && !MainConsole.Instance.HasProcessedCurrentCommand))
+                if (!MainConsole.Instance.HasProcessedCurrentCommand)
                 {
                     MainConsole.Instance.HasProcessedCurrentCommand = true;
                     MainConsole.Instance.InfoFormat("[PERMISSIONS] Forced permissions to {0} in {1}",
@@ -557,12 +549,8 @@ namespace Aurora.Modules.Permissions
             }
         }
 
-        public void HandleTransferOwnership(string[] args)
+        public void HandleTransferOwnership(IScene scene, string[] args)
         {
-            if (MainConsole.Instance.ConsoleScene != m_scene && MainConsole.Instance.ConsoleScene != null)
-                return;
-
-
             string name = MainConsole.Instance.Prompt("Name of user: ", "");
             if (name == "")
             {
@@ -594,12 +582,8 @@ namespace Aurora.Modules.Permissions
             }
         }
 
-        public void HandleTransferLandOwnership(string[] args)
+        public void HandleTransferLandOwnership(IScene scene, string[] args)
         {
-            if (MainConsole.Instance.ConsoleScene != m_scene && MainConsole.Instance.ConsoleScene != null)
-                return;
-
-
             string name = MainConsole.Instance.Prompt("Name of user: ", "");
             if (name == "")
             {
@@ -621,12 +605,8 @@ namespace Aurora.Modules.Permissions
             }
         }
 
-        public void HandleTransferObjectOwnership(string[] args)
+        public void HandleTransferObjectOwnership(IScene scene, string[] args)
         {
-            if (MainConsole.Instance.ConsoleScene != m_scene && MainConsole.Instance.ConsoleScene != null)
-                return;
-
-
             string name = MainConsole.Instance.Prompt("Name of user: ", "");
             if (name == "")
             {
@@ -657,11 +637,8 @@ namespace Aurora.Modules.Permissions
             }
         }
 
-        public void HandleDebugPermissions(string[] args)
+        public void HandleDebugPermissions(IScene scene, string[] args)
         {
-            if (MainConsole.Instance.ConsoleScene != m_scene && MainConsole.Instance.ConsoleScene != null)
-                return;
-
             if (args.Length > 2)
             {
                 bool val;
@@ -671,8 +648,7 @@ namespace Aurora.Modules.Permissions
 
                 m_debugPermissions = val;
 
-                if (MainConsole.Instance.ConsoleScene != null ||
-                    (MainConsole.Instance.ConsoleScene == null && !MainConsole.Instance.HasProcessedCurrentCommand))
+                if (!MainConsole.Instance.HasProcessedCurrentCommand)
                 {
                     MainConsole.Instance.HasProcessedCurrentCommand = true;
                     MainConsole.Instance.InfoFormat("[PERMISSIONS] Set permissions debugging to {0} in {1}",

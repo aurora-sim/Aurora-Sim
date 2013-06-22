@@ -127,17 +127,17 @@ namespace Aurora.Modules.Wind
                         MainConsole.Instance.Commands.AddCommand(
                             String.Format("wind base wind_plugin {0}", windPlugin.Name),
                             String.Format("{0} - {1}", windPlugin.Name, windPlugin.Description), "",
-                            HandleConsoleBaseCommand);
+                            HandleConsoleBaseCommand, true, false);
                         MainConsole.Instance.Commands.AddCommand(
                             String.Format("wind base wind_update_rate"), "Change the wind update rate.", "",
-                            HandleConsoleBaseCommand);
+                            HandleConsoleBaseCommand, true, false);
 
                         foreach (KeyValuePair<string, string> kvp in windPlugin.WindParams())
                         {
                             MainConsole.Instance.Commands.AddCommand(
                                 String.Format("wind {0} {1}", windPlugin.Name, kvp.Key),
                                 String.Format("{0} : {1} - {2}", windPlugin.Name, kvp.Key, kvp.Value), "",
-                                HandleConsoleParamCommand);
+                                HandleConsoleParamCommand, true, false);
                         }
                     }
                 }
@@ -196,21 +196,11 @@ namespace Aurora.Modules.Wind
 
         #region Console Commands
 
-        private void ValidateConsole()
-        {
-            if (MainConsole.Instance.ConsoleScene != m_scene)
-            {
-                MainConsole.Instance.InfoFormat("[WIND]: Console Scene is not my scene.");
-                return;
-            }
-        }
-
         /// <summary>
         ///     Base console command handler, only used if a person specifies the base command with now options
         /// </summary>
         private void HandleConsoleCommand(string[] cmdparams)
         {
-            ValidateConsole();
             MainConsole.Instance.Info(
                 "[WIND] The wind command can be used to change the currently active wind model plugin and update the parameters for wind plugins.");
         }
@@ -218,10 +208,8 @@ namespace Aurora.Modules.Wind
         /// <summary>
         ///     Called to change the active wind model plugin
         /// </summary>
-        private void HandleConsoleBaseCommand(string[] cmdparams)
+        private void HandleConsoleBaseCommand(IScene scene, string[] cmdparams)
         {
-            ValidateConsole();
-
             if ((cmdparams.Length != 4)
                 || !cmdparams[1].Equals("base"))
             {
@@ -273,10 +261,8 @@ namespace Aurora.Modules.Wind
         /// <summary>
         ///     Called to change plugin parameters.
         /// </summary>
-        private void HandleConsoleParamCommand(string[] cmdparams)
+        private void HandleConsoleParamCommand(IScene scene, string[] cmdparams)
         {
-            ValidateConsole();
-
             // wind <plugin> <param> [value]
             if ((cmdparams.Length != 4)
                 && (cmdparams.Length != 3))

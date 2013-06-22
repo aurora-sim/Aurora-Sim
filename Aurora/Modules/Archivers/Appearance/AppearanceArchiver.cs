@@ -192,7 +192,7 @@ namespace Aurora.Modules.Archivers
 
         #region Console Commands
 
-        protected void HandleLoadAvatarArchive(string[] cmdparams)
+        protected void HandleLoadAvatarArchive(IScene scene, string[] cmdparams)
         {
             if (cmdparams.Length != 6)
             {
@@ -210,7 +210,7 @@ namespace Aurora.Modules.Archivers
                 AvatarService.SetAppearance(account.PrincipalID, archive.Appearance);
         }
 
-        protected void HandleSaveAvatarArchive(string[] cmdparams)
+        protected void HandleSaveAvatarArchive(IScene scene, string[] cmdparams)
         {
             if (cmdparams.Length < 7)
             {
@@ -482,11 +482,11 @@ namespace Aurora.Modules.Archivers
                 MainConsole.Instance.Commands.AddCommand("save avatar archive",
                                                          "save avatar archive <First> <Last> <Filename> <FolderNameToSaveInto> (--snapshot <UUID>) (--private)",
                                                          "Saves appearance to an avatar archive (.aa is the recommended file extension) (Note: put \"\" around the FolderName if you need more than one word. Put all attachments in BodyParts folder before saving the archive) Both --snapshot and --private are optional. --private tells any web interfaces that they cannot display this as a default avatar. --snapshot sets a picture to display on the web interface if this archive is being used as a default avatar.",
-                                                         HandleSaveAvatarArchive);
+                                                         HandleSaveAvatarArchive, false, true);
                 MainConsole.Instance.Commands.AddCommand("load avatar archive",
                                                          "load avatar archive <First> <Last> <Filename>",
                                                          "Loads appearance from an avatar archive",
-                                                         HandleLoadAvatarArchive);
+                                                         HandleLoadAvatarArchive, false, true);
             }
         }
 

@@ -72,7 +72,7 @@ namespace Aurora.Services.DataService
                 {
                     MainConsole.Instance.Commands.AddCommand("fix missing region owner", "fix missing region owner",
                                                              "Attempts to fix missing region owners in the database.",
-                                                             delegate(string[] cmd) { FixMissingRegionOwners(); });
+                                                             delegate(IScene scene, string[] cmd) { FixMissingRegionOwners(); }, true, false);
                 }
             }
         }

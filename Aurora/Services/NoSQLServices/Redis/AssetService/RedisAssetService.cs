@@ -1,6 +1,7 @@
 ﻿using Aurora.Framework;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Services;
 using Aurora.Framework.Services.ClassHelpers.Assets;
 using Aurora.Framework.Utilities;
@@ -78,15 +79,15 @@ namespace Aurora.RedisServices.AssetService
             {
                 MainConsole.Instance.Commands.AddCommand("show digest",
                                                          "show digest <ID>",
-                                                         "Show asset digest", HandleShowDigest);
+                                                         "Show asset digest", HandleShowDigest, false, true);
 
                 MainConsole.Instance.Commands.AddCommand("delete asset",
                                                          "delete asset <ID>",
-                                                         "Delete asset from database", HandleDeleteAsset);
+                                                         "Delete asset from database", HandleDeleteAsset, false, true);
 
                 MainConsole.Instance.Commands.AddCommand("get asset",
                                                          "get asset <ID>",
-                                                         "Gets info about asset from database", HandleGetAsset);
+                                                         "Gets info about asset from database", HandleGetAsset, false, true);
 
                 MainConsole.Instance.Info("[REDIS ASSET SERVICE]: Redis asset service enabled");
             }
@@ -444,7 +445,7 @@ namespace Aurora.RedisServices.AssetService
 
         #region Console Commands
 
-        private void HandleShowDigest(string[] args)
+        private void HandleShowDigest(IScene scene, string[] args)
         {
             if (args.Length < 3)
             {
@@ -485,7 +486,7 @@ namespace Aurora.RedisServices.AssetService
             }
         }
 
-        private void HandleDeleteAsset(string[] args)
+        private void HandleDeleteAsset(IScene scene, string[] args)
         {
             if (args.Length < 3)
             {
@@ -506,7 +507,7 @@ namespace Aurora.RedisServices.AssetService
             MainConsole.Instance.Info("Asset deleted");
         }
 
-        private void HandleGetAsset(string[] args)
+        private void HandleGetAsset(IScene scene, string[] args)
         {
             if (args.Length < 3)
             {

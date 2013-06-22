@@ -70,23 +70,23 @@ namespace Aurora.Modules.Appearance
         private const string m_defaultUnderPants = @"LLWearable version 22
 New Underpants
 
-	permissions 0
-	{
-		base_mask	7fffffff
-		owner_mask	7fffffff
-		group_mask	00000000
-		everyone_mask	00000000
-		next_owner_mask	00082000
-		creator_id	05948863-b678-433e-87a4-e44d17678d1d
-		owner_id	05948863-b678-433e-87a4-e44d17678d1d
-		last_owner_id	00000000-0000-0000-0000-000000000000
-		group_id	00000000-0000-0000-0000-000000000000
-	}
-	sale_info	0
-	{
-		sale_type	not
-		sale_price	10
-	}
+    permissions 0
+    {
+        base_mask	7fffffff
+        owner_mask	7fffffff
+        group_mask	00000000
+        everyone_mask	00000000
+        next_owner_mask	00082000
+        creator_id	05948863-b678-433e-87a4-e44d17678d1d
+        owner_id	05948863-b678-433e-87a4-e44d17678d1d
+        last_owner_id	00000000-0000-0000-0000-000000000000
+        group_id	00000000-0000-0000-0000-000000000000
+    }
+    sale_info	0
+    {
+        sale_type	not
+        sale_price	10
+    }
 type 11
 parameters 5
 619 .3
@@ -100,23 +100,23 @@ textures 1
         private const string m_defaultUnderShirt = @"LLWearable version 22
 New Undershirt
 
-	permissions 0
-	{
-		base_mask	7fffffff
-		owner_mask	7fffffff
-		group_mask	00000000
-		everyone_mask	00000000
-		next_owner_mask	00082000
-		creator_id	05948863-b678-433e-87a4-e44d17678d1d
-		owner_id	05948863-b678-433e-87a4-e44d17678d1d
-		last_owner_id	00000000-0000-0000-0000-000000000000
-		group_id	00000000-0000-0000-0000-000000000000
-	}
-	sale_info	0
-	{
-		sale_type	not
-		sale_price	10
-	}
+    permissions 0
+    {
+        base_mask	7fffffff
+        owner_mask	7fffffff
+        group_mask	00000000
+        everyone_mask	00000000
+        next_owner_mask	00082000
+        creator_id	05948863-b678-433e-87a4-e44d17678d1d
+        owner_id	05948863-b678-433e-87a4-e44d17678d1d
+        last_owner_id	00000000-0000-0000-0000-000000000000
+        group_id	00000000-0000-0000-0000-000000000000
+    }
+    sale_info	0
+    {
+        sale_type	not
+        sale_price	10
+    }
 type 10
 parameters 7
 603 .4
@@ -162,7 +162,7 @@ textures 1
             if (MainConsole.Instance != null)
                 MainConsole.Instance.Commands.AddCommand("force send appearance", "force send appearance",
                                                          "Force send the avatar's appearance",
-                                                         HandleConsoleForceSendAppearance);
+                                                         HandleConsoleForceSendAppearance, true, false);
 
             _saveQueue.Start(m_savetime, HandleAppearanceSave);
             _sendQueue.Start(m_sendtime, HandleAppearanceSend);
@@ -711,22 +711,18 @@ textures 1
             MainConsole.Instance.Info("Resent appearance");
         }
 
-        private void HandleConsoleForceSendAppearance(string[] cmds)
+        private void HandleConsoleForceSendAppearance(IScene scene, string[] cmds)
         {
-            //Make sure its set to the right region
-            if (MainConsole.Instance.ConsoleScene != m_scene && MainConsole.Instance.ConsoleScene != null)
-                return;
-
             if (cmds.Length != 5)
             {
-                if (MainConsole.Instance.ConsoleScene != null)
+                if (MainConsole.Instance != null)
                     MainConsole.Instance.Info("Wrong number of commands.");
                 return;
             }
             string firstName = cmds[3], lastName = cmds[4];
 
             IScenePresence SP;
-            if (m_scene.TryGetAvatarByName(firstName + " " + lastName, out SP))
+            if (scene.TryGetAvatarByName(firstName + " " + lastName, out SP))
             {
                 ForceSendAvatarAppearance(SP.UUID);
             }
@@ -760,7 +756,7 @@ textures 1
                     MainConsole.Instance.Error("[Scene]: NO AVATAR APPEARANCE FOUND FOR " + sp.Name);
                     Appearance = new AvatarAppearance(sp.UUID);
                 }
-                _updateMonitor = m_sp.Scene.RequestModuleInterface<IMonitorModule>().GetMonitor<IAgentUpdateMonitor>();
+                _updateMonitor = m_sp.Scene.RequestModuleInterface<IMonitorModule>().GetMonitor<IAgentUpdateMonitor>(sp.Scene);
             }
 
             #region IAvatarAppearanceModule Members

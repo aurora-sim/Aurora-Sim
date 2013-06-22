@@ -227,10 +227,10 @@ namespace Aurora.Modules.Chat
             if (MainConsole.Instance != null)
             {
                 MainConsole.Instance.Commands.AddCommand(
-                    "alert user", "alert user [first] [last] [message]", "Send an alert to a user", HandleAlertConsoleCommand);
+                    "alert user", "alert user [first] [last] [message]", "Send an alert to a user", HandleAlertConsoleCommand, true, false);
 
                 MainConsole.Instance.Commands.AddCommand(
-                    "alert general", "alert general [message]", "Send an alert to everyone", HandleAlertConsoleCommand);
+                    "alert general", "alert general [message]", "Send an alert to everyone", HandleAlertConsoleCommand, true, false);
             }
         }
 
@@ -263,11 +263,8 @@ namespace Aurora.Modules.Chat
         ///     Handle an alert command from the console.
         /// </summary>
         /// <param name="cmdparams"></param>
-        public void HandleAlertConsoleCommand(string[] cmdparams)
+        public void HandleAlertConsoleCommand(IScene scene, string[] cmdparams)
         {
-            if (MainConsole.Instance.ConsoleScene != m_scene && MainConsole.Instance.ConsoleScene == null)
-                return;
-
             if (cmdparams[1] == "general")
             {
                 string message = Util.CombineParams(cmdparams, 2);

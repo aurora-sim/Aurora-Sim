@@ -1,6 +1,7 @@
 ﻿using Aurora.Framework.ClientInterfaces;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Servers;
 using Aurora.Framework.Servers.HttpServer;
 using Aurora.Framework.Servers.HttpServer.Implementation;
@@ -57,7 +58,7 @@ namespace Aurora.Services
             m_avatarService = registry.RequestModuleInterface<IAvatarService>();
             m_assetService = registry.RequestModuleInterface<IAssetService>();
 
-            MainConsole.Instance.Commands.AddCommand("bake avatar", "bake avatar", "Bakes an avatar's appearance", BakeAvatar);
+            MainConsole.Instance.Commands.AddCommand("bake avatar", "bake avatar", "Bakes an avatar's appearance", BakeAvatar, false, true);
         }
 
         public void FinishedStartup()
@@ -95,7 +96,7 @@ namespace Aurora.Services
         private TextureData[] Textures = new TextureData[(int)AvatarTextureIndex.NumberOfEntries];
         //private List<UUID> m_lastInventoryItemIDs = new List<UUID>();
 
-        private void BakeAvatar(string[] cmd)
+        private void BakeAvatar(IScene scene, string[] cmd)
         {
             string name = MainConsole.Instance.Prompt("Name: ");
             IUserAccountService uas = m_registry.RequestModuleInterface<IUserAccountService>();

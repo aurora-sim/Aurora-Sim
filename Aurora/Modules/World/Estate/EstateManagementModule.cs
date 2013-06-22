@@ -1042,7 +1042,7 @@ namespace Aurora.Modules.Estate
 
         #region Console Commands
 
-        public void consoleSetTerrainTexture(string[] args)
+        public void consoleSetTerrainTexture(IScene scene, string[] args)
         {
             string num = args[3];
             string uuid = args[4];
@@ -1081,7 +1081,7 @@ namespace Aurora.Modules.Estate
             }
         }
 
-        public void consoleSetTerrainHeights(string[] args)
+        public void consoleSetTerrainHeights(IScene scene, string[] args)
         {
             string num = args[3];
             string min = args[4];
@@ -1144,7 +1144,7 @@ namespace Aurora.Modules.Estate
                     "Sets the terrain [number] to [uuid], if [x] or [y] are specified, it will only " +
                     "set it on regions with a matching coordinate. Specify -1 in [x] or [y] to wildcard" +
                     " that coordinate.",
-                    consoleSetTerrainTexture);
+                    consoleSetTerrainTexture, true, false);
 
                 MainConsole.Instance.Commands.AddCommand(
                     "set terrain heights",
@@ -1152,7 +1152,7 @@ namespace Aurora.Modules.Estate
                     "Sets the terrain texture heights on corner #[corner] to [min]/[max], if [x] or [y] are specified, it will only " +
                     "set it on regions with a matching coordinate. Specify -1 in [x] or [y] to wildcard" +
                     " that coordinate. Corner # SW = 0, NW = 1, SE = 2, NE = 3.",
-                    consoleSetTerrainHeights);
+                    consoleSetTerrainHeights, true, false);
             }
         }
 

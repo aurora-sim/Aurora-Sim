@@ -62,35 +62,30 @@ namespace Aurora.Region
             get { return "AsyncSceneLoader"; }
         }
 
-        public IScene CreateScene(RegionInfo regionInfo)
-        {
-            return SetupScene(regionInfo, m_configSource);
-        }
-
-        #endregion
-
         /// <summary>
         ///     Create a scene and its initial base structures.
         /// </summary>
         /// <param name="regionInfo"></param>
         /// <param name="configSource"></param>
         /// <returns></returns>
-        protected IScene SetupScene(RegionInfo regionInfo, IConfigSource configSource)
+        public IScene CreateScene(ISimulationDataStore dataStore, RegionInfo regionInfo)
         {
             AgentCircuitManager circuitManager = new AgentCircuitManager();
             List<IClientNetworkServer> clientServers = AuroraModuleLoader.PickupModules<IClientNetworkServer>();
             List<IClientNetworkServer> allClientServers = new List<IClientNetworkServer>();
             foreach (IClientNetworkServer clientServer in clientServers)
             {
-                clientServer.Initialise(MainServer.Instance.Port, m_configSource, circuitManager);
+                clientServer.Initialise((uint)regionInfo.RegionPort, m_configSource, circuitManager);
                 allClientServers.Add(clientServer);
             }
 
             AsyncScene scene = new AsyncScene();
             scene.AddModuleInterfaces(m_openSimBase.ApplicationRegistry.GetInterfaces());
-            scene.Initialize(regionInfo, circuitManager, allClientServers);
+            scene.Initialize(regionInfo, dataStore, circuitManager, allClientServers);
 
             return scene;
         }
+
+        #endregion
     }
 }

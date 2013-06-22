@@ -1208,7 +1208,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ISunModule module = World.RequestModuleInterface<ISunModule>();
             if (module != null)
             {
-                module.SetSunParameter(param, value);
+                module.SetSunParameter(World, param, value);
             }
         }
 
@@ -1223,7 +1223,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             ISunModule module = World.RequestModuleInterface<ISunModule>();
             if (module != null)
             {
-                module.SetSunParameter(param, value);
+                module.SetSunParameter(World, param, value);
             }
         }
 
@@ -2287,7 +2287,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             IMonitorModule mod = World.RequestModuleInterface<IMonitorModule>();
             if (mod != null)
             {
-                float[] stats = mod.GetRegionStats();
+                float[] stats = mod.GetRegionStats(World);
 
                 for (int i = 0; i < 21; i++)
                 {

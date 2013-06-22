@@ -29,6 +29,7 @@ using Aurora.Framework;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.ModuleLoader;
 using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Services;
 using Nini.Config;
 using System;
@@ -75,10 +76,10 @@ namespace Aurora.Services
                                                          MainConsole.Instance.Threshold));
 
             MainConsole.Instance.Commands.AddCommand("set log level", "set log level [level]",
-                                                     "Set the console logging level", HandleLogLevel);
+                                                     "Set the console logging level", HandleLogLevel, false, true);
 
             MainConsole.Instance.Commands.AddCommand("get log level", "get log level",
-                                                     "Returns the current console logging level", HandleGetLogLevel);
+                                                     "Returns the current console logging level", HandleGetLogLevel, false, true);
         }
 
         public void PostInitialise()
@@ -105,12 +106,12 @@ namespace Aurora.Services
 
         #region Console Commands
 
-        private void HandleGetLogLevel(string[] cmd)
+        private void HandleGetLogLevel(IScene scene, string[] cmd)
         {
             MainConsole.Instance.Fatal(String.Format("Console log level is {0}", MainConsole.Instance.Threshold));
         }
 
-        private void HandleLogLevel(string[] cmd)
+        private void HandleLogLevel(IScene scene, string[] cmd)
         {
             string rawLevel = cmd[3];
 

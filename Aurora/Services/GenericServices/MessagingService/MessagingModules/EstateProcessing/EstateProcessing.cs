@@ -121,19 +121,22 @@ namespace Aurora.Services
                 uint estateID = innerMessage["EstateID"].AsUInteger();
                 UUID regionID = innerMessage["RegionID"].AsUUID();
                 ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
-                if (manager != null && manager.Scene != null)
+                if (manager != null)
                 {
-                    if (manager.Scene.RegionInfo.EstateSettings.EstateID == estateID)
+                    foreach (IScene scene in manager.Scenes)
                     {
-                        IEstateConnector estateConnector =
-                            Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
-                        if (estateConnector != null)
+                        if (scene.RegionInfo.EstateSettings.EstateID == estateID)
                         {
-                            EstateSettings es = null;
-                            if ((es = estateConnector.GetEstateSettings(regionID)) != null && es.EstateID != 0)
+                            IEstateConnector estateConnector =
+                                Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
+                            if (estateConnector != null)
                             {
-                                manager.Scene.RegionInfo.EstateSettings = es;
-                                MainConsole.Instance.Debug("[EstateProcessor]: Updated estate information.");
+                                EstateSettings es = null;
+                                if ((es = estateConnector.GetEstateSettings(regionID)) != null && es.EstateID != 0)
+                                {
+                                    scene.RegionInfo.EstateSettings = es;
+                                    MainConsole.Instance.Debug("[EstateProcessor]: Updated estate information.");
+                                }
                             }
                         }
                     }

@@ -29,6 +29,7 @@ using Aurora.Framework;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.Modules;
 using Aurora.Framework.PresenceInfo;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Servers.HttpServer;
 using Aurora.Framework.Servers.HttpServer.Interfaces;
 using Aurora.Framework.Services;
@@ -97,7 +98,7 @@ namespace Aurora.Services
 
             if (MainConsole.Instance != null)
                 MainConsole.Instance.Commands.AddCommand("show presences", "show presences",
-                                                         "Shows all presences in the grid", ShowUsers);
+                                                         "Shows all presences in the grid", ShowUsers, false, true);
         }
 
         public void FinishedStartup()
@@ -108,7 +109,7 @@ namespace Aurora.Services
 
         #region Console Commands
 
-        protected void ShowUsers(string[] cmd)
+        protected void ShowUsers(IScene scene, string[] cmd)
         {
             //Check for all or full to show child agents
             bool showChildAgents = cmd.Length == 3 && (cmd[2] == "all" || (cmd[2] == "full"));

@@ -105,12 +105,25 @@ namespace Aurora.Framework.SceneInfo
         void CacheDispose();
 
         /// <summary>
-        ///     Load the region info for this sim
+        /// Finds all available regions to load
+        /// </summary>
+        /// <param name="newRegion"></param>
+        /// <returns></returns>
+        List<string> FindRegionInfos(out bool newRegion);
+
+        /// <summary>
+        /// Creates a new region
+        /// </summary>
+        /// <returns></returns>
+        RegionInfo CreateNewRegion(ISimulationBase simBase);
+
+        /// <summary>
+        ///     Load all region infos available
         /// </summary>
         /// <param name="simBase"></param>
         /// <param name="newRegion"></param>
         /// <returns></returns>
-        RegionInfo LoadRegionInfo(ISimulationBase simBase, out bool newRegion);
+        RegionInfo LoadRegionInfo(string fileName, ISimulationBase simBase);
 
         /// <summary>
         ///     Set the region ref
@@ -122,5 +135,11 @@ namespace Aurora.Framework.SceneInfo
         ///     Forces the datastore to backup the region
         /// </summary>
         void ForceBackup();
+
+        /// <summary>
+        /// Copies the instance
+        /// </summary>
+        /// <returns></returns>
+        ISimulationDataStore Copy();
     }
 }

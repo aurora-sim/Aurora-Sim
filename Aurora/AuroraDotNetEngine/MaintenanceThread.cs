@@ -203,7 +203,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (module != null)
             {
-                IScriptFrameTimeMonitor scriptMonitor = module.GetMonitor<IScriptFrameTimeMonitor>();
+                IScriptFrameTimeMonitor scriptMonitor = module.GetMonitor<IScriptFrameTimeMonitor>(m_ScriptEngine.Scene);
                 if (scriptMonitor != null)
                     scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
             }
@@ -283,7 +283,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             if (module != null)
             {
-                IScriptFrameTimeMonitor scriptMonitor = module.GetMonitor<IScriptFrameTimeMonitor>();
+                IScriptFrameTimeMonitor scriptMonitor = module.GetMonitor<IScriptFrameTimeMonitor>(m_ScriptEngine.Scene);
                 if (scriptMonitor != null)
                     scriptMonitor.AddTime(Util.EnvironmentTickCountSubtract(StartTime));
             }

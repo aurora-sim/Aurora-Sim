@@ -30,6 +30,7 @@ using Aurora.Framework.Configuration;
 using Aurora.Framework.ConsoleFramework;
 using Aurora.Framework.ModuleLoader;
 using Aurora.Framework.Modules;
+using Aurora.Framework.SceneInfo;
 using Aurora.Framework.Servers;
 using Aurora.Framework.Servers.HttpServer;
 using Aurora.Framework.Servers.HttpServer.Interfaces;
@@ -381,28 +382,28 @@ namespace Aurora.Simulation.Base
         {
             if (MainConsole.Instance == null)
                 return;
-            MainConsole.Instance.Commands.AddCommand("quit", "quit", "Quit the application", HandleQuit);
+            MainConsole.Instance.Commands.AddCommand("quit", "quit", "Quit the application", HandleQuit, false, true);
 
-            MainConsole.Instance.Commands.AddCommand("shutdown", "shutdown", "Quit the application", HandleQuit);
+            MainConsole.Instance.Commands.AddCommand("shutdown", "shutdown", "Quit the application", HandleQuit, false, true);
 
             MainConsole.Instance.Commands.AddCommand("show info", "show info",
-                                                     "Show server information (e.g. startup path)", HandleShowInfo);
+                                                     "Show server information (e.g. startup path)", HandleShowInfo, false, true);
             MainConsole.Instance.Commands.AddCommand("show version", "show version", "Show server version",
-                                                     HandleShowVersion);
+                                                     HandleShowVersion, false, true);
 
             MainConsole.Instance.Commands.AddCommand("reload config", "reload config", "Reloads .ini file configuration",
-                                                     HandleConfigRefresh);
+                                                     HandleConfigRefresh, false, true);
 
             MainConsole.Instance.Commands.AddCommand("set timer script interval", "set timer script interval",
                                                      "Set the interval for the timer script (in minutes).",
-                                                     HandleTimerScriptTime);
+                                                     HandleTimerScriptTime, false, true);
 
-            MainConsole.Instance.Commands.AddCommand("force GC", "force GC", "Forces garbage collection.", HandleForceGC);
+            MainConsole.Instance.Commands.AddCommand("force GC", "force GC", "Forces garbage collection.", HandleForceGC, false, true);
             MainConsole.Instance.Commands.AddCommand("run configurator", "run configurator", "Runs Aurora.Configurator.",
-                                                     runConfig);
+                                                     runConfig, false, true);
         }
 
-        private void HandleQuit(string[] args)
+        private void HandleQuit(IScene scene, string[] args)
         {
             Shutdown(true);
         }
@@ -436,18 +437,18 @@ namespace Aurora.Simulation.Base
             }
         }
 
-        public virtual void HandleForceGC(string[] cmd)
+        public virtual void HandleForceGC(IScene scene, string[] cmd)
         {
             GC.Collect();
             MainConsole.Instance.Warn("Garbage collection finished");
         }
 
-        public virtual void runConfig(string[] cmd)
+        public virtual void runConfig(IScene scene, string[] cmd)
         {
             BaseApplication.Configure(true);
         }
 
-        public virtual void HandleTimerScriptTime(string[] cmd)
+        public virtual void HandleTimerScriptTime(IScene scene, string[] cmd)
         {
             if (cmd.Length != 5)
             {
@@ -461,7 +462,7 @@ namespace Aurora.Simulation.Base
             m_TimerScriptTimer.Enabled = true;
         }
 
-        public virtual void HandleConfigRefresh(string[] cmd)
+        public virtual void HandleConfigRefresh(IScene scene, string[] cmd)
         {
             //Rebuild the configs
             m_config = m_configurationLoader.LoadConfigSettings(m_original_config);
@@ -481,13 +482,13 @@ namespace Aurora.Simulation.Base
             MainConsole.Instance.Info("Finished reloading configuration.");
         }
 
-        public virtual void HandleShowInfo(string[] cmd)
+        public virtual void HandleShowInfo(IScene scene, string[] cmd)
         {
             MainConsole.Instance.Info("Version: " + m_version);
             MainConsole.Instance.Info("Startup directory: " + Environment.CurrentDirectory);
         }
 
-        public virtual void HandleShowVersion(string[] cmd)
+        public virtual void HandleShowVersion(IScene scene, string[] cmd)
         {
             MainConsole.Instance.Info(
                 String.Format(

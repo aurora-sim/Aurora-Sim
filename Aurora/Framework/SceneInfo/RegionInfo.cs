@@ -53,6 +53,7 @@ namespace Aurora.Framework.SceneInfo
         protected int m_regionLocX;
         protected int m_regionLocY;
         protected int m_regionLocZ;
+        protected int m_regionPort;
         private UUID m_GridSecureSessionID = UUID.Zero;
         public bool NewRegion = false;
         public bool HasBeenDeleted { get; set; }
@@ -161,6 +162,13 @@ namespace Aurora.Framework.SceneInfo
         {
             get { return m_regionLocZ; }
             set { m_regionLocZ = value; }
+        }
+
+        [ProtoMember(24)]
+        public int RegionPort
+        {
+            get { return m_regionPort; }
+            set { m_regionPort = value; }
         }
 
         public ulong RegionHandle

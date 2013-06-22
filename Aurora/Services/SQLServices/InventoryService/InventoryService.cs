@@ -77,7 +77,7 @@ namespace Aurora.Services.SQLServices.InventoryService
             if (MainConsole.Instance != null)
                 MainConsole.Instance.Commands.AddCommand("fix inventory", "fix inventory",
                                                          "If the user's inventory has been corrupted, this function will attempt to fix it",
-                                                         FixInventory);
+                                                         FixInventory, false, true);
             registry.RegisterModuleInterface<IInventoryService>(this);
             Init(registry, Name, serverPath: "/inventory/", serverHandlerName: "InventoryServerURI");
         }
@@ -1362,7 +1362,7 @@ namespace Aurora.Services.SQLServices.InventoryService
 
         #region Console Commands
 
-        public virtual void FixInventory(string[] cmd)
+        public virtual void FixInventory(IScene scene, string[] cmd)
         {
             string userName = MainConsole.Instance.Prompt("Name of user");
             UserAccount account = m_UserAccountService.GetUserAccount(null, userName);

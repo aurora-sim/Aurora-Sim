@@ -200,7 +200,7 @@ namespace Aurora.Modules.WorldMap
                 MainConsole.Instance.Commands.AddCommand("update map",
                                                          "update map",
                                                          "Updates the image of the world map",
-                                                         HandleUpdateWorldMapConsoleCommand);
+                                                         HandleUpdateWorldMapConsoleCommand, true, false);
             }
 
             scene.EventManager.OnStartupComplete += StartupComplete;
@@ -270,10 +270,8 @@ namespace Aurora.Modules.WorldMap
         /// <summary>
         ///     Update the world map
         /// </summary>
-        public void HandleUpdateWorldMapConsoleCommand(string[] cmdparams)
+        public void HandleUpdateWorldMapConsoleCommand(IScene scene, string[] cmdparams)
         {
-            if (MainConsole.Instance.ConsoleScene != null && m_scene != MainConsole.Instance.ConsoleScene)
-                return;
             CreateTerrainTexture(true);
         }
 

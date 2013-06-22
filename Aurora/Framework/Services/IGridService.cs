@@ -366,7 +366,7 @@ namespace Aurora.Framework.Services
             RegionLocX = ConvertFrom.RegionLocX;
             RegionLocY = ConvertFrom.RegionLocY;
             RegionLocZ = ConvertFrom.RegionLocZ;
-            InternalPort = (int)MainServer.Instance.Port;
+            InternalPort = ConvertFrom.RegionPort;
             ExternalHostName = MainServer.Instance.HostName.Replace("https://", "").Replace("http://", "");
             HttpPort = MainServer.Instance.Port;
             RegionID = ConvertFrom.RegionID;

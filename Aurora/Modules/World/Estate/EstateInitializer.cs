@@ -224,7 +224,7 @@ namespace Aurora.Modules.Estate
             if (MainConsole.Instance != null)
                 MainConsole.Instance.Commands.AddCommand("change estate", "change estate",
                                                          "change info about the estate for the given region",
-                                                         ChangeEstate);
+                                                         ChangeEstate, true, false);
         }
 
         public void Close(IScene scene)
@@ -235,17 +235,11 @@ namespace Aurora.Modules.Estate
         {
         }
 
-        protected void ChangeEstate(string[] cmd)
+        protected void ChangeEstate(IScene scene, string[] cmd)
         {
             IEstateConnector EstateConnector = Framework.Utilities.DataManager.RequestPlugin<IEstateConnector>();
             if (EstateConnector != null)
             {
-                if (MainConsole.Instance.ConsoleScene == null)
-                {
-                    MainConsole.Instance.Warn("Select a region before using this command.");
-                    return;
-                }
-                IScene scene = MainConsole.Instance.ConsoleScene;
                 string removeFromEstate =
                     MainConsole.Instance.Prompt(
                         "Are you sure you want to leave the estate for region " + scene.RegionInfo.RegionName + "?",
