@@ -11846,37 +11846,25 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
             if (!ScriptProtection.CheckThreatLevel(ThreatLevel.None, "LSL", m_host, "LSL", m_itemID)) return;
             
             string content_type = "text/plain";
-            
-            switch(type)
-            {
-            	case ScriptBaseClass.CONTENT_TYPE_HTML:
-            		content_type = "text/html";
-            		break;
-            	case ScriptBaseClass.CONTENT_TYPE_XML:
-            		content_type = "application/xml";
-            		break;            		
-            	case ScriptBaseClass.CONTENT_TYPE_XHTML:
-            		content_type = "application/xhtml+xml";
-            		break;            		
-            	case ScriptBaseClass.CONTENT_TYPE_ATOM:
-            		content_type = "application/atom+xml";
-            		break;            		
-            	case ScriptBaseClass.CONTENT_TYPE_JSON:
-            		content_type = "application/json";
-            		break;            		
-            	case ScriptBaseClass.CONTENT_TYPE_LLSD:
-            		content_type = "application/llsd+xml";
-            		break;            	
-            	case ScriptBaseClass.CONTENT_TYPE_FORM:
-            		content_type = "application/x-www-form-urlencoded";
-            		break;
-            	case ScriptBaseClass.CONTENT_TYPE_RSS:
-            		content_type = "application/rss+xml";
-            		break;
-            	default:
-            		content_type = "text/plain";            		
-            		break;
-            }
+
+            if (type == ScriptBaseClass.CONTENT_TYPE_HTML)
+                content_type = "text/html";
+            else if (type == ScriptBaseClass.CONTENT_TYPE_XML)
+                content_type = "application/xml";
+            else if (type == ScriptBaseClass.CONTENT_TYPE_XHTML)
+                content_type = "application/xhtml+xml";
+            else if (type == ScriptBaseClass.CONTENT_TYPE_ATOM)
+                content_type = "application/atom+xml";
+            else if (type == ScriptBaseClass.CONTENT_TYPE_JSON)
+                content_type = "application/json";
+            else if (type == ScriptBaseClass.CONTENT_TYPE_LLSD)
+                content_type = "application/llsd+xml";
+            else if (type == ScriptBaseClass.CONTENT_TYPE_FORM)
+                content_type = "application/x-www-form-urlencoded";
+            else if (type == ScriptBaseClass.CONTENT_TYPE_RSS)
+                content_type = "application/rss+xml";
+            else
+                content_type = "text/plain";
 
             if (m_UrlModule != null)
                 m_UrlModule.SetContentType(id, content_type);
