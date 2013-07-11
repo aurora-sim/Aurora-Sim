@@ -165,7 +165,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             IMonitorModule monitorModule = m_scene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)
             {
-                INetworkMonitor networkMonitor = monitorModule.GetMonitor<INetworkMonitor>(null);
+                INetworkMonitor networkMonitor = monitorModule.GetMonitor<INetworkMonitor>(m_scene);
                 networkMonitor.AddPendingUploads(1);
             }
 
@@ -194,7 +194,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             IMonitorModule monitorModule = m_scene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)
             {
-                INetworkMonitor networkMonitor = monitorModule.GetMonitor<INetworkMonitor>(null);
+                INetworkMonitor networkMonitor = monitorModule.GetMonitor<INetworkMonitor>(m_scene);
                 networkMonitor.AddPendingUploads(1);
             }
 
@@ -223,7 +223,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             IMonitorModule monitorModule = m_scene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)
             {
-                INetworkMonitor networkMonitor = monitorModule.GetMonitor<INetworkMonitor>(null);
+                INetworkMonitor networkMonitor = monitorModule.GetMonitor<INetworkMonitor>(m_scene);
                 networkMonitor.AddPendingUploads(1);
             }
 
@@ -309,7 +309,7 @@ namespace Aurora.Modules.Agent.AssetTransaction
             IMonitorModule monitorModule = m_scene.RequestModuleInterface<IMonitorModule>();
             if (monitorModule != null)
             {
-                INetworkMonitor networkMonitor = monitorModule.GetMonitor<INetworkMonitor>(null);
+                INetworkMonitor networkMonitor = monitorModule.GetMonitor<INetworkMonitor>(m_scene);
                 networkMonitor.AddPendingUploads(1);
             }
 
