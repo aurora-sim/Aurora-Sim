@@ -69,8 +69,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             get { return m_Scene; }
         }
 
-        // Handles and queues incoming events from OpenSim
-
         // Handles loading/unloading of scripts into AppDomains
         public AppDomainManager AppDomainManager;
         public AssemblyResolver AssemblyResolver;

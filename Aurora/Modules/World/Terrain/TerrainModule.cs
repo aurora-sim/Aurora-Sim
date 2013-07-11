@@ -352,7 +352,7 @@ namespace Aurora.Modules.Terrain
         public void LoadFromFile(string filename, int offsetX, int offsetY)
         {
             foreach (
-                KeyValuePair<string, ITerrainLoader> loader in m_loaders.Where(loader => filename.EndsWith(loader.Key)))
+                KeyValuePair<string, ITerrainLoader> loader in m_loaders.Where(loader => Path.GetExtension(filename.ToLower()) == loader.Key))
             {
                 lock (m_scene)
                 {
@@ -439,7 +439,7 @@ namespace Aurora.Modules.Terrain
             {
                 foreach (
                     KeyValuePair<string, ITerrainLoader> loader in
-                        m_loaders.Where(loader => filename.EndsWith(loader.Key)))
+                        m_loaders.Where(loader => Path.GetExtension(filename.ToLower()) == loader.Key))
                 {
                     loader.Value.SaveFile(filename, m_channel);
                     return;
@@ -477,7 +477,7 @@ namespace Aurora.Modules.Terrain
         public void LoadFromStream(string filename, Stream stream)
         {
             foreach (
-                KeyValuePair<string, ITerrainLoader> loader in m_loaders.Where(loader => filename.EndsWith(loader.Key)))
+                KeyValuePair<string, ITerrainLoader> loader in m_loaders.Where(loader => Path.GetExtension(filename.ToLower()) == loader.Key))
             {
                 lock (m_scene)
                 {
@@ -632,7 +632,7 @@ namespace Aurora.Modules.Terrain
             {
                 foreach (
                     KeyValuePair<string, ITerrainLoader> loader in
-                        m_loaders.Where(loader => filename.EndsWith(loader.Key)))
+                        m_loaders.Where(loader => Path.GetExtension(filename.ToLower()) == loader.Key))
                 {
                     loader.Value.SaveStream(stream, channel);
                     return;
@@ -1053,7 +1053,7 @@ namespace Aurora.Modules.Terrain
             ITerrainChannel channel = null;
 
             foreach (
-                KeyValuePair<string, ITerrainLoader> loader in m_loaders.Where(loader => filename.EndsWith(loader.Key)))
+                KeyValuePair<string, ITerrainLoader> loader in m_loaders.Where(loader => Path.GetExtension(filename.ToLower()) == loader.Key))
             {
                 lock (m_scene)
                 {
@@ -1222,7 +1222,7 @@ namespace Aurora.Modules.Terrain
                 // this region is included in the tile request
                 foreach (
                     KeyValuePair<string, ITerrainLoader> loader in
-                        m_loaders.Where(loader => filename.EndsWith(loader.Key)))
+                        m_loaders.Where(loader => Path.GetExtension(filename.ToLower()) == loader.Key))
                 {
                     lock (m_scene)
                     {
