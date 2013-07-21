@@ -196,7 +196,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             public SurfaceParameters surface;
             public ContactGeom geom;
             public Vector3 fdir1;
-            public static readonly int unmanagedSizeOf = Marshal.SizeOf(typeof (ContactGeom));
+            public static readonly int unmanagedSizeOf = Marshal.SizeOf(typeof (Contact));
         }
 
 

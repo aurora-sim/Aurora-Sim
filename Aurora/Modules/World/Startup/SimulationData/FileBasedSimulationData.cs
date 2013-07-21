@@ -107,7 +107,8 @@ namespace Aurora.Modules
             newRegion = regions.Count == 0;
             List<string> retVals = new List<string>();
             foreach (string r in regions)
-                retVals.Add(Path.GetFileNameWithoutExtension(r));
+                if(Path.GetExtension(r) == ".sim")
+                    retVals.Add(Path.GetFileNameWithoutExtension(r));
             return retVals;
         }
 

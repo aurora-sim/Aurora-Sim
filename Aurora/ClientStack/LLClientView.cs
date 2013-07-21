@@ -10102,14 +10102,17 @@ namespace Aurora.ClientStack
                     }
                     return true;
                 case "estateobjectreturn":
-                    SimWideDeletesDelegate handlerSimWideDeletesRequest = OnSimWideDeletes;
-                    if (handlerSimWideDeletesRequest != null)
+                    if (m_scene.Permissions.CanIssueEstateCommand(AgentId, false))
                     {
-                        UUID Prey;
-                        UUID.TryParse(Utils.BytesToString(messagePacket.ParamList[1].Parameter), out Prey);
-                        int flags = int.Parse(Utils.BytesToString(messagePacket.ParamList[0].Parameter));
-                        handlerSimWideDeletesRequest(this, flags, Prey);
-                        return true;
+                        SimWideDeletesDelegate handlerSimWideDeletesRequest = OnSimWideDeletes;
+                        if (handlerSimWideDeletesRequest != null)
+                        {
+                            UUID Prey;
+                            UUID.TryParse(Utils.BytesToString(messagePacket.ParamList[1].Parameter), out Prey);
+                            int flags = int.Parse(Utils.BytesToString(messagePacket.ParamList[0].Parameter));
+                            handlerSimWideDeletesRequest(this, flags, Prey);
+                            return true;
+                        }
                     }
                     return true;
                 default:

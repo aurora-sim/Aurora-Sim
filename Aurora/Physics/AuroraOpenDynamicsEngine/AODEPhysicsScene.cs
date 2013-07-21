@@ -65,6 +65,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         protected const int maxContactsbeforedeath = 2000;
         protected int m_currentmaxContactsbeforedeath = maxContactsbeforedeath;
+        public bool ContinueCollisionProcessing { get { return m_global_contactcount < m_currentmaxContactsbeforedeath; } }
 
         protected IntPtr GlobalContactsArray = IntPtr.Zero;
 
@@ -339,6 +340,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             // alloc unmanaged memory to pass information to colision contact joints              
             GlobalContactsArray = Marshal.AllocHGlobal(maxContactsbeforedeath*d.Contact.unmanagedSizeOf);
 
+            //UnmanagedODE.UnmanagedODEPhysics.Initialize(world, m_currentmaxContactsbeforedeath, ContactgeomsArray, GlobalContactsArray, contactgroup);
+
             newGlobalcontact.surface.mode = CommumContactFlags;
             newGlobalcontact.surface.soft_cfm = 0.0001f;
             newGlobalcontact.surface.soft_erp = 0.6f;
@@ -423,7 +426,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
         private IntPtr CreateContacJoint(d.ContactGeom geom)
         {
-            if (GlobalContactsArray == IntPtr.Zero || m_global_contactcount >= m_currentmaxContactsbeforedeath)
+            if (GlobalContactsArray == IntPtr.Zero || !ContinueCollisionProcessing)
                 return IntPtr.Zero;
 
             // damm copy...
@@ -449,7 +452,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
         /// <param name="g2">another geometry or space</param>
         private void near(IntPtr space, IntPtr g1, IntPtr g2)
         {
-            if (g1 == IntPtr.Zero || g2 == IntPtr.Zero || g1 == g2)
+            if (g1 == IntPtr.Zero || g2 == IntPtr.Zero || g1 == g2 || !ContinueCollisionProcessing)
                 return;
 
             // Test if we're colliding a geom with a space.
@@ -530,6 +533,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
 
             ContactPoint maxDepthContact = new ContactPoint();
             d.ContactGeom curContact = new d.ContactGeom();
+            d.ContactGeom maxContact = new d.ContactGeom();
 
             int NotSkipedCount = 0;
 
@@ -548,14 +552,15 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     maxDepthContact.Position.X = curContact.pos.X;
                     maxDepthContact.Position.Y = curContact.pos.Y;
                     maxDepthContact.Position.Z = curContact.pos.Z;
-                    maxDepthContact.Type = (ActorTypes) p1.PhysicsActorType;
+                    maxDepthContact.Type = (ActorTypes)p1.PhysicsActorType;
                     maxDepthContact.SurfaceNormal.X = curContact.normal.X;
                     maxDepthContact.SurfaceNormal.Y = curContact.normal.Y;
                     maxDepthContact.SurfaceNormal.Z = curContact.normal.Z;
+                    maxContact = curContact;
                 }
             }
             if (p1 is AuroraODECharacter || p2 is AuroraODECharacter)
-                AddODECollision(curContact, p1, p2, b1, b2, maxDepthContact, ref NotSkipedCount);
+                AddODECollision(maxContact, p1, p2, b1, b2, maxDepthContact, ref NotSkipedCount);
             else
             {
                 for (int i = 0; i < count; i++)
@@ -566,7 +571,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
 
-            #endregion//);
+            #endregion
 
             //StatCollisionAccountingTime = CollectTime(() =>
             {
@@ -660,7 +665,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 joint = CreateContacJoint(curContact);
             }
 
-            if (m_global_contactcount < m_currentmaxContactsbeforedeath && joint != IntPtr.Zero)
+            if (ContinueCollisionProcessing && joint != IntPtr.Zero)
             {
                 d.JointAttach(joint, b1, b2);
                 m_global_contactcount++;
@@ -752,25 +757,8 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 chr.IsColliding = false;
                 chr.IsTruelyColliding = false;
             }
-            foreach (
-                AuroraODECharacter chr in
-                    _characters.Where(chr => chr != null && chr.Shell != IntPtr.Zero && chr.Body != IntPtr.Zero))
-            {
-                // test the avatar's geometry for collision with the space
-                // This will return near and the space that they are the closest to
-                // And we'll run this again against the avatar and the space segment
-                // This will return with a bunch of possible objects in the space segment
-                // and we'll run it again on all of them.
-                try
-                {
-                    d.SpaceCollide2(space, chr.Shell, IntPtr.Zero, nearCallback);
-                }
-                catch (AccessViolationException)
-                {
-                    MainConsole.Instance.Warn("[PHYSICS]: Unable to space collide");
-                }
-            }
-
+            List<IntPtr> shells = _characters.Where(chr => chr != null && chr.Shell != IntPtr.Zero && chr.Body != IntPtr.Zero).Select<AuroraODECharacter, IntPtr>(chr => chr.Shell).ToList();
+                
             lock (_activeprimsLock)
             {
                 List<AuroraODEPrim> removeprims = null;
@@ -780,27 +768,29 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                     chr.IsColliding = false;
                     chr.LinkSetIsColliding = false;
                 }
-                foreach (AuroraODEPrim prm in _activeprims)
+                if (space != IntPtr.Zero)
                 {
-                    if (prm.Body != IntPtr.Zero && d.BodyIsEnabled(prm.Body) &&
-                        (!prm.m_disabled) && (!prm.m_frozen))
+                    List<AuroraODEPrim> primsToCollide = new List<AuroraODEPrim>(_activeprims.Where(
+                        prm => prm != null && prm.Body != IntPtr.Zero && d.BodyIsEnabled(prm.Body) && 
+                            !prm.m_disabled && !prm.m_frozen && prm.prim_geom != IntPtr.Zero));
+                    shells.AddRange(primsToCollide.ConvertAll<IntPtr>(prm => prm.prim_geom));
+                    
+                    
+                    foreach (IntPtr shell in shells)
                     {
                         try
                         {
-                            lock (prm)
+                            if (ContinueCollisionProcessing)
+                                d.SpaceCollide2(space, shell, IntPtr.Zero, nearCallback);
+                            else
                             {
-                                if (space != IntPtr.Zero && prm.prim_geom != IntPtr.Zero)
-                                {
-                                    d.SpaceCollide2(space, prm.prim_geom, IntPtr.Zero, nearCallback);
-                                }
-                                else
-                                {
-                                    if (removeprims == null)
-                                        removeprims = new List<AuroraODEPrim>();
-                                    removeprims.Add(prm);
-                                    MainConsole.Instance.Debug(
-                                        "[PHYSICS]: unable to collide test active prim against space.  The space was zero, the geom was zero or it was in the process of being removed.  Removed it from the active prim list.  This needs to be fixed!");
-                                }
+                                //Do a step so that we can do the rest of the contacts, since
+                                //  otherwise, we get prim explosions inworld
+                                m_global_contactcount = 0;
+                                d.WorldQuickStep(world, ODE_STEPSIZE);
+                                d.JointGroupEmpty(contactgroup);
+
+                                d.SpaceCollide2(space, shell, IntPtr.Zero, nearCallback);
                             }
                         }
                         catch (AccessViolationException)
@@ -808,17 +798,27 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                             MainConsole.Instance.Warn("[PHYSICS]: Unable to space collide");
                         }
                     }
-                    else if (prm.m_frozen)
+
+                    /*if (shells.Count > 0)
+                    {
+                        List<UnmanagedODE.ContactGeom> contacts = UnmanagedODE.UnmanagedODEPhysics.CollisionLoop(space, shells);
+                    }*/
+
+                    foreach (AuroraODEPrim prm in
+                        _activeprims.Where(prm => prm != null && (prm.m_frozen || prm.prim_geom == IntPtr.Zero)))
                     {
                         if (removeprims == null)
                             removeprims = new List<AuroraODEPrim>();
                         removeprims.Add(prm);
+                        if (prm.prim_geom == IntPtr.Zero)
+                            MainConsole.Instance.Debug("[PHYSICS]: unable to collide test active prim against space. The space was zero, the geom was zero or " +
+                                "it was in the process of being removed.  Removed it from the active prim list.  This needs to be fixed!");
                     }
-                }
-                if (removeprims != null)
-                {
-                    foreach (AuroraODEPrim chr in removeprims)
-                        _activeprims.Remove(chr);
+                    if (removeprims != null)
+                    {
+                        foreach (AuroraODEPrim chr in removeprims)
+                            _activeprims.Remove(chr);
+                    }
                 }
             }
 

@@ -616,6 +616,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             d.Quaternion myrot = new d.Quaternion();
 
             Body = d.BodyCreate(_parent_scene.world);
+            d.BodySetData(Body, (IntPtr)ActorTypes.Prim);
 
             DMassDup(ref primdMass, out objdmass);
 

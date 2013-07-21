@@ -416,6 +416,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
             PID_P *= m_mass/_parent_scene.ODE_STEPSIZE;
 
             Body = d.BodyCreate(_parent_scene.world);
+            d.BodySetData(Body, (IntPtr)ActorTypes.Agent);
 
             d.BodySetPosition(Body, npositionX, npositionY, npositionZ);
 
