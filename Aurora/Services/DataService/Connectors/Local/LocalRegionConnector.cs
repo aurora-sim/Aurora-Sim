@@ -175,7 +175,7 @@ namespace Aurora.Services.DataService
                                                         }, "telehubs", filter, null, null, null);
 
             //Not the right number of values, so its not there.
-            return (telehubposition.Count != 11)
+            return (telehubposition == null || telehubposition.Count != 11)
                        ? null
                        : new Telehub
                              {

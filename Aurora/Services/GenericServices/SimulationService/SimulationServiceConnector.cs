@@ -233,6 +233,7 @@ namespace Aurora.Services
         {
             MakeChildAgentRequest request = new MakeChildAgentRequest();
             request.AgentID = AgentID;
+            request.OldRegion = oldRegion;
             request.Destination = destination;
             request.IsCrossing = isCrossing;
 

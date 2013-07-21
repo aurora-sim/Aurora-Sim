@@ -99,7 +99,7 @@ namespace Aurora.Services
                 case "MakeChildAgentRequest":
                     MakeChildAgentRequest makeChildAgentRequest = new MakeChildAgentRequest();
                     makeChildAgentRequest.FromOSD(message);
-                    MakeChildAgent(makeChildAgentRequest.AgentID, makeChildAgentRequest.Destination, makeChildAgentRequest.IsCrossing);
+                    MakeChildAgent(makeChildAgentRequest.AgentID, makeChildAgentRequest.OldRegion, makeChildAgentRequest.Destination, makeChildAgentRequest.IsCrossing);
                     break;
                 case "FailedToTeleportAgentRequest":
                     FailedToTeleportAgentRequest failedToTeleportAgentRequest = new FailedToTeleportAgentRequest();
@@ -211,9 +211,9 @@ namespace Aurora.Services
             return true;
         }
 
-        public bool MakeChildAgent(UUID AgentID, GridRegion destination, bool isCrossing)
+        public bool MakeChildAgent(UUID AgentID, GridRegion oldRegion, GridRegion destination, bool isCrossing)
         {
-            IScene Scene = destination == null ? null : GetScene(destination.RegionID);
+            IScene Scene = oldRegion == null ? null : GetScene(oldRegion.RegionID);
             if (Scene == null)
                 return false;
 
