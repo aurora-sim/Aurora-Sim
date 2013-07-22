@@ -271,7 +271,7 @@ namespace Aurora.Framework.Utilities
             [ProtoMember(1)]
             public string str;
             // protobuf-net wants an implicit or explicit operator between the types
-            public static implicit operator OSDArray(OSDMapSurrogate value)
+            public static implicit operator OSDArray(OSDArraySurrogate value)
             {
                 return value.str == "" ? null : (OSDArray)OSDParser.DeserializeJson(value.str);
             }
