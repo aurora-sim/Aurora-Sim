@@ -114,9 +114,11 @@ namespace Aurora.Framework.Utilities
             RuntimeTypeModel.Default.Add(typeof (UUID), false)
                             .SetSurrogate(typeof (UUIDSurrogate));
             RuntimeTypeModel.Default.Add(typeof (IPEndPoint), false)
-                            .SetSurrogate(typeof (IPEndPointSurrogate));
+                            .SetSurrogate(typeof(IPEndPointSurrogate));
             RuntimeTypeModel.Default.Add(typeof (OSD), false)
                             .SetSurrogate(typeof (OSDSurrogate));
+            RuntimeTypeModel.Default.Add(typeof (OSDArray), false)
+                            .SetSurrogate(typeof (OSDArraySurrogate));
             RuntimeTypeModel.Default.Add(typeof (OSDMap), false)
                             .SetSurrogate(typeof (OSDMapSurrogate));
             RuntimeTypeModel.Default.Add(typeof (Vector3), false)
@@ -246,19 +248,40 @@ namespace Aurora.Framework.Utilities
         [ProtoContract]
         private class OSDMapSurrogate
         {
-            [ProtoMember(1)] public string str;
+            [ProtoMember(1)]
+            public string str;
             // protobuf-net wants an implicit or explicit operator between the types
             public static implicit operator OSDMap(OSDMapSurrogate value)
             {
-                return value.str == "" ? null : (OSDMap) OSDParser.DeserializeJson(value.str);
+                return value.str == "" ? null : (OSDMap)OSDParser.DeserializeJson(value.str);
             }
 
             public static implicit operator OSDMapSurrogate(OSDMap value)
             {
                 return new OSDMapSurrogate
-                           {
-                               str = value == null ? "" : OSDParser.SerializeJsonString(value)
-                           };
+                {
+                    str = value == null ? "" : OSDParser.SerializeJsonString(value)
+                };
+            }
+        }
+
+        [ProtoContract]
+        private class OSDArraySurrogate
+        {
+            [ProtoMember(1)]
+            public string str;
+            // protobuf-net wants an implicit or explicit operator between the types
+            public static implicit operator OSDArray(OSDMapSurrogate value)
+            {
+                return value.str == "" ? null : (OSDArray)OSDParser.DeserializeJson(value.str);
+            }
+
+            public static implicit operator OSDArraySurrogate(OSDArray value)
+            {
+                return new OSDArraySurrogate
+                {
+                    str = value == null ? "" : OSDParser.SerializeJsonString(value)
+                };
             }
         }
 
