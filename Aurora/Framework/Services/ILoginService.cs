@@ -72,6 +72,8 @@ namespace Aurora.Framework.Services
         protected bool m_login;
         protected string m_value;
 
+        public string Value { get { return m_value; } }
+
         static LLFailedLoginResponse()
         {
             AuthenticationProblem = new LLFailedLoginResponse(LoginResponseEnum.PasswordIncorrect,

@@ -376,7 +376,7 @@ namespace Aurora.Services
                 {
                     MainConsole.Instance.InfoFormat(
                         "[LLOGIN SERVICE]: Login failed for user {1}, reason: {0}",
-                        data.ToString(), account.Name);
+                        (data != null ? data.ToString() : (response is LLFailedLoginResponse) ? (response as LLFailedLoginResponse).Value : "Unknown"), account.Name);
                     return response;
                 }
                 if (data != null)

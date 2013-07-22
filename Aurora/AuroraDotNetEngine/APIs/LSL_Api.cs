@@ -12471,7 +12471,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine.APIs
 
         private bool InBoundingBox(IScenePresence avatar, Vector3 point)
         {
-            float height = avatar.RequestModuleInterface<IAvatarAppearanceModule>().Appearance.AvatarHeight;
+            IAvatarAppearanceModule appModule = avatar.RequestModuleInterface<IAvatarAppearanceModule>();
+            if (appModule == null || appModule.Appearance == null)
+                return false;
+
+            float height = appModule.Appearance.AvatarHeight;
             Vector3 b1 = avatar.AbsolutePosition + new Vector3(-0.22f, -0.22f, -height / 2);
             Vector3 b2 = avatar.AbsolutePosition + new Vector3(0.22f, 0.22f, height / 2);
 
