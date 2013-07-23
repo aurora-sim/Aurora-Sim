@@ -731,26 +731,18 @@ namespace Aurora.Region.Serialization
             writer.WriteElementString("APIDEnabled", sop.APIDEnabled.ToString().ToLower());
             writer.WriteElementString("Damage", sop.Damage.ToString());
             
-            writer.WriteStartElement("StateSave");
             using(MemoryStream stream = new MemoryStream())
             {
                 ProtoBuf.Serializer.Serialize<Dictionary<UUID, StateSave>>(stream, sop.StateSaves);
-                byte[] bytes = stream.ToArray();
-                writer.WriteBase64(bytes, 0, bytes.Length);
+                writer.WriteElementString("StateSave", Convert.ToBase64String(stream.ToArray()));
             }
-            writer.WriteEndElement();
 
-            writer.WriteStartElement("KeyframeAnimation");
             using(MemoryStream stream = new MemoryStream())
             {
                 ProtoBuf.Serializer.Serialize<KeyframeAnimation>(stream, sop.KeyframeAnimation);
-                byte[] bytes = stream.ToArray();
-                writer.WriteBase64(bytes, 0, bytes.Length);
+                writer.WriteElementString("KeyframeAnimation", Convert.ToBase64String(stream.ToArray()));
             }
-            writer.WriteEndElement();
-
-            
-
+             
             //Write the generic elements last
             foreach (KeyValuePair<string, Serialization> kvp in m_genericSerializers)
             {
@@ -1561,17 +1553,7 @@ namespace Aurora.Region.Serialization
         {
             try
             {
-                byte[] bytes = new byte[50];
-                using (MemoryStream stream = new MemoryStream())
-                {
-                    int readBytes = reader.ReadElementContentAsBase64(bytes, 0, 50);
-                    while (readBytes != 0)
-                    {
-                        stream.Write(bytes, 0, readBytes);
-                        readBytes = reader.ReadElementContentAsBase64(bytes, 0, 50);
-                    }
-                    bytes = stream.ToArray();
-                }
+                byte[] bytes = Convert.FromBase64String(reader.ReadElementString());
                 using (MemoryStream stream = new MemoryStream(bytes))
                 {
                     T list = ProtoBuf.Serializer.Deserialize<T>(stream);
