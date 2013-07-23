@@ -126,8 +126,6 @@ namespace Aurora.Framework.SceneInfo
 
         public event ChatSessionRequest OnChatSessionRequest;
 
-        public event IncomingInstantMessage OnUnhandledInstantMessage;
-
         /// <summary>
         ///     This is fired when a scene object property that a script might be interested in (such as color, scale or
         ///     inventory) changes.  Only enough information is sent for the LSL changed event
@@ -947,27 +945,6 @@ namespace Aurora.Framework.SceneInfo
                     {
                         MainConsole.Instance.ErrorFormat(
                             "[EVENT MANAGER]: Delegate for TriggerIncomingInstantMessage failed - continuing.  {0} {1}",
-                            e, e.StackTrace);
-                    }
-                }
-            }
-        }
-
-        public void TriggerUnhandledInstantMessage(GridInstantMessage message)
-        {
-            IncomingInstantMessage handlerUnhandledInstantMessage = OnUnhandledInstantMessage;
-            if (handlerUnhandledInstantMessage != null)
-            {
-                foreach (IncomingInstantMessage d in handlerUnhandledInstantMessage.GetInvocationList())
-                {
-                    try
-                    {
-                        d(message);
-                    }
-                    catch (Exception e)
-                    {
-                        MainConsole.Instance.ErrorFormat(
-                            "[EVENT MANAGER]: Delegate for TriggerOnAttach failed - continuing.  {0} {1}",
                             e, e.StackTrace);
                     }
                 }

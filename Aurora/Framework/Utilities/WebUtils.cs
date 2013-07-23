@@ -303,7 +303,7 @@ namespace Aurora.Framework.Utilities
                             MainConsole.Instance.Trace(
                                 string.Format("[WebUtils]: osd request (URI:{0}, METHOD:{1}, UPSTACK(4):{5}) took {2}ms overall, {3}ms writing, {4}ms deserializing",
                                 url, method, tickdiff, tickdata, tickserialize,
-                                stackTrace.GetFrame(4).GetMethod().Name));
+                                (stackTrace.FrameCount > 4 ? stackTrace.GetFrame(4) : stackTrace.GetFrame(stackTrace.FrameCount - 1)).GetMethod().Name));
                         }
                         else if (MainConsole.Instance.IsDebugEnabled)
                             MainConsole.Instance.Debug(
