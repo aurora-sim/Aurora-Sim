@@ -1559,19 +1559,29 @@ namespace Aurora.Region.Serialization
 
         private void ReadProtobuf<T>(SceneObjectPart obj, XmlTextReader reader, string name, Type SOPType)
         {
-            byte[] bytes = new byte[50];
-            using (MemoryStream stream = new MemoryStream())
+            try
             {
-                int readBytes = reader.ReadElementContentAsBase64(bytes, 0, 50);
-                while (readBytes != 0)
+                byte[] bytes = new byte[50];
+                using (MemoryStream stream = new MemoryStream())
                 {
-                    stream.Write(bytes, 0, readBytes);
-                    readBytes = reader.ReadElementContentAsBase64(bytes, 0, 50);
+                    int readBytes = reader.ReadElementContentAsBase64(bytes, 0, 50);
+                    while (readBytes != 0)
+                    {
+                        stream.Write(bytes, 0, readBytes);
+                        readBytes = reader.ReadElementContentAsBase64(bytes, 0, 50);
+                    }
+                    bytes = stream.ToArray();
                 }
-                stream.Position = 0;
-                T list = ProtoBuf.Serializer.Deserialize<T>(stream);
-                if(list != null)
-                    SOPType.GetProperty(name).SetValue(obj, list, null);
+                using (MemoryStream stream = new MemoryStream(bytes))
+                {
+                    T list = ProtoBuf.Serializer.Deserialize<T>(stream);
+                    if (list != null)
+                        SOPType.GetProperty(name).SetValue(obj, list, null);
+                }
+            }
+            catch (Exception ex)
+            {
+                MainConsole.Instance.Debug("[SceneObjectSerializer]: Failed to parse " + name + ": " + ex.ToString());
             }
         }
 
