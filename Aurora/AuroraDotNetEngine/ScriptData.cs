@@ -746,7 +746,6 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 ScriptEngine.ScriptProtection.AddNewScript(this);
                 return false;
             }
-            Source = null; //Don't keep it in memory, we don't need it anymore
             Compiled = true; //We compiled successfully
 
             //ILease lease = (ILease)RemotingServices.GetLifetimeService(Script as MarshalByRefObject);

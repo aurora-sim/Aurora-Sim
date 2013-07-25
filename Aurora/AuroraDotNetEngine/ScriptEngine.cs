@@ -246,8 +246,11 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 }
 
                 // Create all objects we'll be using
-                ScriptProtection = new ScriptProtectionModule();
-                ScriptProtection.Initialize(Config);
+                if (ScriptProtection == null)
+                {
+                    ScriptProtection = new ScriptProtectionModule();
+                    ScriptProtection.Initialize(Config);
+                }
 
                 EventManager = new EventManager(this);
 
