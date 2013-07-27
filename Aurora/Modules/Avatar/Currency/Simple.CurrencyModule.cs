@@ -240,6 +240,7 @@ namespace Simple.Currency
                 ISceneManager manager = m_registry.RequestModuleInterface<ISceneManager>();
                 if (manager != null)
                 {
+                    bool paid = false;
                     foreach (IScene scene in manager.Scenes)
                     {
                         ISceneChildEntity ent = scene.GetSceneObjectPart(toID);
@@ -249,12 +250,14 @@ namespace Simple.Currency
                                 (uint)amount, description, (TransactionType)type, UUID.Random());
                             if (success)
                                 FireObjectPaid(toID, fromID, amount);
+                            paid = true;
+                            break;
                         }
-                        else
-                        {
-                            m_connector.UserCurrencyTransfer(toID, fromID, (uint)amount, description,
-                                                     (TransactionType)type, UUID.Random());
-                        }
+                    }
+                    if(!paid)
+                    {
+                        m_connector.UserCurrencyTransfer(toID, fromID, (uint)amount, description,
+                                                    (TransactionType)type, UUID.Random());
                     }
                 }
             }

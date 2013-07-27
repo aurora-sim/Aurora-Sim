@@ -203,7 +203,8 @@ namespace Aurora.Modules
 
         public void UpdateRegionInfo(IScene scene, string[] info)
         {
-            m_scene.RegionInfo = CreateRegionFromConsole(m_scene.RegionInfo);
+            if (MainConsole.Instance.ConsoleScene != null)
+                MainConsole.Instance.ConsoleScene.RegionInfo = CreateRegionFromConsole(MainConsole.Instance.ConsoleScene.RegionInfo);
         }
 
         public virtual List<ISceneEntity> LoadObjects()
