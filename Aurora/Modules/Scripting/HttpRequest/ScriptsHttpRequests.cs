@@ -560,8 +560,7 @@ namespace Aurora.Modules.Scripting
                 if (response != null)
                     response.Close();
             }
-
-            Status = (int) HttpStatusCode.OK;
+            
             _finished = true;
         }
 
