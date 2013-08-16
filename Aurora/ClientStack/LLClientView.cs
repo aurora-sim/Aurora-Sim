@@ -2327,9 +2327,12 @@ namespace Aurora.ClientStack
         public void SendAgentDataUpdate(UUID agentid, UUID activegroupid, string name,
                                         ulong grouppowers, string groupname, string grouptitle)
         {
-            m_activeGroupID = activegroupid;
-            m_activeGroupName = groupname;
-            m_activeGroupPowers = grouppowers;
+            if (agentid == this.AgentId)
+            {
+                m_activeGroupID = activegroupid;
+                m_activeGroupName = groupname;
+                m_activeGroupPowers = grouppowers;
+            }
 
             AgentDataUpdatePacket sendAgentDataUpdate =
                 (AgentDataUpdatePacket) PacketPool.Instance.GetPacket(PacketType.AgentDataUpdate);
@@ -3629,7 +3632,7 @@ namespace Aurora.ClientStack
                                          new AvatarAppearancePacket.AppearanceDataBlock() 
                                          {  
                                              CofVersion = app.Serial,
-                                             AppearanceVersion = 1//SSA setting
+                                             AppearanceVersion = (int)RegionProtocols.None
                                          }
                                      };
             avp.Sender.IsTrial = false;
