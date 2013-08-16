@@ -523,7 +523,7 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 d.BodySetLinearVel(Body, velocity.X, velocity.Y, velocity.Z);
         }
 
-        public void ForceSetRotVelocity(Vector3 velocity)
+        public override void ForceSetRotVelocity(Vector3 velocity)
         {
             m_rotationalVelocity = velocity;
             if (Body != IntPtr.Zero)

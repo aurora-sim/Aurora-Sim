@@ -4895,23 +4895,24 @@ namespace Aurora.Region
                 {
                     Vector3 _target_velocity =
                         new Vector3(
-                            (PIDTarget.X - m_initialPIDLocation.X)*(PIDTau),
-                            (PIDTarget.Y - m_initialPIDLocation.Y)*(PIDTau),
-                            (PIDTarget.Z - m_initialPIDLocation.Z)*(PIDTau)
+                            (PIDTarget.X - AbsolutePosition.X) * (1f / PIDTau),
+                            (PIDTarget.Y - AbsolutePosition.Y) * (1f / PIDTau),
+                            (PIDTarget.Z - AbsolutePosition.Z) * (1f / PIDTau)
                             );
                     if (PIDTarget.ApproxEquals(AbsolutePosition, 0.1f))
                     {
                         ParentGroup.Velocity = Vector3.Zero;
+                        AngularVelocity = Vector3.Zero;
+                        if (PhysActor != null)
+                            PhysActor.ClearVelocity();
                         ParentGroup.SetAbsolutePosition(true, PIDTarget);
-                        this.ScheduleTerseUpdate();
-                        //End the movement
-                        //SetMoveToTarget(false, Vector3.Zero, 0);
                     }
                     else
                     {
-                        //ParentGroup.SetAbsolutePosition(true, ParentGroup.AbsolutePosition + _target_velocity);
                         Velocity = _target_velocity;
-                        this.ScheduleTerseUpdate();
+                        AngularVelocity = Vector3.Zero;
+                        if (PhysActor != null)
+                            PhysActor.ForceSetRotVelocity(Vector3.Zero);
                     }
                 }
                 else if (PIDHoverActive)
@@ -4942,7 +4943,6 @@ namespace Aurora.Region
                             return;
                     }
                     Velocity = _target_velocity;
-                    this.ScheduleTerseUpdate();
                 }
                 if (APIDEnabled)
                 {
@@ -4957,9 +4957,6 @@ namespace Aurora.Region
                     UpdateRotation(rot);
 
                     APIDIterations--;
-
-                    // This ensures that we'll check this object on the next iteration
-                    ParentGroup.ScheduleGroupTerseUpdate();
                 }
             }
             catch (Exception ex)

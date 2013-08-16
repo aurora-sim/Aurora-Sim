@@ -233,13 +233,9 @@ namespace Aurora.Framework.Physics
         public abstract bool SendCollisions();
         public abstract void AddCollisionEvent(uint localID, ContactPoint contact);
 
-        public virtual void ForceSetVelocity(Vector3 velocity)
-        {
-        }
-
-        public virtual void ForceSetPosition(Vector3 position)
-        {
-        }
+        public virtual void ForceSetVelocity(Vector3 velocity) { }
+        public virtual void ForceSetRotVelocity(Vector3 velocity) { }
+        public virtual void ForceSetPosition(Vector3 position) { }
 
         #endregion
 
