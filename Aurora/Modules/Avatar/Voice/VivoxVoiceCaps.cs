@@ -1235,9 +1235,6 @@ namespace Aurora.Modules
             {
                 MainConsole.Instance.ErrorFormat(
                     "[VivoxVoice][PARCELVOICE]: region \"{0}\": avatar \"{1}\": {2}, retry later",
-                    m_service.Region.RegionName, m_service.ClientCaps.AccountInfo.Name, e.Message);
-                MainConsole.Instance.DebugFormat(
-                    "[VivoxVoice][PARCELVOICE]: region \"{0}\": avatar \"{1}\": {2} failed",
                     m_service.Region.RegionName, m_service.ClientCaps.AccountInfo.Name, e.ToString());
 
                 return Encoding.UTF8.GetBytes("<llsd><undef /></llsd>");
