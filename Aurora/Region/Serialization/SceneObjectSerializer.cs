@@ -466,7 +466,7 @@ namespace Aurora.Region.Serialization
             m_SOPXmlProcessors.Add("APIDIterations", ((sop, xml) => GenericInt(sop, xml, "APIDIterations", sopType)));
             m_SOPXmlProcessors.Add("APIDEnabled", ((sop, xml) => GenericBool(sop, xml, "APIDEnabled", sopType)));
             m_SOPXmlProcessors.Add("Damage", ((sop, xml) => GenericFloat(sop, xml, "Damage", sopType)));
-            m_SOPXmlProcessors.Add("StateSave", ((sop, xml) => ReadProtobuf<Dictionary<UUID, StateSave>>(sop, xml, "StateSaves", sopType)));
+            m_SOPXmlProcessors.Add("StateSaveXML", ((sop, xml) => ReadStateSave(sop, xml, sopType)));
             m_SOPXmlProcessors.Add("KeyframeAnimation", ((sop, xml) => ReadProtobuf<KeyframeAnimation>(sop, xml, "KeyframeAnimation", sopType)));
 
             #endregion
@@ -730,12 +730,30 @@ namespace Aurora.Region.Serialization
             writer.WriteElementString("APIDIterations", sop.APIDIterations.ToString());
             writer.WriteElementString("APIDEnabled", sop.APIDEnabled.ToString().ToLower());
             writer.WriteElementString("Damage", sop.Damage.ToString());
-            
-            using(MemoryStream stream = new MemoryStream())
+
+            writer.WriteStartElement("StateSaveXML");
+            foreach (KeyValuePair<UUID, StateSave> kvp in sop.StateSaves)
             {
-                ProtoBuf.Serializer.Serialize<Dictionary<UUID, StateSave>>(stream, sop.StateSaves);
-                writer.WriteElementString("StateSave", Convert.ToBase64String(stream.ToArray()));
+                writer.WriteStartElement("StateSave");
+
+                writer.WriteElementString("AssemblyName", kvp.Value.AssemblyName);
+                writer.WriteElementString("Compiled", kvp.Value.Compiled.ToString().ToLower());
+                writer.WriteElementString("Disabled", kvp.Value.Disabled.ToString().ToLower());
+                writer.WriteElementString("ItemID", kvp.Value.ItemID.ToString());
+                writer.WriteElementString("MinEventDelay", kvp.Value.MinEventDelay.ToString());
+                writer.WriteElementString("PermsGranter", kvp.Value.PermsGranter.ToString());
+                writer.WriteElementString("PermsMask", kvp.Value.PermsMask.ToString());
+                writer.WriteElementString("Plugins", kvp.Value.Plugins);
+                writer.WriteElementString("Running", kvp.Value.Running.ToString().ToLower());
+                writer.WriteElementString("Source", kvp.Value.Source);
+                writer.WriteElementString("State", kvp.Value.State);
+                writer.WriteElementString("TargetOmegaWasSet", kvp.Value.TargetOmegaWasSet.ToString().ToLower());
+                writer.WriteElementString("UserInventoryID", kvp.Value.UserInventoryID.ToString());
+                writer.WriteElementString("Variables", kvp.Value.Variables);
+
+                writer.WriteEndElement();// StateSave
             }
+            writer.WriteEndElement();// StateSaveXML
 
             using(MemoryStream stream = new MemoryStream())
             {
@@ -1565,6 +1583,81 @@ namespace Aurora.Region.Serialization
             {
                 MainConsole.Instance.Debug("[SceneObjectSerializer]: Failed to parse " + name + ": " + ex.ToString());
             }
+        }
+
+        private void ReadStateSave(SceneObjectPart obj, XmlTextReader reader, Type sopType)
+        {
+            reader.ReadStartElement();
+
+            Dictionary<UUID, StateSave> states = new Dictionary<UUID, StateSave>();
+
+            while (reader.IsStartElement("StateSave"))
+            {
+                reader.ReadStartElement("StateSave");
+
+                StateSave state = new StateSave();
+
+                while (!reader.HasValue)
+                {
+                    string name = reader.Name;
+                    if (name == "StateSave")
+                        break;
+                    string val = reader.ReadElementContentAsString();
+
+                    switch (name)
+                    {
+                        case "AssemblyName":
+                            state.AssemblyName = val;
+                            break;
+                        case "Compiled":
+                            state.Compiled = bool.Parse(val);
+                            break;
+                        case "Disabled":
+                            state.Disabled = bool.Parse(val);
+                            break;
+                        case "ItemID":
+                            state.ItemID = UUID.Parse(val);
+                            break;
+                        case "MinEventDelay":
+                            state.MinEventDelay = double.Parse(val);
+                            break;
+                        case "PermsGranter":
+                            state.PermsGranter = UUID.Parse(val);
+                            break;
+                        case "PermsMask":
+                            state.PermsMask = int.Parse(val);
+                            break;
+                        case "Plugins":
+                            state.Plugins = val;
+                            break;
+                        case "Running":
+                            state.Running = bool.Parse(val);
+                            break;
+                        case "Source":
+                            state.Source = val;
+                            break;
+                        case "State":
+                            state.State = val;
+                            break;
+                        case "TargetOmegaWasSet":
+                            state.TargetOmegaWasSet = bool.Parse(val);
+                            break;
+                        case "UserInventoryID":
+                            state.UserInventoryID = UUID.Parse(val);
+                            break;
+                        case "Variables":
+                            state.Variables = val;
+                            break;
+                    }
+                }
+
+                states.Add(state.ItemID, state);
+
+                reader.ReadEndElement();
+            }
+            reader.ReadEndElement();
+
+            obj.StateSaves = states;
         }
 
         private void GenericByte(SceneObjectPart obj, XmlTextReader reader, string name, Type SOPType)
