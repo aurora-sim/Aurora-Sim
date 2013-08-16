@@ -560,7 +560,9 @@ namespace Aurora.Physics.AuroraOpenDynamicsEngine
                 }
             }
             if (p1 is AuroraODECharacter || p2 is AuroraODECharacter)
-                AddODECollision(maxContact, p1, p2, b1, b2, maxDepthContact, ref NotSkipedCount);
+                //This really should be maxContact, but there are crashes that users have reported when this is used...
+                //AddODECollision(maxContact, p1, p2, b1, b2, maxDepthContact, ref NotSkipedCount);
+                AddODECollision(curContact, p1, p2, b1, b2, maxDepthContact, ref NotSkipedCount);
             else
             {
                 for (int i = 0; i < count; i++)
