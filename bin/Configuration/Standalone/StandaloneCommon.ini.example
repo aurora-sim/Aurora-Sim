@@ -76,6 +76,9 @@
     AllowUsageOfExportPermissions = true
     ;; If a user does not have a home location set, what region should it be set to for them?
     DefaultHomeRegion = ""
+    ;; The position in the default region (set above) to put the user (in the format "X,Y" or "X,Y,Z")
+    ;; Default is "128, 128, 25"
+    DefaultHomeRegionPosition = "128, 128, 25"
     
     ;VoiceServerType = "vivox"
     ;MaxAgentGroups = 100

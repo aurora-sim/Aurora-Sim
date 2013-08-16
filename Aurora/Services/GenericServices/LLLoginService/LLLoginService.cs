@@ -85,6 +85,7 @@ namespace Aurora.Services
         protected bool m_AllowDuplicateLogin = false;
         protected string m_DefaultUserAvatarArchive = "DefaultAvatar.aa";
         protected string m_DefaultHomeRegion = "";
+        protected Vector3 m_DefaultHomeRegionPos = new Vector3();
         protected ArrayList eventCategories = new ArrayList();
         protected ArrayList classifiedCategories = new ArrayList();
         protected List<ILoginModule> LoginModules = new List<ILoginModule>();
@@ -107,6 +108,16 @@ namespace Aurora.Services
             m_forceUserToWearFolderName = m_loginServerConfig.GetString("forceUserToWearFolderName", "");
             m_forceUserToWearFolderOwnerUUID = m_loginServerConfig.GetString("forceUserToWearFolderOwner", "");
             m_DefaultHomeRegion = m_loginServerConfig.GetString("DefaultHomeRegion", "");
+            m_DefaultHomeRegionPos = new Vector3();
+            string defHomeRegPos = m_loginServerConfig.GetString("DefaultHomeRegionPosition", "");
+            if (defHomeRegPos != "")
+            {
+                string[] spl = defHomeRegPos.Replace(" ", "").Split(',');
+                if(spl.Length == 2)
+                    m_DefaultHomeRegionPos = new Vector3(float.Parse(spl[0]), float.Parse(spl[1]), 25);
+                else if (spl.Length == 3)
+                    m_DefaultHomeRegionPos = new Vector3(float.Parse(spl[0]), float.Parse(spl[1]), float.Parse(spl[2]));
+            }
             m_DefaultUserAvatarArchive = m_loginServerConfig.GetString("DefaultAvatarArchiveForNewUser",
                                                                        m_DefaultUserAvatarArchive);
             m_AllowAnonymousLogin = m_loginServerConfig.GetBoolean("AllowAnonymousLogin", false);
@@ -503,6 +514,7 @@ namespace Aurora.Services
 
                 if (guinfo == null || guinfo.HomeRegionID == UUID.Zero) //Give them a default home and last
                 {
+                    bool positionSet = false;
                     if (guinfo == null)
                         guinfo = new UserInfo {UserID = account.PrincipalID.ToString()};
                     GridRegion DefaultRegion = null, FallbackRegion = null, SafeRegion = null;
@@ -513,6 +525,8 @@ namespace Aurora.Services
                             DefaultRegion = m_GridService.GetRegionByName(account.AllScopeIDs, m_DefaultHomeRegion);
                             if (DefaultRegion != null)
                                 guinfo.HomeRegionID = guinfo.CurrentRegionID = DefaultRegion.RegionID;
+                            guinfo.HomePosition = guinfo.CurrentPosition = m_DefaultHomeRegionPos;
+                            positionSet = true;
                         }
                         if (guinfo.HomeRegionID == UUID.Zero)
                         {
@@ -542,7 +556,8 @@ namespace Aurora.Services
                         }
                     }
 
-                    guinfo.CurrentPosition = guinfo.HomePosition = new Vector3(128, 128, 25);
+                    if(!positionSet)
+                        guinfo.CurrentPosition = guinfo.HomePosition = new Vector3(128, 128, 25);
                     guinfo.HomeLookAt = guinfo.CurrentLookAt = new Vector3(0, 0, 0);
 
                     m_agentInfoService.SetHomePosition(guinfo.UserID, guinfo.HomeRegionID, guinfo.HomePosition,
