@@ -2022,7 +2022,8 @@ namespace Aurora.BotManager
 
         public void SendInstantMessage(GridInstantMessage im)
         {
-            m_controller.SendInstantMessage(im);
+            //This will cause a stack overflow, as it will loop back to trying to send the IM out again
+            //m_controller.SendInstantMessage(im);
         }
 
         public void Kick(string message)

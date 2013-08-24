@@ -521,6 +521,7 @@ namespace Aurora.Modules.Land
                             LandData.ParcelAccessList.Remove(entry);
                             return true;
                         }
+                        return false;
                     }
                 }
                 else if ((LandData.Flags & (uint) ParcelFlags.UseAccessGroup) > 0)
