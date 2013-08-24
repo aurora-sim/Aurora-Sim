@@ -785,6 +785,11 @@ namespace Aurora.Region
 
         private void HandleChangeRegion(IScene scene, string[] cmd)
         {
+            if (cmd.Length <= 2) 
+            {
+                MainConsole.Instance.Warn("Wrong number of parameters, needs a region name specified");
+                return;
+            }
             string regionName = Util.CombineParams(cmd, 2);
 
             MainConsole.Instance.ConsoleScene = m_scenes.Find((s) => s.RegionInfo.RegionName == regionName);
