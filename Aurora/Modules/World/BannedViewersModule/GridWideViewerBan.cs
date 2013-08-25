@@ -54,9 +54,9 @@ namespace Aurora.Modules.Ban
             if (config != null)
             {
                 string bannedViewers = config.GetString("ViewersToBan", "");
-                m_bannedViewers = Util.ConvertToList(bannedViewers);
+                m_bannedViewers = Util.ConvertToList(bannedViewers, false);
                 string allowedViewers = config.GetString("ViewersToAllow", "");
-                m_allowedViewers = Util.ConvertToList(allowedViewers);
+                m_allowedViewers = Util.ConvertToList(allowedViewers, false);
                 m_viewerTagURL = config.GetString("ViewerXMLURL", m_viewerTagURL);
                 m_viewerTagFile = config.GetString("ViewerXMLFile", m_viewerTagFile);
                 m_enabled = config.GetBoolean("ViewerBanEnabled", true);

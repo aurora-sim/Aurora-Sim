@@ -30,7 +30,7 @@
     ;;   been set as bad agents under other names will be allowed in
     ;; If it is "AllowKnown", all agents will be allowed in
     ;; Default is AllowCleanOnly
-    GrieferAllowLevel = AllowCleanOnly
+    GrieferAllowLevel = AllowSuspected
     
     ;;
     ;; Viewer banning section
