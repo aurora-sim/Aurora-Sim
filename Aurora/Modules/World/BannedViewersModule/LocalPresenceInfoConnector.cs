@@ -90,11 +90,11 @@ namespace Aurora.Modules.Ban
                 agent.Flags =
                     (PresenceInfo.PresenceInfoFlags) Enum.Parse(typeof (PresenceInfo.PresenceInfoFlags), query[1]);
             }
-            agent.KnownAlts = Util.ConvertToList(query[2]);
-            agent.KnownID0s = Util.ConvertToList(query[3]);
-            agent.KnownIPs = Util.ConvertToList(query[4]);
-            agent.KnownMacs = Util.ConvertToList(query[5]);
-            agent.KnownViewers = Util.ConvertToList(query[6]);
+            agent.KnownAlts = Util.ConvertToList(query[2], false);
+            agent.KnownID0s = Util.ConvertToList(query[3], false);
+            agent.KnownIPs = Util.ConvertToList(query[4], false);
+            agent.KnownMacs = Util.ConvertToList(query[5], false);
+            agent.KnownViewers = Util.ConvertToList(query[6], false);
             agent.LastKnownID0 = query[7];
             agent.LastKnownIP = query[8];
             agent.LastKnownMac = query[9];

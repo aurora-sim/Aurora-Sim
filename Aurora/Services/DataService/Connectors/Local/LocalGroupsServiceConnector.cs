@@ -63,7 +63,7 @@ namespace Aurora.Services.DataService
             if (source.Configs["Groups"] != null)
             {
                 agentsCanBypassGroupNoticePermsCheck =
-                    Util.ConvertToList(source.Configs["Groups"].GetString("AgentsCanBypassGroupNoticePermsCheck", ""))
+                    Util.ConvertToList(source.Configs["Groups"].GetString("AgentsCanBypassGroupNoticePermsCheck", ""), true)
                         .ConvertAll(x => new UUID(x));
             }
 

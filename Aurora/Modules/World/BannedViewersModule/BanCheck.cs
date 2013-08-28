@@ -148,9 +148,9 @@ namespace Aurora.Modules.Ban
                 return;
 
             string bannedViewers = config.GetString("ViewersToBan", "");
-            m_bannedViewers = Util.ConvertToList(bannedViewers);
+            m_bannedViewers = Util.ConvertToList(bannedViewers, false);
             string allowedViewers = config.GetString("ViewersToAllow", "");
-            m_allowedViewers = Util.ConvertToList(allowedViewers);
+            m_allowedViewers = Util.ConvertToList(allowedViewers, false);
             m_useIncludeList = config.GetBoolean("UseAllowListInsteadOfBanList", false);
 
             m_checkOnLogin = config.GetBoolean("CheckForSimilaritiesOnLogin", m_checkOnLogin);
@@ -547,14 +547,14 @@ namespace Aurora.Modules.Ban
             IConfig config = source.Configs["GrieferProtection"];
             if (config != null)
             {
-                List<string> iPBans = Util.ConvertToList(config.GetString("IPBans", ""));
+                List<string> iPBans = Util.ConvertToList(config.GetString("IPBans", ""), true);
                 foreach (string ip in iPBans)
                 {
                     IPAddress ipa;
                     if (IPAddress.TryParse(ip, out ipa))
                         IPBans.Add(ipa);
                 }
-                IPRangeBans = Util.ConvertToList(config.GetString("IPRangeBans", ""));
+                IPRangeBans = Util.ConvertToList(config.GetString("IPRangeBans", ""), true);
             }
         }
 

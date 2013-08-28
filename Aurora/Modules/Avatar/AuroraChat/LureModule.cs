@@ -146,7 +146,7 @@ namespace Aurora.Modules.Chat
                     FromAgentName = client.Name,
                     ToAgentID = targetid,
                     Dialog = (byte)InstantMessageDialog.RequestTeleport,
-                    Message = "",
+                    Message = message,
                     SessionID = dest,
                     Offline = 0,
                     Position = presence.AbsolutePosition,

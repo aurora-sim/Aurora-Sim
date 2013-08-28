@@ -34,7 +34,7 @@ namespace Aurora.Services.GenericServices.CapsService
         {
             IConfig externalConfig = config.Configs["ExternalCaps"];
             if (externalConfig == null) return;
-            m_allowedCapsModules = Util.ConvertToList(externalConfig.GetString("CapsHandlers"));
+            m_allowedCapsModules = Util.ConvertToList(externalConfig.GetString("CapsHandlers"), true);
             
             ISyncMessageRecievedService service = registry.RequestModuleInterface<ISyncMessageRecievedService>();
             service.OnMessageReceived += service_OnMessageReceived;

@@ -34,7 +34,7 @@
                 case "Disabled":
                     return "Disabilitato";
                 case "Enabled":
-                    return "abilitato";
+                    return "Abilitato";
                 case "News":
                     return "News";
                 case "Region":
@@ -144,7 +144,7 @@
                 case "OwnerNameText":
                     return "Proprietario";
                 case "RegionLocationText":
-                    return "posizione della Regione";
+                    return "Posizione della Regione";
                 case "RegionSizeText":
                     return "Dimensione della Regione";
                 case "RegionNameText":
@@ -246,7 +246,7 @@
                 case "MenuSettingsManager":
                     return "Modifica delle Impostazioni";
                 case "MenuManager":
-                    return "Ammin";
+                    return "Admin";
 
                     // Tooltips Menu Buttons
                 case "TooltipsMenuHome":
@@ -298,19 +298,19 @@
 
                     // Menu Region
                 case "MenuRegionTitle":
-                    return "Region";
+                    return "Regione";
                 case "MenuParcelTitle":
-                    return "Parcel";
+                    return "Terreno";
                 case "MenuOwnerTitle":
-                    return "Owner";
+                    return "Proprietario";
 
                     // Menu Profile
                 case "MenuProfileTitle":
-                    return "Profil";
+                    return "Profilo";
                 case "MenuGroupTitle":
-                    return "Group";
+                    return "Gruppo";
                 case "MenuPicksTitle":
-                    return "Picks";
+                    return "Preferiti";
 
                     // Urls
                 case "WelcomeScreen":
@@ -335,23 +335,23 @@
                     return "Luminus";
 
                 case "StyleSwitcherStylesText":
-                    return "Styles";
+                    return "Stili";
                 case "StyleSwitcherLanguagesText":
-                    return "Languages";
+                    return "Lingua";
                 case "StyleSwitcherChoiceText":
-                    return "Choice";
+                    return "Seleziona";
 
                     // Language Switcher Tooltips
                 case "en":
-                    return "English";
+                    return "Inglese";
                 case "fr":
-                    return "French";
+                    return "Francese";
                 case "de":
-                    return "German";
+                    return "Tedesco";
                 case "it":
-                    return "Italian";
+                    return "Italiano";
                 case "es":
-                    return "Spanish";
+                    return "Spagnolo";
 
                     // Index Page
                 case "HomeText":
@@ -397,7 +397,7 @@
                 case "LoggedOutSuccessfullyText":
                     return "Sei stato disconnesso.";
                 case "Logout":
-                    return "Logout";
+                    return "Disconnetti";
 
                     //Change user information page
                 case "ChangeUserInformationText":
@@ -440,9 +440,9 @@
 
                     //http_505 page
                 case "Error505Text":
-                    return "Error code";
+                    return "Ccodice errore";
                 case "Error505InfoText":
-                    return "505 Internal Server Error";
+                    return "505 Errore interno del server";
                 case "HomePage505Text":
                     return "home page";
 
@@ -454,7 +454,7 @@
                 case "SearchForUserText":
                     return "Cerca un utente";
                 case "UserSearchText":
-                    return "Recerca Utente";
+                    return "Ricerca Utente";
                 case "SearchResultForUserText":
                     return "Risultati della ricerca Utente";
 
@@ -464,7 +464,7 @@
                 case "RegionSearchText":
                     return "Cerca Regione";
                 case "SearchResultForRegionText":
-                    return "Search Result For Region";
+                    return "Risultati della ricerca per Regione";
 
                     //Edit user page
                 case "AdminDeleteUserText":
@@ -505,11 +505,11 @@
                 case "BannedUntilText":
                     return "Utente bloccato fino a";
                 case "KickAUserText":
-                    return "Kick A User (Logs them out within 30 seconds)";
+                    return "Espelli un utente (disconnetti un utente entro i prossimi 30 secondi)";
                 case "KickMessageText":
-                    return "Message To User";
+                    return "invia un messaggio ad un utente";
                 case "KickUserText":
-                    return "Kick User";
+                    return "Espelli un utente";
 
                     //factory_reset
                 case "FactoryReset":
@@ -657,19 +657,19 @@
 
                     // ColorBox
                 case "ColorBoxImageText":
-                    return "Image";
+                    return "Immagine";
                 case "ColorBoxOfText":
-                    return "of";
+                    return "di";
                 case "ColorBoxPreviousText":
-                    return "Previous";
+                    return "Precedente";
                 case "ColorBoxNextText":
-                    return "Next";
+                    return "Successivo";
                 case "ColorBoxCloseText":
-                    return "Close";
+                    return "Chiudi";
                 case "ColorBoxStartSlideshowText":
-                    return "Start Slide Show";
+                    return "Presentazione immagini";
                 case "ColorBoxStopSlideshowText":
-                    return "Stop Slide Show";
+                    return "Ferma la presentazione";
             }
             return "UNKNOWN CHARACTER";
         }
