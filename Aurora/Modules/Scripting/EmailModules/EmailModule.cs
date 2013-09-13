@@ -125,11 +125,13 @@ namespace Aurora.Modules.Scripting
                     {
                         //Creation EmailMessage
 
-                        string fromEmailAddress = "@" + m_HostName;
-                        if (scene != null)
+                        string fromEmailAddress;
+
+                        if (scene != null && objectID != UUID.Zero)
                             fromEmailAddress = objectID.ToString() + "@" + m_HostName;
                         else
-                            fromEmailAddress = "noreply@" + m_HostName;
+                            fromEmailAddress = "no-reply@" + m_HostName;
+
                         EmailMessage emailMessage = new EmailMessage
                                                         {
                                                             FromAddress =
@@ -142,9 +144,17 @@ namespace Aurora.Modules.Scripting
                         //Text
                         emailMessage.BodyText = body;
                         if (scene != null)
-                            emailMessage.BodyText = "Object-Name: " + LastObjectName +
-                                                    "\nRegion: " + LastObjectRegionName + "\nLocal-Position: " +
-                                                    LastObjectPosition + "\n\n" + emailMessage.BodyText;
+                        {
+                            // If Object Null Dont Include Object Info Headers (Offline IMs)
+                            if(objectID != UUID.Zero)
+                                emailMessage.BodyText = "Object-Name: " + LastObjectName +
+                                                        "\nRegion: " + LastObjectRegionName + "\nLocal-Position: " +
+                                                        LastObjectPosition + "\n\n";
+
+                            emailMessage.BodyText += emailMessage.BodyText;
+                        }
+
+                        
 
                         //Config SMTP Server
                         //Set SMTP SERVER config
