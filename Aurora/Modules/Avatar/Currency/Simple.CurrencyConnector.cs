@@ -370,7 +370,14 @@ namespace Simple.Currency
 
         private void UserCurrencyCreate(UUID agentId)
         {
-            m_gd.Insert(_REALM, new object[] {agentId.ToString(), 0, 0, 0, 0, 0});
+            // Check if this agent has a user account, if not assume its a bot and exit
+            UserAccount account = m_registry.RequestModuleInterface<IUserAccountService>()
+                          .GetUserAccount(new List<UUID> { UUID.Zero }, agentId);
+
+            if (account != null)
+            {
+                m_gd.Insert(_REALM, new object[] {agentId.ToString(), 0, 0, 0, 0, 0});
+            }
         }
 
         private void GroupCurrencyCreate(UUID groupID)
