@@ -267,13 +267,12 @@ namespace Aurora.Framework.Utilities
                 {
                     HttpWebResponse webResponse = (HttpWebResponse)we.Response;
                     if (webResponse.StatusCode == HttpStatusCode.BadRequest)
-                        MainConsole.Instance.WarnFormat("[WebUtils]: bad request to {0}, data {1}", url,
-                                                        buffer != null ? OSDParser.SerializeJsonString(buffer) : "");
+                        //AR: Removed JSON Data filling console on connecting to down regions
+                        MainConsole.Instance.WarnFormat("[WebUtils]: WebException bad request to {0}", url);
                     else
-                        MainConsole.Instance.Warn(string.Format("[WebUtils]: {0} to {1}, data {2}, response {3}",
-                                                        webResponse.StatusCode, url,
-                                                        buffer != null ? OSDParser.SerializeJsonString(buffer) : "",
-                                                        webResponse.StatusDescription));
+                        //AR: Removed JSON Data filling console on connecting to down regions
+                        MainConsole.Instance.Warn(string.Format("[WebUtils]: WebException {0} to {1}",
+                                                        webResponse.StatusCode, url));
                     return new byte[0];
                 }
                 if (request != null)
@@ -319,8 +318,8 @@ namespace Aurora.Framework.Utilities
 
             if (MainConsole.Instance != null)
                 using (MemoryStream stream = new MemoryStream(buffer))
-                    MainConsole.Instance.WarnFormat("[WebUtils]: request failed: {0} to {1}, data {2}", errorMessage,
-                                                    url, buffer != null ? OSDParser.SerializeJsonString(OSDParser.DeserializeJson(stream)) : "");
+                    //AR: Removed JSON Data filling console on connecting to down regions
+                    MainConsole.Instance.WarnFormat("[WebUtils]: request failed: {0} to {1}", errorMessage, url);
             return new byte[0];
         }
 

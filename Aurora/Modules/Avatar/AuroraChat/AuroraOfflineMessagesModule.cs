@@ -230,7 +230,7 @@ namespace Aurora.Modules.Chat
                         Framework.Utilities.DataManager.RequestPlugin<IProfileConnector>().GetUserProfile(im.ToAgentID);
                     if (profile != null && profile.IMViaEmail)
                     {
-                        UserAccount account = m_Scene.UserAccountService.GetUserAccount(null, im.ToAgentID.ToString());
+                        UserAccount account = m_Scene.UserAccountService.GetUserAccount(null, im.ToAgentID);
                         if (account != null && !string.IsNullOrEmpty(account.Email))
                         {
                             emailModule.SendEmail(UUID.Zero, account.Email,
