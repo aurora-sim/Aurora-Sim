@@ -180,12 +180,6 @@ namespace Aurora.Modules.Entities.ObjectDelete
             {
                 if (m_removeFromSimQueue.TryDequeue(out x))
                 {
-                    if (x.permissionToDelete)
-                    {
-                        IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
-                        if (backup != null)
-                            backup.DeleteSceneObjects(x.objectGroups.ToArray(), true, true);
-                    }
                     MainConsole.Instance.DebugFormat(
                         "[SCENE]: Sending object to user's inventory, {0} item(s) remaining.",
                         m_removeFromSimQueue.Count);
@@ -204,6 +198,14 @@ namespace Aurora.Modules.Entities.ObjectDelete
                             MainConsole.Instance.ErrorFormat(
                                 "[ASYNC DELETER]: Exception background sending object: {0}{1}", e.Message, e.StackTrace);
                         }
+                    }
+
+                    //AR: Moved Delete To After Object Taken To Inventory. Prevents script variables not being updated before taken to inventory
+                    if (x.permissionToDelete)
+                    {
+                        IBackupModule backup = m_scene.RequestModuleInterface<IBackupModule>();
+                        if (backup != null)
+                            backup.DeleteSceneObjects(x.objectGroups.ToArray(), true, true);
                     }
                     return true;
                 }
