@@ -390,7 +390,7 @@ namespace Aurora.Modules.Attachments
                 ISceneEntity objatt = assetID == UUID.Zero
                                           ? invAccess.CreateObjectFromInventory(remoteClient,
                                                                                 itemID, out item)
-                                          : invAccess.CreateObjectFromInventory(remoteClient, itemID, assetID);
+                                          : invAccess.CreateObjectFromInventory(remoteClient, itemID, assetID, null);
 
                 if (objatt != null)
                 {
