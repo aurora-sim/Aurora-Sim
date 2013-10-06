@@ -66,7 +66,7 @@ namespace Aurora.Framework.Modules
         /// <param name="itemID"></param>
         /// <param name="assetID"></param>
         /// <returns></returns>
-        ISceneEntity CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID, UUID assetID);
+        ISceneEntity CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID, UUID assetID, InventoryItemBase item);
 
         /// <summary>
         ///     Rez an object from inventory and add it to the scene
