@@ -74,9 +74,14 @@ namespace Aurora.Services
                 {
                     foreach (GridInstantMessage im in messages)
                     {
+                        Framework.PresenceInfo.IScenePresence UserPresence;
+
                         foreach (IScene scene in manager.Scenes)
                         {
-                            if (scene.GetScenePresence(im.ToAgentID) != null)
+                            UserPresence = scene.GetScenePresence(im.ToAgentID);
+
+                            //AR: Do not fire for child agents or group messages are sent for every region
+                            if (UserPresence != null && UserPresence.IsChildAgent == false)
                             {
                                 IMessageTransferModule messageTransfer = scene.RequestModuleInterface<IMessageTransferModule>();
                                 if (messageTransfer != null)
