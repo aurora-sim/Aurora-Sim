@@ -611,13 +611,13 @@ namespace Aurora.Modules.InventoryAccess
                 //
                 itemId = item.ID;
             }
-            return CreateObjectFromInventory(remoteClient, itemId, item.AssetID, out doc);
+            return CreateObjectFromInventory(remoteClient, itemId, item.AssetID, out doc, item);
         }
 
-        public virtual ISceneEntity CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID, UUID assetID)
+        public virtual ISceneEntity CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID, UUID assetID, InventoryItemBase item)
         {
             XmlDocument doc;
-            return CreateObjectFromInventory(remoteClient, itemID, assetID, out doc);
+            return CreateObjectFromInventory(remoteClient, itemID, assetID, out doc, item);
         }
 
         protected virtual ISceneEntity CreateObjectFromInventory(InventoryItemBase item, IClientAPI remoteClient,
@@ -640,11 +640,11 @@ namespace Aurora.Modules.InventoryAccess
                 //
                 itemId = item.ID;
             }
-            return CreateObjectFromInventory(remoteClient, itemId, item.AssetID, out doc);
+            return CreateObjectFromInventory(remoteClient, itemId, item.AssetID, out doc, item);
         }
 
         protected virtual ISceneEntity CreateObjectFromInventory(IClientAPI remoteClient, UUID itemID, UUID assetID,
-                                                                 out XmlDocument doc)
+                                                                 out XmlDocument doc, InventoryItemBase item)
         {
             byte[] rezAsset = m_scene.AssetService.GetData(assetID.ToString());
 
@@ -683,6 +683,14 @@ namespace Aurora.Modules.InventoryAccess
                 group.IsDeleted = false;
                 foreach (ISceneChildEntity part in group.ChildrenEntities())
                 {
+                    //AR: Could be changed by user in inventory, so restore from inventory not asset on rez
+                    if (item != null)
+                    {
+                        part.EveryoneMask = item.EveryOnePermissions;
+                        part.GroupMask = item.GroupPermissions;
+                        part.NextOwnerMask = item.NextPermissions;
+                    }
+
                     part.IsLoading = false;
                 }
                 return group;
