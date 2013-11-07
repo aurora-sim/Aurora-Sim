@@ -267,6 +267,12 @@ namespace Aurora.Services
                     }
                     else
                     {
+						// Handle the case where portions of the range are missing.
+						if (start == -1)
+							start = 0;
+						if (end == -1)
+							end = int.MaxValue;
+
                         end = Utils.Clamp(end, 0, texture.Data.Length - 1);
                         start = Utils.Clamp(start, 0, end);
                         int len = end - start + 1;
@@ -306,21 +312,46 @@ namespace Aurora.Services
             }
         }
 
+		
+		/*
+		 * <summary>
+		 * Parse a range header.
+		 * </summary>
+		 * <remarks>
+		 * As per http://www.w3.org/Protocols/rfc2616/rfc2616-sec14.html,
+		 * this obeys range headers with two values (e.g. 533-4165) and no second value (e.g. 533-).
+		 * Where there is no value, -1 is returned. Also handles a range like (-4165) where -1 is 
+		 * returned for the starting value.</remarks>
+		 * <returns></returns>
+		 * <param name='header'></param>
+		 * <param name='start'>Undefined if the parse fails.</param>
+		 * <param name='end'>Undefined if the parse fails.</param>
+		 */
         private bool TryParseRange(string header, out int start, out int end)
         {
-            if (header.StartsWith("bytes="))
-            {
-                string[] rangeValues = header.Substring(6).Split('-');
-                if (rangeValues.Length == 2)
-                {
-                    if (Int32.TryParse(rangeValues[0], out start) && Int32.TryParse(rangeValues[1], out end))
-                        return true;
-                }
-            }
+			start = end = -1;
 
-            start = end = 0;
-            return false;
-        }
+			if (! header.StartsWith("bytes="))
+				return false;
+
+			string[] rangeValues = header.Substring(6).Split('-');
+			if (rangeValues.Length != 2)
+				return false;
+
+			if (rangeValues[0] != "")
+			{
+				if (!Int32.TryParse(rangeValues[0], out start))
+					return false;
+			}
+
+			if (rangeValues[1] != "")
+			{
+				if (!Int32.TryParse(rangeValues[1], out end))
+					return false;
+			}
+
+			return true;
+		}
 
         private byte[] ConvertTextureData(AssetBase texture, string format)
         {
