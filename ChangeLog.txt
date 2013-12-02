@@ -1,0 +1,47 @@
+
+Aurora-Sim (Dev) 
+Rowan D <greythane@gmail.com>
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  Sept 26, 2013
+* Aurora.ScriptEngine.AuroraDotNetEngine.APIs - LSL_Types.cs - class LSL_Types
+  Add (float) type casting to '==' and 'Equals' overides
+* namespace Aurora.Services.SQLServices.GridService -  private struct NeighborLocation
+  Add GetHashCode overide to satisfy compiler warning and prevent incorrect a == b or a != b comparisons
+* Aurora.Modules.World.Startup.SimulationData.FileLoaders - TarRegionLoader.cs - class TarRegionDataLoader
+  Correct console error message header on exception  (trivial but... :) )
+  Added additional console info during loading of backup file
+* Aurora.Modules.WorldMap - class AuroraWorldMapModule - private void GetMapBlocks()
+  Correct if..else.. logic when dealing with the item.mapblocks types
+* namespace Aurora.Modules.Caps - public class RenderMaterials - RenderMaterialsPostCap()
+    Remove comparison of te.DefaultTexture.MaterialID == null as it should always be assigned at creation (debug only)
+* Aurora.Modules.Terrain - TerrainModule.cs
+  Add checks for missing commandline parameters so that the sim does not crash!! 
+  Modify existing error messages to be a bit more helpful       
+* FileBasesSimulationData.cs -  FindRegionInfos()
+  Correct to use configured (if any) StoreBackupDirectory rather than assume the current directory "."
+  
+  Sept 27th, 2013
+* Aurora.Modules.Terrain - TerrainModule.cs
+  Update procedures to load terrain into the correct scene as selected
+  
+   Sept 30th, 2013
+* Aurora.Modules.Terrain - TerrainModule.cs
+  Finalise updates to load terrain into the correct scene
+* Aurora.Services.SQLServices.GridService - GridService.cs
+  Add region size to info details
+  Correct region URI details
+* Aurora.Framework.Services - IGridservice.cs
+  Add RegionURI to return region instance uri	
+* Aurora.Region - SceneManager.cs
+  Add currently selected region name to console prompt    	 	   
+  
+  Oct 1st, 2013
+* Aurora.Modules.Terrain - TerrainModule.cs
+  Harden LoadFile and SaveFile procedures to avoid complete crash on an unexpected error
+
+  Oct 2nd 2013
+* Aurora.Modules.Terrain - TerrainModule.cs
+	Remove added debug commands 
+* Aurora.Framework.Sceneinfo - TerrainChannel.cs
+  Correct problem when creating/loading a terrainchannel if the source image is not the same as the region size.	

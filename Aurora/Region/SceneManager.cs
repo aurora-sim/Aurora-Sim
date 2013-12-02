@@ -166,7 +166,7 @@ namespace Aurora.Region
 
             bool newRegion = false;
             StartRegions(out newRegion);
-            MainConsole.Instance.DefaultPrompt = "Region ";
+            MainConsole.Instance.DefaultPrompt = "Region [root]";
             if (newRegion) //Save the new info
             {
                 foreach (ISimulationDataStore store in m_simulationDataServices)
@@ -221,7 +221,7 @@ namespace Aurora.Region
         public void StartRegions(out bool newRegion)
         {
             List<KeyValuePair<ISimulationDataStore, RegionInfo>> regions = new List<KeyValuePair<ISimulationDataStore, RegionInfo>>();
-            List<string> regionFiles = m_selectedDataService.FindRegionInfos(out newRegion);
+            List<string> regionFiles = m_selectedDataService.FindRegionInfos(out newRegion, m_OpenSimBase);
             if (newRegion)
             {
                 ISimulationDataStore store = m_selectedDataService.Copy();
@@ -793,9 +793,19 @@ namespace Aurora.Region
             string regionName = Util.CombineParams(cmd, 2);
 
             MainConsole.Instance.ConsoleScene = m_scenes.Find((s) => s.RegionInfo.RegionName == regionName);
-
+	
             MainConsole.Instance.InfoFormat("[SceneManager]: Changed to region {0}",
                 MainConsole.Instance.ConsoleScene == null ? "root" : MainConsole.Instance.ConsoleScene.RegionInfo.RegionName);
+
+			string rName;
+			if (MainConsole.Instance.ConsoleScene == null) {
+				MainConsole.Instance.Info(String.Format(regionName+" not found? (Case is important)"));
+				rName = "root";
+			} else {
+				rName = MainConsole.Instance.ConsoleScene.RegionInfo.RegionName;
+			}
+			MainConsole.Instance.DefaultPrompt = "Region ["+rName+"]";
+
         }
 
         private void HandleShowUsers(IScene scene, string[] cmd)

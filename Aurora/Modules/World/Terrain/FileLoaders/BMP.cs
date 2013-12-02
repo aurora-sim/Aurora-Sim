@@ -40,6 +40,7 @@ namespace Aurora.Modules.Terrain.FileLoaders
     /// </summary>
     internal class BMP : GenericSystemDrawing
     {
+
         /// <summary>
         ///     Exports a file to a image on the disk using a System.Drawing exporter.
         /// </summary>

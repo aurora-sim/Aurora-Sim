@@ -35,7 +35,8 @@ namespace Aurora.Modules.Terrain.FileLoaders
 {
     internal class GIF : GenericSystemDrawing
     {
-        public override void SaveFile(string filename, ITerrainChannel map)
+
+		public override void SaveFile(string filename, ITerrainChannel map)
         {
             Bitmap colours = CreateGrayscaleBitmapFromMap(map);
 

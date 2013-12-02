@@ -1,3 +1,8 @@
+*.hg
+.hgignore
+hgrc
+debug/*
+
 *.bak
 *.build
 *.command
@@ -35,7 +40,6 @@ Aurora.build
 Aurora.sln
 Aurora.sln.cache
 Aurora.suo
-Aurora.v11.suo
 AuroraDocs/doxygen/
 bin/*.abackup
 bin/*.db
@@ -48,7 +52,6 @@ bin/*.log
 bin/*.maddin
 bin/*.manifest
 bin/*.pdb
-bin/*.sim
 bin/.version
 bin/addin-db-*
 bin/assetcache
@@ -88,3 +91,5 @@ Prebuild/Prebuild.build
 Prebuild/Prebuild.sln
 TAGS
 TestResult.xml
+*StyleCop.Cache
+

@@ -89,6 +89,25 @@ namespace Aurora.Framework.SceneInfo
         {
             m_scene = scene;
             m_Width = w;
+
+			// the basic assumption is that regions are square so make sure...
+			if (m_scene != null)
+			{
+				if (w != m_scene.RegionInfo.RegionSizeX)
+					w = m_scene.RegionInfo.RegionSizeX;
+				if (h != m_scene.RegionInfo.RegionSizeY)
+					h = m_scene.RegionInfo.RegionSizeY;
+
+			}
+			else
+			{
+				if (w != Constants.RegionSize)
+					w = Constants.RegionSize;
+				if (h != Constants.RegionSize)
+					h = Constants.RegionSize;
+			}
+
+
             m_map = new short[w*h];
             taint = new bool[w/Constants.TerrainPatchSize,h/Constants.TerrainPatchSize];
         }

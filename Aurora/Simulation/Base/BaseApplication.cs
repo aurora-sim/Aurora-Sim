@@ -42,8 +42,8 @@ using System.Runtime.InteropServices;
 using System.Threading;
 using System.Reflection;
 
-[assembly: AssemblyVersion("0.8.1")]
-[assembly: AssemblyFileVersion("0.8.1")]
+[assembly: AssemblyVersion("0.8.2")]
+[assembly: AssemblyFileVersion("0.8.2")]
 
 namespace Aurora.Simulation.Base
 {

@@ -358,7 +358,8 @@ namespace Aurora.Modules.Terrain
                 {
                     try
                     {
-                        ITerrainChannel channel = loader.Value.LoadFile(filename, m_scene);
+					   MainConsole.Instance.Info("[TERRAIN]: Loading "+filename+" to "+m_scene.RegionInfo.RegionName);
+                       ITerrainChannel channel = loader.Value.LoadFile(filename, m_scene);
                         channel.Scene = m_scene;
                         if (m_scene.RegionInfo.RegionSizeY == channel.Height &&
                             m_scene.RegionInfo.RegionSizeX == channel.Width)
@@ -418,6 +419,11 @@ namespace Aurora.Modules.Terrain
                         throw new TerrainException(
                             String.Format("Unable to load heightmap: {0}", e.Message));
                     }
+					catch (Exception e)
+					{
+						MainConsole.Instance.Error(String.Format("[TERRAIN]: Something crashed during load. {0} Exception.", e));
+					}
+
                 }
                 CheckForTerrainUpdates();
                 MainConsole.Instance.Info("[TERRAIN]: File (" + filename + ") loaded successfully");
@@ -429,12 +435,21 @@ namespace Aurora.Modules.Terrain
                 String.Format("unable to load heightmap from file {0}: no loader available for that format", filename));
         }
 
+
         /// <summary>
         ///     Saves the current heightmap to a specified file.
         /// </summary>
         /// <param name="filename">The destination filename</param>
         public void SaveToFile(string filename)
         {
+			if (File.Exists(filename))
+			{
+				if (MainConsole.Instance.Prompt("File '"+filename+"' exists. Overwrite?", "yes") != "yes")
+					return;
+
+				File.Delete (filename);
+			}
+
             try
             {
                 foreach (
@@ -457,6 +472,10 @@ namespace Aurora.Modules.Terrain
                 MainConsole.Instance.Error(String.Format("[TERRAIN]: Unable to save to {0}, {1}", filename, ioe.Message));
                 throw new TerrainException(String.Format("Unable to save heightmap: {0}", ioe.Message));
             }
+			catch (Exception e)
+			{
+				MainConsole.Instance.Error(String.Format("[TERRAIN]: Something crashed during save. {0} Exception.", e));
+			}
         }
 
         /// <summary>
@@ -1226,6 +1245,7 @@ namespace Aurora.Modules.Terrain
                 {
                     lock (m_scene)
                     {
+						MainConsole.Instance.Info("[TERRAIN]: Loading "+filename+" to "+m_scene.RegionInfo.RegionName);
                         ITerrainChannel channel = loader.Value.LoadFile(filename, offsetX, offsetY,
                                                                         fileWidth, fileHeight,
                                                                         m_scene.RegionInfo.RegionSizeX,
@@ -1506,9 +1526,38 @@ namespace Aurora.Modules.Terrain
 
         #region Console Commands
 
+        private List<TerrainModule> FindModuleForScene(IScene scene)
+        {
+            List<TerrainModule> modules = new List<TerrainModule>();
+            if (scene == null)
+            {
+                string line =
+                    MainConsole.Instance.Prompt("Are you sure that you want to do this command on all scenes?", "yes");
+                if (!line.Equals("yes", StringComparison.CurrentCultureIgnoreCase))
+                    return modules;
+                //Return them all
+                return m_terrainModules;
+            }
+
+            modules.AddRange(m_terrainModules.Where(module => module.m_scene == scene));
+
+            return modules;
+        }
+
         private void InterfaceLoadFile(IScene scene, string[] cmd)
         {
-            int offsetX = 0;
+			if (cmd.Count() < 3)
+			{
+				MainConsole.Instance.Info(
+					"You need to specify a filename to load [opt: xoffset  and/or yoffset].");
+				return;
+			}
+			if (!File.Exists(cmd[2])) {
+				MainConsole.Instance.Info("Terrain file '"+cmd[2]+"' not found.");
+				return;
+			}
+ 
+			int offsetX = 0;
             int offsetY = 0;
 
             int i = 0;
@@ -1527,80 +1576,136 @@ namespace Aurora.Modules.Terrain
                 i++;
             }
 
-            LoadFromFile(cmd[2], offsetX, offsetY);
+			List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
+			foreach (TerrainModule tmodule in m)
+            {
+				MainConsole.Instance.Info("[TERRAIN]: Loading "+cmd[2]+" to scene "+tmodule.m_scene.RegionInfo.RegionName);
+                tmodule.LoadFromFile(cmd[2], offsetX, offsetY);
+            }
+            // LoadFromFile(cmd[2], offsetX, offsetY);
         }
 
         private void InterfaceLoadTileFile(IScene scene, string[] cmd)
         {
-            LoadFromFile(cmd[2],
+			if (cmd.Count() < 7)
+			{
+				MainConsole.Instance.Info(
+					"You do not have enough parameters. Please look at 'terrain help' for more info.");
+				return;
+			}
+			if (!File.Exists(cmd[2])) {
+				MainConsole.Instance.Info("Terrain file '"+cmd[2]+"' not found.");
+				return;
+			}
+
+			List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
+			foreach (TerrainModule tmodule in m)
+            {
+				MainConsole.Instance.Info("[TERRAIN]: Loading "+cmd[2]+" tile to scene "+tmodule.m_scene.RegionInfo.RegionName);
+            	tmodule.LoadFromFile(cmd[2],
                                     int.Parse(cmd[3]),
                                     int.Parse(cmd[4]),
                                     int.Parse(cmd[5]),
                                     int.Parse(cmd[6]));
+					}
         }
 
         private void InterfaceSaveFile(IScene scene, string[] cmd)
         {
-            SaveToFile(cmd[2]);
+			if (cmd.Count() < 3)
+			{
+				MainConsole.Instance.Info("You need to specify a filename.");
+				return;
+			}
+ 			List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
+			foreach (TerrainModule tmodule in m)
+            {
+				MainConsole.Instance.Info("[TERRAIN]: Saving scene "+tmodule.m_scene.RegionInfo.RegionName+ " to "+cmd[2]);
+           		tmodule.SaveToFile(cmd[2]);
+			}
         }
 
         private void InterfaceSavePhysics(IScene scene, string[] cmd)
         {
-            m_scene.PhysicsScene.SetTerrain(m_channel, m_channel.GetSerialised());
+        	List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
+
+			foreach (TerrainModule tmodule in m) {
+				MainConsole.Instance.Info("[TERRAIN]: Saving scene "+tmodule.m_scene.RegionInfo.RegionName+ " physics");
+				tmodule.m_scene.PhysicsScene.SetTerrain (tmodule.m_channel, tmodule.m_channel.GetSerialised ());
+			}
         }
 
         private void InterfaceBakeTerrain(IScene scene, string[] cmd)
         {
-            UpdateRevertMap();
+	        List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
+			foreach (TerrainModule tmodule in m) {
+				MainConsole.Instance.Info ("[TERRAIN]: Saving scene " + tmodule.m_scene.RegionInfo.RegionName + " physics");
+				tmodule.UpdateRevertMap ();
+			}
         }
 
         private void InterfaceRevertTerrain(IScene scene, string[] cmd)
         {
-            int x, y;
-            for (x = 0; x < m_channel.Width; x++)
-                for (y = 0; y < m_channel.Height; y++)
-                    m_channel[x, y] = m_revert[x, y];
+			List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
+			foreach (TerrainModule tmodule in m) {
+				int x, y;
+				for (x = 0; x < tmodule.m_channel.Width; x++)
+					for (y = 0; y < tmodule.m_channel.Height; y++)
+						tmodule.m_channel [x, y] = m_revert [x, y];
 
-            CheckForTerrainUpdates();
+				tmodule.CheckForTerrainUpdates ();
+			}
         }
 
         private void InterfaceFlipTerrain(IScene scene, string[] cmd)
         {
+			if (cmd.Count() < 3)
+			{
+				MainConsole.Instance.Info(
+					"You need to specify a direction x or y.");
+				return;
+			}
+
             String direction = cmd[2];
 
-            if (direction.ToLower().StartsWith("y"))
-            {
-                for (int x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
-                {
-                    for (int y = 0; y < m_scene.RegionInfo.RegionSizeY/2; y++)
-                    {
-                        float height = m_channel[x, y];
-                        float flippedHeight = m_channel[x, m_scene.RegionInfo.RegionSizeY - 1 - y];
-                        m_channel[x, y] = flippedHeight;
-                        m_channel[x, m_scene.RegionInfo.RegionSizeY - 1 - y] = height;
-                    }
-                }
-            }
-            else if (direction.ToLower().StartsWith("x"))
-            {
-                for (int y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
-                {
-                    for (int x = 0; x < m_scene.RegionInfo.RegionSizeX/2; x++)
-                    {
-                        float height = m_channel[x, y];
-                        float flippedHeight = m_channel[m_scene.RegionInfo.RegionSizeX - 1 - x, y];
-                        m_channel[x, y] = flippedHeight;
-                        m_channel[m_scene.RegionInfo.RegionSizeX - 1 - x, y] = height;
-                    }
-                }
-            }
-            else
-            {
-                MainConsole.Instance.Error("Unrecognised direction - need x or y");
-            }
+			List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
+			foreach (TerrainModule tmodule in m)
+			{
+				if (direction.ToLower ().StartsWith ("y"))
+				{
+					for (int x = 0; x < tmodule.m_scene.RegionInfo.RegionSizeX; x++)
+					{
+						for (int y = 0; y < tmodule.m_scene.RegionInfo.RegionSizeY/2; y++)
+						{
+							float height = tmodule.m_channel [x, y];
+							float flippedHeight = tmodule.m_channel [x, tmodule.m_scene.RegionInfo.RegionSizeY - 1 - y];
+                        	
+							tmodule.m_channel [x, y] = flippedHeight;
+							tmodule.m_channel [x, m_scene.RegionInfo.RegionSizeY - 1 - y] = height;
+						}
+					}
+				} else if (direction.ToLower ().StartsWith ("x"))
+				{
+					for (int y = 0; y < tmodule.m_scene.RegionInfo.RegionSizeY; y++)
+					{
+						for (int x = 0; x < tmodule.m_scene.RegionInfo.RegionSizeX/2; x++)
+						{
+							float height = tmodule.m_channel [x, y];
+							float flippedHeight = tmodule.m_channel [tmodule.m_scene.RegionInfo.RegionSizeX - 1 - x, y];
+                        	
+							tmodule.m_channel [x, y] = flippedHeight;
+							tmodule.m_channel [tmodule.m_scene.RegionInfo.RegionSizeX - 1 - x, y] = height;
+						}
+					}
+				
+				} else
+				{
+					MainConsole.Instance.Error ("Unrecognised direction - need x or y");
+				}
 
+				tmodule.CheckForTerrainUpdates ();
+			}
 
-            CheckForTerrainUpdates();
         }
 
         private void InterfaceRescaleTerrain(IScene scene, string[] cmd)
@@ -1608,64 +1713,60 @@ namespace Aurora.Modules.Terrain
             if (cmd.Count() < 4)
             {
                 MainConsole.Instance.Info(
-                    "You do not have enough parameters. Please look at 'terrain help' for more info.");
+                    "You need to specify both <min> and <max> height.");
                 return;
             }
-            float desiredMin = float.Parse(cmd[2]);
-            float desiredMax = float.Parse(cmd[3]);
 
-            // determine desired scaling factor
-            float desiredRange = desiredMax - desiredMin;
-            //MainConsole.Instance.InfoFormat("Desired {0}, {1} = {2}", new Object[] { desiredMin, desiredMax, desiredRange });
 
-            if (desiredRange == 0d)
-            {
-                // delta is zero so flatten at requested height
-                InterfaceFillTerrain(scene, cmd);
-            }
-            else
-            {
-                //work out current heightmap range
-                float currMin = float.MaxValue;
-                float currMax = float.MinValue;
+            List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
+			foreach (TerrainModule tmodule in m)
+			{
+				float desiredMin = float.Parse (cmd [2]);
+				float desiredMax = float.Parse (cmd [3]);
 
-                int width = m_channel.Width;
-                int height = m_channel.Height;
+				// determine desired scaling factor
+				float desiredRange = desiredMax - desiredMin;
+				//MainConsole.Instance.InfoFormat("Desired {0}, {1} = {2}", new Object[] { desiredMin, desiredMax, desiredRange });
 
-                for (int x = 0; x < width; x++)
-                {
-                    for (int y = 0; y < height; y++)
-                    {
-                        float currHeight = m_channel[x, y];
-                        if (currHeight < currMin)
-                        {
-                            currMin = currHeight;
-                        }
-                        else if (currHeight > currMax)
-                        {
-                            currMax = currHeight;
-                        }
-                    }
-                }
+				if (desiredRange == 0d) {
+					// delta is zero so flatten at requested height
+					tmodule.InterfaceFillTerrain (scene, cmd);
+				} else {
+					//work out current heightmap range
+					float currMin = float.MaxValue;
+					float currMax = float.MinValue;
 
-                float currRange = currMax - currMin;
-                float scale = desiredRange/currRange;
+					int width = tmodule.m_channel.Width;
+					int height = tmodule.m_channel.Height;
 
-                //MainConsole.Instance.InfoFormat("Current {0}, {1} = {2}", new Object[] { currMin, currMax, currRange });
-                //MainConsole.Instance.InfoFormat("Scale = {0}", scale);
+					for (int x = 0; x < width; x++) {
+						for (int y = 0; y < height; y++) {
+							float currHeight = tmodule.m_channel [x, y];
+							if (currHeight < currMin) {
+								currMin = currHeight;
+							} else if (currHeight > currMax) {
+								currMax = currHeight;
+							}
+						}
+					}
 
-                // scale the heightmap accordingly
-                for (int x = 0; x < width; x++)
-                {
-                    for (int y = 0; y < height; y++)
-                    {
-                        float currHeight = m_channel[x, y] - currMin;
-                        m_channel[x, y] = desiredMin + (currHeight*scale);
-                    }
-                }
+					float currRange = currMax - currMin;
+					float scale = desiredRange / currRange;
 
-                CheckForTerrainUpdates();
-            }
+					//MainConsole.Instance.InfoFormat("Current {0}, {1} = {2}", new Object[] { currMin, currMax, currRange });
+					//MainConsole.Instance.InfoFormat("Scale = {0}", scale);
+
+					// scale the heightmap accordingly
+					for (int x = 0; x < width; x++) {
+						for (int y = 0; y < height; y++) {
+							float currHeight = tmodule.m_channel [x, y] - currMin;
+							tmodule.m_channel [x, y] = desiredMin + (currHeight * scale);
+						}
+					}
+
+					tmodule.CheckForTerrainUpdates ();
+				}
+			}
         }
 
         private void InterfaceElevateTerrain(IScene scene, string[] cmd)
@@ -1673,14 +1774,19 @@ namespace Aurora.Modules.Terrain
             if (cmd.Count() < 3)
             {
                 MainConsole.Instance.Info(
-                    "You do not have enough parameters. Please look at 'terrain help' for more info.");
+                    "You need to specify how much height to add.");
                 return;
             }
-            int x, y;
-            for (x = 0; x < m_channel.Width; x++)
-                for (y = 0; y < m_channel.Height; y++)
-                    m_channel[x, y] += float.Parse(cmd[2]);
-            CheckForTerrainUpdates();
+
+			List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
+			foreach (TerrainModule tmodule in m)
+			{
+				int x, y;
+				for (x = 0; x < tmodule.m_channel.Width; x++)
+					for (y = 0; y < tmodule.m_channel.Height; y++)
+						tmodule.m_channel [x, y] += float.Parse (cmd [2]);
+				tmodule.CheckForTerrainUpdates ();
+			}
         }
 
         private void InterfaceMultiplyTerrain(IScene scene, string[] cmd)
@@ -1688,14 +1794,19 @@ namespace Aurora.Modules.Terrain
             if (cmd.Count() < 3)
             {
                 MainConsole.Instance.Info(
-                    "You do not have enough parameters. Please look at 'terrain help' for more info.");
+                    "You need to specify how much to multiply existing terrain by.");
                 return;
             }
-            int x, y;
-            for (x = 0; x < m_channel.Width; x++)
-                for (y = 0; y < m_channel.Height; y++)
-                    m_channel[x, y] *= float.Parse(cmd[2]);
-            CheckForTerrainUpdates();
+
+			List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
+			foreach (TerrainModule tmodule in m)
+			{
+				int x, y;
+				for (x = 0; x < tmodule.m_channel.Width; x++)
+					for (y = 0; y < tmodule.m_channel.Height; y++)
+						tmodule.m_channel [x, y] *= float.Parse (cmd [2]);
+				tmodule.CheckForTerrainUpdates ();
+			}
         }
 
         private void InterfaceLowerTerrain(IScene scene, string[] cmd)
@@ -1703,14 +1814,19 @@ namespace Aurora.Modules.Terrain
             if (cmd.Count() < 3)
             {
                 MainConsole.Instance.Info(
-                    "You do not have enough parameters. Please look at 'terrain help' for more info.");
+                    "You need to specify how much height to subtract.");
                 return;
             }
-            int x, y;
-            for (x = 0; x < m_channel.Width; x++)
-                for (y = 0; y < m_channel.Height; y++)
-                    m_channel[x, y] -= float.Parse(cmd[2]);
-            CheckForTerrainUpdates();
+
+			List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
+			foreach (TerrainModule tmodule in m)
+			{
+				int x, y;
+				for (x = 0; x < tmodule.m_channel.Width; x++)
+					for (y = 0; y < tmodule.m_channel.Height; y++)
+						tmodule.m_channel [x, y] -= float.Parse (cmd [2]);
+				tmodule.CheckForTerrainUpdates ();
+			}
         }
 
         private void InterfaceFillTerrain(IScene scene, string[] cmd)
@@ -1718,57 +1834,74 @@ namespace Aurora.Modules.Terrain
             if (cmd.Count() < 3)
             {
                 MainConsole.Instance.Info(
-                    "You do not have enough parameters. Please look at 'terrain help' for more info.");
+                    "You need to specify the height of the terrain.");
                 return;
             }
-            int x, y;
 
-            for (x = 0; x < m_channel.Width; x++)
-                for (y = 0; y < m_channel.Height; y++)
-                    m_channel[x, y] = float.Parse(cmd[2]);
-            CheckForTerrainUpdates();
+			List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
+			foreach (TerrainModule tmodule in m)
+			{
+				int x, y;
+
+				for (x = 0; x < tmodule.m_channel.Width; x++)
+					for (y = 0; y < tmodule.m_channel.Height; y++)
+						tmodule.m_channel [x, y] = float.Parse (cmd [2]);
+				tmodule.CheckForTerrainUpdates ();
+			}
         }
 
         private void InterfaceShowDebugStats(IScene scene, string[] cmd)
         {
-            float max = float.MinValue;
-            float min = float.MaxValue;
-            float sum = 0;
+			List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
+			foreach (TerrainModule tmodule in m)
+			{
+				float max = float.MinValue;
+				float min = float.MaxValue;
+				float sum = 0;
 
-            int x;
-            for (x = 0; x < m_channel.Width; x++)
-            {
-                int y;
-                for (y = 0; y < m_channel.Height; y++)
-                {
-                    sum += m_channel[x, y];
-                    if (max < m_channel[x, y])
-                        max = m_channel[x, y];
-                    if (min > m_channel[x, y])
-                        min = m_channel[x, y];
-                }
-            }
+				int x;
+				for (x = 0; x < tmodule.m_channel.Width; x++)
+				{
+					int y;
+					for (y = 0; y < tmodule.m_channel.Height; y++)
+					{
+						sum += tmodule.m_channel [x, y];
+						if (max < tmodule.m_channel [x, y])
+							max = tmodule.m_channel [x, y];
+						if (min > tmodule.m_channel [x, y])
+							min = tmodule.m_channel [x, y];
+					}
+				}
+            
+				double avg = sum / (tmodule.m_channel.Height * tmodule.m_channel.Width);
 
-            double avg = sum/(m_channel.Height*m_channel.Width);
-
-            MainConsole.Instance.Info("Channel " + m_channel.Width + "x" + m_channel.Height);
-            MainConsole.Instance.Info("max/min/avg/sum: " + max + "/" + min + "/" + avg + "/" + sum);
+				MainConsole.Instance.Info ("Channel " + tmodule.m_channel.Width + "x" + tmodule.m_channel.Height);
+				MainConsole.Instance.Info ("max/min/avg/sum: " + max + "/" + min + "/" + avg + "/" + sum);
+			}
         }
 
         private void InterfaceEnableExperimentalBrushes(IScene scene, string[] cmd)
         {
-            if (bool.Parse(cmd[2]))
-            {
-                m_painteffects[StandardTerrainEffects.Revert] = new WeatherSphere();
-                m_painteffects[StandardTerrainEffects.Flatten] = new OlsenSphere();
-                m_painteffects[StandardTerrainEffects.Smooth] = new ErodeSphere();
-            }
-            else
-            {
-                InstallDefaultEffects();
-            }
+        	List<TerrainModule> m = FindModuleForScene(MainConsole.Instance.ConsoleScene);
+			foreach (TerrainModule tmodule in m)
+			{
+				if (bool.Parse (cmd [2]))
+				{
+					tmodule.m_painteffects [StandardTerrainEffects.Revert] = new WeatherSphere ();
+					tmodule.m_painteffects [StandardTerrainEffects.Flatten] = new OlsenSphere ();
+					tmodule.m_painteffects [StandardTerrainEffects.Smooth] = new ErodeSphere ();
+				} else
+				{
+					tmodule.InstallDefaultEffects ();
+				}
+			}
         }
 
+		/// <summary>
+		/// Command line interface help.
+		/// </summary>
+		/// <param name="scene">Scene.</param>
+		/// <param name="cmd">Cmd.</param>
         private void InterfaceHelp(IScene scene, string[] cmd)
         {
             if (!MainConsole.Instance.HasProcessedCurrentCommand)
@@ -1779,11 +1912,11 @@ namespace Aurora.Modules.Terrain
                                                                  current +
                                                                  (" " + loader.Key + " (" + loader.Value + ")"));
 
-            MainConsole.Instance.Info(
-                "terrain load <FileName> - Loads a terrain from a specified file. FileName: The file you wish to load from, the file extension determines the loader to be used. Supported extensions include: " +
+			MainConsole.Instance.Info(
+                "terrain load <FileName> - Loads a terrain from a specified file. \n FileName: The file you wish to load from, the file extension determines the loader to be used. \n Supported extensions include: " +
                 supportedFileExtensions);
             MainConsole.Instance.Info(
-                "terrain save <FileName> - Saves the current heightmap to a specified file. FileName: The destination filename for your heightmap, the file extension determines the format to save in. Supported extensions include: " +
+                "terrain save <FileName> - Saves the current heightmap to a specified file. \n FileName: The destination filename for your heightmap, the file extension determines the format to save in. \n Supported extensions include: " +
                 supportedFileExtensions);
             MainConsole.Instance.Info(
                 "terrain load-tile <file width> <file height> <minimum X tile> <minimum Y tile> - Loads a terrain from a section of a larger file. " +
@@ -1815,7 +1948,10 @@ namespace Aurora.Modules.Terrain
                 "\n Max: max terrain height after rescaling");
         }
 
-        private void AddConsoleCommands()
+		/// <summary>
+		/// Adds the console commands.
+		/// </summary>
+		private void AddConsoleCommands()
         {
             // Load / Save
             string supportedFileExtensions = m_loaders.Aggregate("",

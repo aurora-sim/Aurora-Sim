@@ -101,14 +101,19 @@ namespace Aurora.Modules
 
         public void Initialise() { }
 
-        public virtual List<string> FindRegionInfos(out bool newRegion)
+		public virtual List<string> FindRegionInfos(out bool newRegion, ISimulationBase simBase)
         {
-            List<string> regions = new List<string>(Directory.GetFiles(".", "*.sim", SearchOption.TopDirectoryOnly));
+//			List<string> regions = new List<string>(Directory.GetFiles(".", "*.sim", SearchOption.TopDirectoryOnly));
+			ReadConfig(simBase);
+			MainConsole.Instance.Info("Looking for previous sims in: "+ m_storeDirectory);
+			List<string> regions = new List<string>(Directory.GetFiles(m_storeDirectory, "*.sim", SearchOption.TopDirectoryOnly));
             newRegion = regions.Count == 0;
             List<string> retVals = new List<string>();
-            foreach (string r in regions)
-                if(Path.GetExtension(r) == ".sim")
-                    retVals.Add(Path.GetFileNameWithoutExtension(r));
+			foreach (string r in regions)
+				if (Path.GetExtension (r) == ".sim") {
+				MainConsole.Instance.Info ("Found: " + Path.GetFileNameWithoutExtension (r));
+					retVals.Add (Path.GetFileNameWithoutExtension (r));
+				}
             return retVals;
         }
 

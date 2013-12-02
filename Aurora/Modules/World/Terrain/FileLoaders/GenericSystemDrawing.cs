@@ -140,13 +140,14 @@ namespace Aurora.Modules.Terrain.FileLoaders
         {
             ITerrainChannel retval = new TerrainChannel(bitmap.Width, bitmap.Height, null);
 
-            int x;
-            for (x = 0; x < bitmap.Width; x++)
+			int x;
+			int y;
+
+			for (x = 0; x < bitmap.Width; x++)
             {
-                int y;
-                for (y = 0; y < bitmap.Height; y++)
+            	for (y = 0; y < bitmap.Height; y++)
                 {
-                    retval[x, y] = bitmap.GetPixel(x, bitmap.Height - y - 1).GetBrightness()*128;
+					retval[x, y] = bitmap.GetPixel(x, bitmap.Height - y - 1).GetBrightness()*128;
                 }
             }
 
