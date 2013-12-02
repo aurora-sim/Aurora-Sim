@@ -94,6 +94,15 @@ namespace Aurora.Services.SQLServices.GridService
             {
                 return !(a == b);
             }
+			public override int GetHashCode() 
+			{
+				string idStr = this.RegionID.ToString();
+				int hash = idStr.GetHashCode();
+
+				hash = (hash * 3) + (this.RegionLocX * 5) + (this.RegionLocY * 7);
+	
+				return hash;
+			}
         }
         private class NeighborLocationEqualityComparer : IEqualityComparer<NeighborLocation>
         {
@@ -904,9 +913,11 @@ namespace Aurora.Services.SQLServices.GridService
                 MainConsole.Instance.Info("Region UUID: " + r.RegionID);
                 MainConsole.Instance.Info("Region ScopeID: " + r.ScopeID);
                 MainConsole.Instance.Info("Region Location: " + String.Format("{0},{1}", r.RegionLocX, r.RegionLocY));
-                MainConsole.Instance.Info("Region URI: " + r.ServerURI);
+				MainConsole.Instance.Info("Region Siza: " + String.Format("{0} x {1}", r.RegionSizeX, r.RegionSizeY));
+                MainConsole.Instance.Info("Region URI: " + r.RegionURI);			
                 MainConsole.Instance.Info("Region Owner: " + r.EstateOwner);
                 MainConsole.Instance.Info("Region Flags: " + flags);
+				MainConsole.Instance.Info("Gridserver URI: " + r.ServerURI);				
                 MainConsole.Instance.Info(
                     "-------------------------------------------------------------------------------");
             }

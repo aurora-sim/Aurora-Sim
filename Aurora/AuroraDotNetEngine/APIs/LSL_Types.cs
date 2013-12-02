@@ -128,7 +128,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
             public static bool operator ==(Vector3 lhs, Vector3 rhs)
             {
-                return (lhs.x == rhs.x && lhs.y == rhs.y && lhs.z == rhs.z);
+				return ((float)lhs.x == (float)rhs.x && (float)lhs.y == (float)rhs.y && (float)lhs.z == (float)rhs.z);
             }
 
             public static bool operator !=(Vector3 lhs, Vector3 rhs)
@@ -147,7 +147,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
 
                 Vector3 vector = (Vector3) o;
 
-                return (x == vector.x && y == vector.y && z == vector.z);
+				return (x == (float)vector.x && y == (float)vector.y && z == (float)vector.z);
             }
 
             public static Vector3 operator -(Vector3 vector)
@@ -2021,8 +2021,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
                 else
                     return new LSLFloat(0.0);
             }
-
-#if !LINUX
+//  not sure why this is not available for everything.. it is needed for both Linux & OSX	#if !LINUX 
             public static bool operator ==(LSLFloat f1, LSLFloat f2)
             {
                 return f1.value == f2.value;
@@ -2032,7 +2031,7 @@ namespace Aurora.ScriptEngine.AuroraDotNetEngine
             {
                 return f1.value != f2.value;
             }
-#endif
+// #endif
 
             public static LSLFloat operator ++(LSLFloat f)
             {

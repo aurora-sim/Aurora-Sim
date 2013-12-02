@@ -416,12 +416,12 @@ namespace Aurora.Modules.WorldMap
 
                         foreach (GridRegion region in regions)
                         {
-                            if ((item.mapBlocks & 0) == 0)
-                                mapBlocks.Add(MapBlockFromGridRegion(region, region.RegionLocX, region.RegionLocY));
-                            else if ((item.mapBlocks & 1) == 1)
+                            if ((item.mapBlocks & 1) == 1)
                                 mapBlocks.Add(TerrainBlockFromGridRegion(region));
-                            else if ((item.mapBlocks & 2) == 2) //V2 viewer, we need to deal with it a bit
+							else if ((item.mapBlocks & 2) == 2) //V2 viewer, we need to deal with it a bit
                                 mapBlocks.AddRange(Map2BlockFromGridRegion(region));
+							else
+								mapBlocks.Add(MapBlockFromGridRegion(region, region.RegionLocX, region.RegionLocY));
                         }
                         if (regions.Count == 0)
                         {
@@ -445,12 +445,12 @@ namespace Aurora.Modules.WorldMap
 
                         foreach (GridRegion region in regions)
                         {
-                            if ((item.mapBlocks & 0) == 0)
-                                mapBlocks.Add(MapBlockFromGridRegion(region, region.RegionLocX, region.RegionLocY));
-                            else if ((item.mapBlocks & 1) == 1)
+                            if ((item.mapBlocks & 1) == 1)
                                 mapBlocks.Add(TerrainBlockFromGridRegion(region));
                             else if ((item.mapBlocks & 2) == 2) //V2 viewer, we need to deal with it a bit
                                 mapBlocks.AddRange(Map2BlockFromGridRegion(region));
+							else
+								mapBlocks.Add(MapBlockFromGridRegion(region, region.RegionLocX, region.RegionLocY));
                         }
 
                         item.remoteClient.SendMapBlock(mapBlocks, item.mapBlocks);
