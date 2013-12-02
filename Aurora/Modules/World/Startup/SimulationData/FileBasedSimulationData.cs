@@ -101,14 +101,19 @@ namespace Aurora.Modules
 
         public void Initialise() { }
 
-        public virtual List<string> FindRegionInfos(out bool newRegion)
+		public virtual List<string> FindRegionInfos(out bool newRegion, ISimulationBase simBase)
         {
-            List<string> regions = new List<string>(Directory.GetFiles(".", "*.sim", SearchOption.TopDirectoryOnly));
+//			List<string> regions = new List<string>(Directory.GetFiles(".", "*.sim", SearchOption.TopDirectoryOnly));
+			ReadConfig(simBase);
+			MainConsole.Instance.Info("Looking for previous sims in: "+ m_storeDirectory);
+			List<string> regions = new List<string>(Directory.GetFiles(m_storeDirectory, "*.sim", SearchOption.TopDirectoryOnly));
             newRegion = regions.Count == 0;
             List<string> retVals = new List<string>();
-            foreach (string r in regions)
-                if(Path.GetExtension(r) == ".sim")
-                    retVals.Add(Path.GetFileNameWithoutExtension(r));
+			foreach (string r in regions)
+				if (Path.GetExtension (r) == ".sim") {
+				MainConsole.Instance.Info ("Found: " + Path.GetFileNameWithoutExtension (r));
+					retVals.Add (Path.GetFileNameWithoutExtension (r));
+				}
             return retVals;
         }
 
@@ -138,14 +143,13 @@ namespace Aurora.Modules
             {
                 info = new RegionInfo();
                 info.RegionID = UUID.Random();
-                info.RegionPort = 9000;
+				info.RegionPort = 9000;
             }
             info.RegionName = MainConsole.Instance.Prompt("Region Name: ", info.RegionName);
             
             info.RegionLocX =
                 int.Parse(MainConsole.Instance.Prompt("Region Location X: ",
-                ((info.RegionLocX == 0 ? 1000 : info.RegionLocX/Constants.RegionSize)).ToString()))*
-                Constants.RegionSize;
+                ((info.RegionLocX == 0 ? 1000 : info.RegionLocX/Constants.RegionSize)).ToString()))*Constants.RegionSize;
             info.RegionLocY =
                 int.Parse(MainConsole.Instance.Prompt("Region location Y: ",
                                                       ((info.RegionLocY == 0 ? 1000 : info.RegionLocY/Constants.RegionSize)).ToString()))*
@@ -157,7 +161,7 @@ namespace Aurora.Modules
             info.RegionPort = int.Parse(MainConsole.Instance.Prompt("Region Port: ", info.RegionPort.ToString()));
             
             info.RegionType = MainConsole.Instance.Prompt("Region Type: ",
-                                                          (info.RegionType == "" ? "Mainland" : info.RegionType));
+                                                          (info.RegionType == "" ? "Flatland" : info.RegionType));
 
             info.SeeIntoThisSimFromNeighbor =
                 bool.Parse(

@@ -26,6 +26,7 @@
  */
 
 using System;
+using System.Drawing;
 using Aurora.Framework.Modules;
 using Aurora.Framework.Utilities;
 using OpenMetaverse;
@@ -51,10 +52,22 @@ namespace Aurora.Framework.SceneInfo
         {
             m_scene = scene;
             m_Width = m_scene.RegionInfo.RegionSizeX;
-            CreateDefaultTerrain();
+			CreateDefaultTerrain(m_scene.RegionInfo.RegionType);
         }
 
-        public TerrainChannel(short[] import, IScene scene)
+		public TerrainChannel(String landType, IScene scene)
+		{
+			m_scene = scene;
+			m_Width = Constants.RegionSize;
+			if (scene != null)
+			{
+				m_Width = scene.RegionInfo.RegionSizeX;
+			}
+
+			CreateDefaultTerrain(landType);
+		}
+
+		public TerrainChannel(short[] import, IScene scene)
         {
             m_scene = scene;
             m_map = import;
@@ -66,7 +79,7 @@ namespace Aurora.Framework.SceneInfo
                 (scene.RegionInfo.RegionSizeY != int.MaxValue))
             {
                 //We need to fix the map then
-                CreateDefaultTerrain();
+				CreateDefaultTerrain(m_scene.RegionInfo.RegionType);
             }
         }
 
@@ -89,6 +102,25 @@ namespace Aurora.Framework.SceneInfo
         {
             m_scene = scene;
             m_Width = w;
+
+			// the basic assumption is that regions are square so make sure...
+			if (m_scene != null)
+			{
+				if (w != m_scene.RegionInfo.RegionSizeX)
+					w = m_scene.RegionInfo.RegionSizeX;
+				if (h != m_scene.RegionInfo.RegionSizeY)
+					h = m_scene.RegionInfo.RegionSizeY;
+
+			}
+			else
+			{
+				if (w != Constants.RegionSize)
+					w = Constants.RegionSize;
+				if (h != Constants.RegionSize)
+					h = Constants.RegionSize;
+			}
+
+
             m_map = new short[w*h];
             taint = new bool[w/Constants.TerrainPatchSize,h/Constants.TerrainPatchSize];
         }
@@ -209,12 +241,58 @@ namespace Aurora.Framework.SceneInfo
             return ((vsn.X + vsn.Y)/(-1*vsn.Z)) + p0.Z;
         }
 
+		public void GenerateTerrain(String landType, float min, float max, int smoothing,  IScene scene)
+		{
+			m_scene = scene;
+			m_Width = Constants.RegionSize;
+			if (scene != null)
+			{
+				m_Width = scene.RegionInfo.RegionSizeX;
+			}
+
+			if (landType == null)
+			{
+				CreateFlatlandTerrain ();
+				return;
+			}
+
+			// try for the land type
+			landType = landType.ToLower ();
+			if (landType.Equals ("mainland"))
+				CreateMainlandTerrain (min, max, smoothing);
+			else if (landType.Equals ("island"))
+				CreateIslandTerrain (min, max, smoothing);
+			else
+				CreateFlatlandTerrain ();
+		}
         #endregion
 
-        private void CreateDefaultTerrain()
-        {
-            m_map = null;
-            taint = null;
+        /// <summary>
+        /// Creates the default terrain, currently 'Flatland'
+        /// </summary>
+		private void CreateDefaultTerrain(string landType)
+		{
+			if (landType == null)
+			{
+				CreateFlatlandTerrain ();
+				return;
+			}
+
+			// try for the land type
+			landType = landType.ToLower ();
+			if (landType.Equals ("mainland"))
+				CreateMainlandTerrain ();
+			else if (landType.Equals ("island"))
+				CreateIslandTerrain ();
+			else
+				CreateFlatlandTerrain ();
+		}
+
+		private void CreateFlatlandTerrain()
+		{
+
+			m_map = null;
+		 	taint = null;
             m_map = new short[m_scene.RegionInfo.RegionSizeX*m_scene.RegionInfo.RegionSizeX];
             taint =
                 new bool[m_scene.RegionInfo.RegionSizeX/Constants.TerrainPatchSize,
@@ -231,5 +309,107 @@ namespace Aurora.Framework.SceneInfo
                 }
             }
         }
-    }
+
+
+		private void CreateMainlandTerrain()
+		{
+			float minHeight = (float) m_scene.RegionInfo.RegionSettings.WaterHeight - 5;
+			float maxHeight = 30;
+
+			CreateMainlandTerrain (minHeight, maxHeight,2);
+		}
+
+		private void CreateMainlandTerrain (float minHeight, float maxHeight, int smoothing)
+		{
+			m_map = null;
+			taint = null;
+			m_map = new short[m_scene.RegionInfo.RegionSizeX*m_scene.RegionInfo.RegionSizeX];
+			taint =
+				new bool[m_scene.RegionInfo.RegionSizeX/Constants.TerrainPatchSize,
+				         m_scene.RegionInfo.RegionSizeY/Constants.TerrainPatchSize];
+
+			int rWidth = m_scene.RegionInfo.RegionSizeX;
+			int rHeight = m_scene.RegionInfo.RegionSizeY;
+			m_Width = rWidth; 
+
+			int octaveCount = 8;
+			float[][] heightMap = PerlinNoise.GenerateHeightMap(rWidth, rHeight, octaveCount, minHeight, maxHeight, smoothing);
+
+			int x;
+			for (x = 0; x < rWidth; x++)
+			{
+				int y;
+				for (y = 0; y < rHeight; y++)
+				{
+					this[x, y] = heightMap[x][y];
+				}
+			}
+		}
+
+		private void CreateIslandTerrain()
+		{
+			float minHeight = (float) m_scene.RegionInfo.RegionSettings.WaterHeight - 5;
+			float maxHeight = minHeight + 3;
+
+			CreateIslandTerrain (minHeight, maxHeight,2);
+		}
+
+		private void CreateIslandTerrain(float minHeight, float maxHeight, int smoothing)
+		{
+			m_map = null;
+			taint = null;
+			m_map = new short[m_scene.RegionInfo.RegionSizeX*m_scene.RegionInfo.RegionSizeX];
+			taint =
+				new bool[m_scene.RegionInfo.RegionSizeX/Constants.TerrainPatchSize,
+				         m_scene.RegionInfo.RegionSizeY/Constants.TerrainPatchSize];
+
+			int rWidth = m_scene.RegionInfo.RegionSizeX;
+			int rHeight = m_scene.RegionInfo.RegionSizeY;
+			m_Width = rWidth; 
+
+			int octaveCount = 8;
+			float[][] heightMap = PerlinNoise.GenerateIslandMap(rWidth, rHeight, octaveCount, minHeight, maxHeight, smoothing);
+
+			int x;
+			for (x = 0; x < rWidth; x++)
+			{
+				int y;
+				for (y = 0; y < rHeight; y++)
+				{
+					this[x, y] = heightMap[x][y];
+				}
+			}
+		}
+
+		// original island from opensim
+		private void CreateAtolIslandTerrain()
+		{
+			m_map = null;
+			taint = null;
+			m_map = new short[m_scene.RegionInfo.RegionSizeX*m_scene.RegionInfo.RegionSizeX];
+			taint =
+				new bool[m_scene.RegionInfo.RegionSizeX/Constants.TerrainPatchSize,
+				         m_scene.RegionInfo.RegionSizeY/Constants.TerrainPatchSize];
+			m_Width = m_scene.RegionInfo.RegionSizeX;
+
+			int x;
+			int y;
+			float regionDiv = (float) (Constants.RegionSize / 2.0);
+
+			for (x = 0; x < m_scene.RegionInfo.RegionSizeX; x++)
+			{
+				for (y = 0; y < m_scene.RegionInfo.RegionSizeY; y++)
+				{
+					this [x, y] = (float)TerrainUtil.PerlinNoise2D (x, y, 2, (float)  0.125) * 10;
+					float spherFacA = (float) (TerrainUtil.SphericalFactor ( x, y, regionDiv, regionDiv, 50) * 0.01);
+					float spherFacB = (float) (TerrainUtil.SphericalFactor ( x, y, regionDiv, regionDiv, 100) * 0.001);
+					if (this [x, y] < spherFacA)
+						this [x, y] = spherFacA;
+					if (this [x, y] < spherFacB)
+						this [x, y] = spherFacB;
+				}
+			}
+		}
+
+	}
 }

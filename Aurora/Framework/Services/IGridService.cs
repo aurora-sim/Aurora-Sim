@@ -294,7 +294,7 @@ namespace Aurora.Framework.Services
         /// </summary>
         [ProtoMember(3)]
         public uint HttpPort { get; set; }
-
+		
         [ProtoMember(4)]
         public string RegionName { get; set; }
 
@@ -351,9 +351,21 @@ namespace Aurora.Framework.Services
         /// <summary>
         ///     A well-formed URI for the host region server (namely "http://" + ExternalHostName + : + HttpPort)
         /// </summary>
-        public string ServerURI { get { return "http://" + ExternalHostName + ":" + HttpPort; } }
+        public string ServerURI
+		{
+			get { return "http://" + ExternalHostName + ":" + HttpPort; }	// this returns the main server port- gridserver??
+		}
 
-        public GridRegion()
+		/// <summary>
+		/// Gets the region URI.
+		/// </summary>
+		/// <value>The region URI.</value>
+		public string RegionURI
+		{
+			get { return "http://" + ExternalHostName + ":" + InternalPort; }	
+		}
+
+		public GridRegion()
         {
             Flags = 0;
         }

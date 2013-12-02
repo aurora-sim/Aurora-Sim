@@ -109,7 +109,7 @@ namespace Aurora.Framework.SceneInfo
         /// </summary>
         /// <param name="newRegion"></param>
         /// <returns></returns>
-        List<string> FindRegionInfos(out bool newRegion);
+		List<string> FindRegionInfos(out bool newRegion, ISimulationBase simBase);
 
         /// <summary>
         /// Creates a new region

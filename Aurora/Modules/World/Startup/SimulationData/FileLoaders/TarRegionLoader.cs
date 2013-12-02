@@ -29,7 +29,9 @@ namespace Aurora.Modules
             if (stream == null)
                 return null;
 
-            GZipStream m_loadStream = new GZipStream(stream, CompressionMode.Decompress);
+			MainConsole.Instance.Warn("[TarRegionDataLoader]: loading region data: " + file);
+ 
+			GZipStream m_loadStream = new GZipStream(stream, CompressionMode.Decompress);
             TarArchiveReader reader = new TarArchiveReader(m_loadStream);
             List<uint> foundLocalIDs = new List<uint>();
             RegionData regiondata = new RegionData();
@@ -43,7 +45,8 @@ namespace Aurora.Modules
             //Load the archive data that we need
             while ((data = reader.ReadEntry(out filePath, out entryType)) != null)
             {
-                if (TarArchiveReader.TarEntryType.TYPE_DIRECTORY == entryType)
+				MainConsole.Instance.Warn(".");
+               	if (TarArchiveReader.TarEntryType.TYPE_DIRECTORY == entryType)
                     continue;
 
                 if (filePath.StartsWith("parcels/"))
@@ -132,6 +135,8 @@ namespace Aurora.Modules
                 threads[i].Join();
 
             foundLocalIDs.Clear();
+
+			MainConsole.Instance.Warn("[TarRegionDataLoader]: completed: ");
 
             return regiondata;
         }
@@ -278,7 +283,7 @@ namespace Aurora.Modules
             }
             catch (Exception ex)
             {
-                MainConsole.Instance.Warn("[ProtobufRegionLoader]: Failed to save backup: " + ex.ToString());
+				MainConsole.Instance.Warn("[TarRegionDataLoader]: Failed to save backup: " + ex.ToString());
                 return false;
             }
             return true;

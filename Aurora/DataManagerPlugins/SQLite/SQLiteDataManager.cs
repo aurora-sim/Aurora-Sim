@@ -329,7 +329,6 @@ namespace Aurora.DataManager.SQLite
                                     uint? count)
         {
             Dictionary<string, object> ps = new Dictionary<string, object>();
-            List<string> retVal = new List<string>();
             List<string> parts = new List<string>();
 
             if (queryFilter != null && queryFilter.Count > 0)

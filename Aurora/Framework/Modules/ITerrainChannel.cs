@@ -25,6 +25,7 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+using System;
 using Aurora.Framework.SceneInfo;
 
 namespace Aurora.Framework.Modules
@@ -52,5 +53,7 @@ namespace Aurora.Framework.Modules
         /// <param name="y"></param>
         /// <returns></returns>
         float GetNormalizedGroundHeight(int x, int y);
+		void GenerateTerrain(String landType, float min, float max, int smoothing, IScene scene);
+
     }
 }
